@@ -1,8 +1,11 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/theme.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/one_ui_colors.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../models/models.dart';
 import '../../../services/api_exception.dart';
@@ -32,6 +35,10 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
   DateTime? _checkOut;
   int _guests = 1;
   final _notesController = TextEditingController();
+
+  // Seat planning (transport only)
+  final Set<int> _selectedSeats = {};
+  Set<int> _occupiedSeats = {};
 
   bool get _isTransport => widget.type == 'transport';
 
@@ -71,6 +78,9 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
           item = null;
       }
       if (!mounted) return;
+      if (item is Transport) {
+        _buildSeatMap(item);
+      }
       setState(() {
         _item = item;
         _loading = false;
@@ -130,13 +140,36 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
       case 'guide':
         return _unitPrice * _nights;
       case 'transport':
-        return _unitPrice * _guests;
+        return _unitPrice * max(1, _selectedSeats.length);
       case 'destination':
         return _unitPrice * _guests;
       default:
         return 0;
     }
   }
+
+  // ── Seat map helpers (transport) ───────────────────────────────────────
+
+  void _buildSeatMap(Transport transport) {
+    final total = max(1, transport.totalSeats);
+    final taken = (transport.totalSeats - transport.availableSeats)
+        .clamp(0, total);
+    final rnd = Random(transport.id * 7919 + total);
+    final all = List<int>.generate(total, (i) => i + 1)..shuffle(rnd);
+    _occupiedSeats = all.take(taken).toSet();
+    _selectedSeats.clear();
+  }
+
+  String seatLabel(int seatNumber) {
+    const cols = ['A', 'B', 'C', 'D'];
+    final idx = seatNumber - 1;
+    return '${idx ~/ 4 + 1}${cols[idx % 4]}';
+  }
+
+  List<String> get _selectedSeatLabels =>
+      (_selectedSeats.toList()..sort())
+          .map(seatLabel)
+          .toList(growable: false);
 
   // ── Actions ─────────────────────────────────────────────────────────────
 
@@ -186,18 +219,27 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
       _showSnack('Please select a date range');
       return;
     }
+    if (_isTransport && _selectedSeats.isEmpty) {
+      _showSnack('Please choose at least one seat');
+      return;
+    }
 
     setState(() => _submitting = true);
     try {
+      String? notes = _notesController.text.trim().isEmpty
+          ? null
+          : _notesController.text.trim();
+      if (_isTransport) {
+        final seatNote = 'Seats: ${_selectedSeatLabels.join(', ')}';
+        notes = notes == null ? seatNote : '$notes. $seatNote';
+      }
       final booking = await ref.read(bookingServiceProvider).createBooking(
         type: widget.type,
         itemId: widget.itemId,
         checkIn: _checkIn!,
         checkOut: _isTransport ? null : _checkOut,
-        guests: _guests,
-        notes: _notesController.text.trim().isEmpty
-            ? null
-            : _notesController.text.trim(),
+        guests: _isTransport ? max(1, _selectedSeats.length) : _guests,
+        notes: notes,
       );
 
       if (!mounted) return;
@@ -235,8 +277,58 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Booking is available for hotels and transport only — tourist spots
+    // and guides are for exploring, not booking.
+    if (widget.type != 'hotel' && widget.type != 'transport') {
+      return Scaffold(
+        backgroundColor: AppColors.background(context),
+        appBar: AppBar(title: const Text('Booking')),
+        body: NatureBackground.wrap(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.forest_outlined,
+                    size: 64,
+                    color: AppColors.primary(context),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Tourist spots are for exploring, not booking.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary(context),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Book hotels and transport for your trip instead.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary(context),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  CGButton(
+                    label: 'Browse Hotels',
+                    width: 220,
+                    onPressed: () => context.go('/hotels'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     return Scaffold(
-      backgroundColor: OneUIColors.backgroundLight,
+      backgroundColor: AppColors.background(context),
       appBar: AppBar(
         leading: IconButton(
           key: const Key('booking-form-back'),
@@ -245,7 +337,7 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
         ),
         title: const Text('Book Now'),
       ),
-      body: _loading
+      body: NatureBackground.wrap(child: _loading
           ? const Center(child: CircularProgressIndicator())
           : _item == null
           ? TravelEmpty(
@@ -275,30 +367,30 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
                               vertical: 16,
                             ),
                             decoration: BoxDecoration(
-                              color: OneUIColors.surfaceVariantLight,
+                              color: AppColors.surfaceVariant(context),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
                               children: [
-                                const Icon(
+                                 Icon(
                                   Icons.calendar_today_rounded,
                                   size: 18,
-                                  color: OneUIColors.primaryLight,
+                                  color: AppColors.primary(context),
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
                                     _dateButtonText,
-                                    style: const TextStyle(
+                                    style:  TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
-                                      color: OneUIColors.textPrimaryLight,
+                                      color: AppColors.textPrimary(context),
                                     ),
                                   ),
                                 ),
-                                const Icon(
+                                 Icon(
                                   Icons.chevron_right_rounded,
-                                  color: OneUIColors.textSecondaryLight,
+                                  color: AppColors.textSecondary(context),
                                 ),
                               ],
                             ),
@@ -309,9 +401,9 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
                               '$_nights night${_nights == 1 ? '' : 's'}',
-                              style: const TextStyle(
+                              style:  TextStyle(
                                 fontSize: 12,
-                                color: OneUIColors.textSecondaryLight,
+                                color: AppColors.textSecondary(context),
                               ),
                             ),
                           ),
@@ -319,7 +411,13 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildSection('Guests', _buildGuestsRow()),
+                  if (_isTransport)
+                    _buildSection(
+                      'Choose your seats  ·  ${_selectedSeats.length} selected',
+                      _buildSeatPicker(),
+                    )
+                  else
+                    _buildSection('Guests', _buildGuestsRow()),
                   const SizedBox(height: 16),
                   _buildSection(
                     'Notes (optional)',
@@ -333,7 +431,7 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
                         hintText: 'Anything the host should know…',
                         counterText: '',
                         filled: true,
-                        fillColor: OneUIColors.surfaceVariantLight,
+                        fillColor: AppColors.surfaceVariant(context),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -353,7 +451,169 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
                   const SizedBox(height: 24),
                 ],
               ),
+            )),
+    );
+  }
+
+  /// Bus-style seat grid: 4 seats per row with a central aisle.
+  Widget _buildSeatPicker() {
+    final transport = _item! as Transport;
+    final total = max(1, transport.totalSeats);
+    final freeCount = total - _occupiedSeats.length;
+    final full = _selectedSeats.length >= freeCount;
+
+    const cols = ['A', 'B', 'C', 'D'];
+
+    Widget seatTile(int n) {
+      final occupied = _occupiedSeats.contains(n);
+      final selected = _selectedSeats.contains(n);
+      final canTap =
+          !occupied && (!selected && full ? false : true);
+      final idx = n - 1;
+      final label = '${idx ~/ 4 + 1}${cols[idx % 4]}';
+      return GestureDetector(
+        onTap: !canTap
+            ? null
+            : () => setState(() {
+                if (!_selectedSeats.remove(n)) _selectedSeats.add(n);
+              }),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOut,
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            color: occupied
+                ? AppColors.surfaceVariant(context)
+                : selected
+                ? OneUIColors.buttonGreen
+                : AppColors.surface(context),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: selected
+                  ? OneUIColors.buttonGreen
+                  : occupied
+                  ? AppColors.divider(context)
+                  : AppColors.primary(context).withValues(alpha: 0.45),
+              width: selected ? 2 : 1.2,
             ),
+            boxShadow: selected
+                ? [
+                    const BoxShadow(
+                      color: Color(0x551B7A4F),
+                      blurRadius: 8,
+                      offset: Offset(0, 3),
+                    ),
+                  ]
+                : const [],
+          ),
+          child: Center(
+            child: occupied
+                ? Icon(
+                    Icons.close_rounded,
+                    size: 16,
+                    color: AppColors.textHint(context),
+                  )
+                : Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: selected
+                          ? Colors.white
+                          : AppColors.textPrimary(context),
+                    ),
+                  ),
+          ),
+        ),
+      );
+    }
+
+    Widget legendDot(Color color, String label) => Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: AppColors.textSecondary(context),
+          ),
+        ),
+      ],
+    );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.divider(context), width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.directions_bus_rounded,
+                size: 18,
+                color: AppColors.primary(context),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Front of vehicle',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary(context),
+                  ),
+                ),
+              ),
+              Text(
+                '$freeCount of $total free',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary(context),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            children: [
+              for (var i = 0; i < total; i++) ...[
+                seatTile(i + 1),
+                if (i % 4 == 1) const SizedBox(width: 24),
+              ],
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 14,
+            runSpacing: 6,
+            children: [
+              legendDot(AppColors.surface(context), 'Free'),
+              legendDot(OneUIColors.buttonGreen, 'Selected'),
+              legendDot(AppColors.surfaceVariant(context), 'Taken'),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -362,9 +622,9 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: OneUIColors.surfaceLight,
+        color: AppColors.surface(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: OneUIColors.dividerLight, width: 0.5),
+        border: Border.all(color: AppColors.divider(context), width: 0.5),
       ),
       child: Row(
         children: [
@@ -372,7 +632,7 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: OneUIColors.primarySoft,
+              color: AppColors.primarySoft(context),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -382,7 +642,7 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
                 'transport' => Icons.directions_bus_rounded,
                 _ => Icons.location_on_rounded,
               },
-              color: OneUIColors.primaryLight,
+              color: AppColors.primary(context),
               size: 22,
             ),
           ),
@@ -393,18 +653,18 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
               children: [
                 Text(
                   _itemName,
-                  style: const TextStyle(
+                  style:  TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: OneUIColors.textPrimaryLight,
+                    color: AppColors.textPrimary(context),
                   ),
                 ),
                 if (_itemSubtitle.isNotEmpty)
                   Text(
                     _itemSubtitle,
-                    style: const TextStyle(
+                    style:  TextStyle(
                       fontSize: 12,
-                      color: OneUIColors.textSecondaryLight,
+                      color: AppColors.textSecondary(context),
                     ),
                   ),
               ],
@@ -415,17 +675,17 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
             children: [
               Text(
                 '৳${_fmtPrice(_unitPrice)}',
-                style: const TextStyle(
+                style:  TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  color: OneUIColors.primaryLight,
+                  color: AppColors.primary(context),
                 ),
               ),
               Text(
                 _priceLabel,
-                style: const TextStyle(
+                style:  TextStyle(
                   fontSize: 11,
-                  color: OneUIColors.textSecondaryLight,
+                  color: AppColors.textSecondary(context),
                 ),
               ),
             ],
@@ -441,10 +701,10 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style:  TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: OneUIColors.textPrimaryLight,
+            color: AppColors.textPrimary(context),
           ),
         ),
         const SizedBox(height: 8),
@@ -457,24 +717,24 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: OneUIColors.surfaceVariantLight,
+        color: AppColors.surfaceVariant(context),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          const Icon(
+           Icon(
             Icons.people_rounded,
             size: 18,
-            color: OneUIColors.primaryLight,
+            color: AppColors.primary(context),
           ),
           const SizedBox(width: 10),
-          const Expanded(
+           Expanded(
             child: Text(
               'Guests',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: OneUIColors.textPrimaryLight,
+                color: AppColors.textPrimary(context),
               ),
             ),
           ),
@@ -484,7 +744,7 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
                 ? null
                 : () => setState(() => _guests--),
             icon: const Icon(Icons.remove_circle_outline_rounded),
-            color: OneUIColors.primaryLight,
+            color: AppColors.primary(context),
             visualDensity: VisualDensity.compact,
           ),
           SizedBox(
@@ -492,10 +752,10 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
             child: Text(
               '$_guests',
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style:  TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
-                color: OneUIColors.textPrimaryLight,
+                color: AppColors.textPrimary(context),
               ),
             ),
           ),
@@ -505,7 +765,7 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
                 ? null
                 : () => setState(() => _guests++),
             icon: const Icon(Icons.add_circle_outline_rounded),
-            color: OneUIColors.primaryLight,
+            color: AppColors.primary(context),
             visualDensity: VisualDensity.compact,
           ),
         ],
@@ -518,27 +778,37 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: OneUIColors.primarySoft,
+        color: AppColors.primarySoft(context),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'Estimated total',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: OneUIColors.textPrimaryLight,
+          Flexible(
+            child: Text(
+              'Estimated total',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style:  TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary(context),
+              ),
             ),
           ),
-          Text(
-            '৳${_fmtPrice(_estimate)}',
-            key: const Key('booking-estimate'),
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: OneUIColors.primaryLight,
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              '৳${_fmtPrice(_estimate)}',
+              key: const Key('booking-estimate'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
+              style:  TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.primary(context),
+              ),
             ),
           ),
         ],

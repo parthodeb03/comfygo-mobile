@@ -22,6 +22,12 @@ _fd, _TEST_DB_PATH = tempfile.mkstemp(prefix="comfygo_test_", suffix=".db")
 os.close(_fd)
 # Forward slashes keep the SQLAlchemy URL valid on Windows
 os.environ["DATABASE_URL"] = "sqlite:///" + _TEST_DB_PATH.replace("\\", "/")
+os.environ["SECRET_KEY"] = "comfygo-test-secret-key-" + ("x" * 32)
+os.environ["ADMIN_EMAIL"] = "admin.test@example.com"
+os.environ["ADMIN_PASSWORD"] = "test-admin-password"
+# Rate limiting is exercised explicitly in test_new_features.py; keep it off
+# for the rest of the suite so repeated logins never trip the limiter.
+os.environ["RATE_LIMIT_ENABLED"] = "false"
 
 from app.core.database import Base, engine, SessionLocal  # noqa: E402
 from app.main import app  # noqa: E402
@@ -29,6 +35,27 @@ import seed as seed_script  # noqa: E402
 
 Base.metadata.create_all(bind=engine)
 seed_script.seed_database()
+
+# Shared booking flow tests use Ahmed's unlimited test plan; dedicated tests
+# exercise Basic caps with a fresh account.
+from app.models.package import Package, PackageTier, UserPackage, PackageStatus  # noqa: E402
+from app.models.user import User  # noqa: E402
+from datetime import datetime, timedelta  # noqa: E402
+_test_db = SessionLocal()
+try:
+    _ahmed = _test_db.query(User).filter_by(email="ahmed@email.com").first()
+    _ultimate = _test_db.query(Package).filter_by(tier=PackageTier.ultimate).first()
+    if _ahmed and _ultimate:
+        _test_db.add(UserPackage(
+            user_id=_ahmed.id,
+            package_id=_ultimate.id,
+            status=PackageStatus.active,
+            start_date=datetime.utcnow(),
+            end_date=datetime.utcnow() + timedelta(days=365),
+        ))
+        _test_db.commit()
+finally:
+    _test_db.close()
 
 
 # ── Shared clients ─────────────────────────────────────────────────────────
@@ -98,7 +125,7 @@ def guide2_headers(client):
 
 @pytest.fixture(scope="session")
 def admin_headers(client):
-    return _login(client, "admin@comfygo.com", "admin123")
+    return _login(client, "admin.test@example.com", "test-admin-password")
 
 
 @pytest.fixture()

@@ -2,14 +2,17 @@
 class ApiConstants {
   ApiConstants._();
 
-  // Base URL - change this to your backend URL
+  // Base URL — override at build/run time when needed:
+  //   flutter run --dart-define=API_BASE_URL=http://localhost:8000
   //
-  // Physical Android device: run `adb reverse tcp:8000 tcp:8000` on your PC,
-  //   then use http://localhost:8000 here.
-  //   Alternatively, use your PC's local IP (e.g. http://192.168.1.x:8000).
+  // Android emulator host alias; use a LAN address for a physical phone.
   //
-  // iOS / Android emulator: use http://localhost:8000
-  static const String baseUrl = 'http://localhost:8000';
+  // With a USB-connected phone you can instead keep localhost and run:
+  //   adb reverse tcp:8000 tcp:8000
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://10.0.2.2:8000',
+  );
 
   // API Prefix
   static const String apiPrefix = '/api/v1';

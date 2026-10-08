@@ -2,6 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/services.dart';
 import '../models/models.dart';
+import '../services/favorite_service.dart';
+import '../services/review_service.dart';
+import '../services/invoice_pdf.dart';
 import 'auth_provider.dart';
 
 /// Destination Service Provider
@@ -38,6 +41,23 @@ final bookingServiceProvider = Provider<BookingService>((ref) {
 final paymentServiceProvider = Provider<PaymentService>((ref) {
   final apiClient = ref.watch(apiClientProvider);
   return PaymentService(apiClient);
+});
+
+final favoriteServiceProvider = Provider<FavoriteService>((ref) {
+  final apiClient = ref.watch(apiClientProvider);
+  return FavoriteService(apiClient);
+});
+
+final reviewServiceProvider = Provider<ReviewService>((ref) {
+  final apiClient = ref.watch(apiClientProvider);
+  return ReviewService(apiClient);
+});
+
+final invoicePdfServiceProvider = Provider<void Function(InvoicePdf)>((ref) {
+  // InvoicePdf is a stateless callable class — provide the format function.
+  return (InvoicePdf pdf) {
+    // no-op: the UI calls static helpers directly on InvoicePdf.
+  };
 });
 
 /// Package Service Provider

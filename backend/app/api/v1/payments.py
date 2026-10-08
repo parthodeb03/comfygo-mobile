@@ -5,7 +5,7 @@ import uuid
 from ...core.database import get_db
 from ...models.booking import Booking, BookingStatus
 from ...models.payment import Payment, PaymentStatus, PaymentMethod
-from ...schemas.payment import PaymentCreate, PaymentResponse
+from ...schemas.payment import PaymentCreate, PaymentResponse, RefundRequest
 from ..deps import Principal, get_current_principal, require_non_admin
 
 router = APIRouter(prefix="/payments", tags=["payments"])
@@ -98,11 +98,13 @@ def create_payment(
 
     transaction_id = str(uuid.uuid4())
     card_last_four = payment.card_number[-4:] if payment.card_number else None
+    wallet_number = payment.wallet_number.strip() if payment.wallet_number else None
 
-    # Card payments settle immediately; cash is collected later (admin confirms)
+    # Card and mobile-wallet payments settle immediately (sandbox simulation);
+    # cash is collected later (admin confirms)
     status = (
         PaymentStatus.completed
-        if payment.method == PaymentMethod.card
+        if payment.method in (PaymentMethod.card, PaymentMethod.bkash, PaymentMethod.nagad)
         else PaymentStatus.pending
     )
 
@@ -110,9 +112,10 @@ def create_payment(
         user_id=principal.id,
         transaction_id=transaction_id,
         card_last_four=card_last_four,
+        wallet_number=wallet_number,
         status=status,
         **payment.model_dump(
-            exclude={"card_number", "expiry_date", "cvv", "cardholder_name"}
+            exclude={"card_number", "expiry_date", "cvv", "cardholder_name", "wallet_number"}
         ),
     )
     db.add(db_payment)
@@ -148,7 +151,7 @@ def confirm_payment(
 @router.put("/{payment_id}/refund", response_model=PaymentResponse)
 def refund_payment(
     payment_id: int,
-    data: dict,
+    data: RefundRequest,
     principal: Principal = Depends(get_current_principal),
     db: Session = Depends(get_db),
 ):

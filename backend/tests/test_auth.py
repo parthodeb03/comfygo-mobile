@@ -123,9 +123,7 @@ def test_update_profile_ignores_unsafe_fields(client, tourist_headers):
         headers=tourist_headers,
         json={"role": "admin", "id": 9999},
     )
-    assert resp.status_code == 200
-    assert resp.json()["role"] != "admin"
-    assert resp.json()["id"] != 9999
+    assert resp.status_code == 422
 
 
 # ── Refresh ────────────────────────────────────────────────────────────────
@@ -157,7 +155,7 @@ def test_refresh_invalid_token(client):
 
 def test_refresh_missing_token(client):
     resp = client.post("/api/v1/auth/refresh", json={})
-    assert resp.status_code == 400
+    assert resp.status_code == 422
 
 
 # ── Forgot password ────────────────────────────────────────────────────────
@@ -172,8 +170,8 @@ def test_forgot_password(client, fresh_email):
 
 def test_admin_login(client):
     resp = client.post("/api/v1/admin/login", json={
-        "email": "admin@comfygo.com",
-        "password": "admin123",
+        "email": "admin.test@example.com",
+        "password": "test-admin-password",
     })
     assert resp.status_code == 200, resp.text
     body = resp.json()
@@ -183,7 +181,7 @@ def test_admin_login(client):
 
 def test_admin_login_wrong_password(client):
     resp = client.post("/api/v1/admin/login", json={
-        "email": "admin@comfygo.com",
+        "email": "admin.test@example.com",
         "password": "wrong",
     })
     assert resp.status_code == 401
@@ -195,4 +193,4 @@ def test_admin_profile_with_admin_token(client, admin_headers):
     assert resp.status_code == 200, resp.text
     body = resp.json()
     assert body["role"] == "admin"
-    assert body["email"] == "admin@comfygo.com"
+    assert body["email"] == "admin.test@example.com"

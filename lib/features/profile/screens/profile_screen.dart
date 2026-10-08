@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../state/auth_provider.dart';
-import '../../../models/user_model.dart';
+import '../../../state/service_providers.dart';
+import '../../../state/theme_provider.dart';
+import '../../../models/models.dart';
+import '../../../data/tourist_spots.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -13,6 +17,16 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final isDark = ref.watch(themeProvider).isDarkMode;
+    final bookings = ref.watch(bookingsProvider).bookings;
+    final totalBookings = bookings.length;
+    final upcoming = bookings
+        .where(
+          (b) =>
+              b.status == BookingStatus.pending ||
+              b.status == BookingStatus.confirmed,
+        )
+        .length;
     final initials = (user?.fullName ?? 'G U')
         .split(' ')
         .map((w) => w.isNotEmpty ? w[0] : '')
@@ -21,8 +35,8 @@ class ProfileScreen extends ConsumerWidget {
         .toUpperCase();
 
     return Scaffold(
-      backgroundColor: OneUIColors.backgroundLight,
-      body: SafeArea(
+      backgroundColor: AppColors.background(context),
+      body: NatureBackground.wrap(child: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
@@ -32,7 +46,7 @@ class ProfileScreen extends ConsumerWidget {
               // ─── Avatar + Name ─────────────────────────────
               CircleAvatar(
                 radius: 44,
-                backgroundColor: OneUIColors.primaryLight,
+                backgroundColor: AppColors.primary(context),
                 child: ClipOval(
                   child: SizedBox.expand(
                     child:
@@ -51,18 +65,18 @@ class ProfileScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               Text(
                 user?.fullName ?? 'Guest User',
-                style: const TextStyle(
+                style:  TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
-                  color: OneUIColors.textPrimaryLight,
+                  color: AppColors.textPrimary(context),
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 user?.email ?? 'guest@example.com',
-                style: const TextStyle(
+                style:  TextStyle(
                   fontSize: 14,
-                  color: OneUIColors.textSecondaryLight,
+                  color: AppColors.textSecondary(context),
                 ),
               ),
 
@@ -79,25 +93,25 @@ class ProfileScreen extends ConsumerWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: OneUIColors.primarySoft,
+                  color: AppColors.primarySoft(context),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                     Icon(
                       Icons.verified_rounded,
                       size: 14,
-                      color: OneUIColors.primaryLight,
+                      color: AppColors.primary(context),
                     ),
                     const SizedBox(width: 6),
                     Flexible(
                       child: Text(
                         _roleLabel(user?.role.name ?? 'tourist'),
-                        style: const TextStyle(
+                        style:  TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: OneUIColors.primaryLight,
+                          color: AppColors.primary(context),
                         ),
                       ),
                     ),
@@ -111,34 +125,33 @@ class ProfileScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
-                  color: OneUIColors.surfaceLight,
+                  color: AppColors.surface(context),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: OneUIColors.dividerLight,
+                    color: AppColors.divider(context),
                     width: 0.5,
                   ),
-                ),
-                child: const Row(
-                  children: [
-                    _StatItem(
-                      icon: Icons.book_rounded,
-                      value: '—',
-                      label: 'Bookings',
-                    ),
-                    _Divider(),
-                    _StatItem(
-                      icon: Icons.star_rounded,
-                      value: '—',
-                      label: 'Reviews',
-                    ),
-                    _Divider(),
-                    _StatItem(
-                      icon: Icons.card_giftcard_rounded,
-                      value: 'Basic',
-                      label: 'Plan',
-                    ),
-                  ],
-                ),
+                ),                  child: Row(
+                    children: [
+                      _StatItem(
+                        icon: Icons.book_rounded,
+                        value: '$totalBookings',
+                        label: 'Bookings',
+                      ),
+                      const _Divider(),
+                      _StatItem(
+                        icon: Icons.upcoming_rounded,
+                        value: '$upcoming',
+                        label: 'Upcoming',
+                      ),
+                      const _Divider(),
+                      const _StatItem(
+                        icon: Icons.card_giftcard_rounded,
+                        value: 'Basic',
+                        label: 'Plan',
+                      ),
+                    ],
+                  ),
               ),
 
               const SizedBox(height: 24),
@@ -150,10 +163,14 @@ class ProfileScreen extends ConsumerWidget {
                 children: [
                   _SettingsTile(
                     icon: Icons.person_outline_rounded,
-                    color: OneUIColors.primaryLight,
+                    color: AppColors.primary(context),
                     title: 'Edit Profile',
                     subtitle: 'Update your personal information',
-                    onTap: () {},
+                    trailing:  Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppColors.textHint(context),
+                    ),
+                    onTap: () => context.push('/profile/edit'),
                   ),
                   _SettingsTile(
                     icon: Icons.card_membership_rounded,
@@ -174,32 +191,105 @@ class ProfileScreen extends ConsumerWidget {
 
               const SizedBox(height: 20),
 
+              // ─── Appearance ────────────────────────────────
+              _SectionHeader(title: 'Appearance'),
+              const SizedBox(height: 8),
+              _SettingsGroup(
+                children: [
+                  _SettingsTile(
+                    icon: isDark
+                        ? Icons.dark_mode_rounded
+                        : Icons.light_mode_rounded,
+                    color: isDark
+                        ? const Color(0xFF7E57C2)
+                        : const Color(0xFFFFB300),
+                    title: 'Dark mode',
+                    subtitle: isDark
+                        ? 'On — easy on the eyes at night'
+                        : 'Off — bright and clear',
+                    trailing: Switch(
+                      value: isDark,
+                      onChanged: (_) =>
+                          ref.read(themeProvider.notifier).toggleTheme(),
+                    ),
+                    onTap: () =>
+                        ref.read(themeProvider.notifier).toggleTheme(),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
               // ─── Preferences section ────────────────────────
               _SectionHeader(title: 'Preferences'),
               const SizedBox(height: 8),
               _SettingsGroup(
                 children: [
                   _SettingsTile(
+                    icon: Icons.landscape_outlined,
+                    color: AppColors.primary(context),
+                    title: 'Tourist Spots',
+                    subtitle: '${touristSpots.length} places, division-wise',
+                    trailing:  Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppColors.textHint(context),
+                    ),
+                    onTap: () => context.push('/spots'),
+                  ),
+                  _SettingsTile(
                     icon: Icons.help_outline_rounded,
                     color: const Color(0xFF2196F3),
                     title: 'Help & Support',
                     subtitle: 'FAQs, contact us, feedback',
-                    trailing: const Icon(
+                    trailing:  Icon(
                       Icons.chevron_right_rounded,
-                      color: OneUIColors.textHintLight,
+                      color: AppColors.textHint(context),
                     ),
-                    onTap: () {},
+                    onTap: () => context.push('/help'),
+                  ),
+                  _SettingsTile(
+                    icon: Icons.mail_outline_rounded,
+                    color: const Color(0xFF1B7A4F),
+                    title: 'Contact Us',
+                    subtitle: 'Send us a message',
+                    trailing:  Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppColors.textHint(context),
+                    ),
+                    onTap: () => context.push('/contact'),
                   ),
                   _SettingsTile(
                     icon: Icons.info_outline_rounded,
-                    color: OneUIColors.textSecondaryLight,
+                    color: AppColors.textSecondary(context),
                     title: 'About',
                     subtitle: 'App version 1.0.0',
-                    trailing: const Icon(
+                    trailing:  Icon(
                       Icons.chevron_right_rounded,
-                      color: OneUIColors.textHintLight,
+                      color: AppColors.textHint(context),
                     ),
-                    onTap: () {},
+                    onTap: () => context.push('/about'),
+                  ),
+                  _SettingsTile(
+                    icon: Icons.privacy_tip_outlined,
+                    color: const Color(0xFF7E57C2),
+                    title: 'Privacy Policy',
+                    subtitle: 'How we handle your data',
+                    trailing:  Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppColors.textHint(context),
+                    ),
+                    onTap: () => context.push('/privacy'),
+                  ),
+                  _SettingsTile(
+                    icon: Icons.description_outlined,
+                    color: const Color(0xFFFF8F50),
+                    title: 'Terms of Service',
+                    subtitle: 'Rules for using ComfyGo',
+                    trailing:  Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppColors.textHint(context),
+                    ),
+                    onTap: () => context.push('/terms'),
                   ),
                 ],
               ),
@@ -215,9 +305,9 @@ class ProfileScreen extends ConsumerWidget {
                       color: OneUIColors.error,
                       title: 'Admin Panel',
                       subtitle: 'Manage users, bookings & listings',
-                      trailing: const Icon(
+                      trailing:  Icon(
                         Icons.chevron_right_rounded,
-                        color: OneUIColors.textHintLight,
+                        color: AppColors.textHint(context),
                       ),
                       onTap: () => context.push('/admin'),
                     ),
@@ -242,7 +332,7 @@ class ProfileScreen extends ConsumerWidget {
             ],
           ),
         ),
-      ),
+      )),
     );
   }
 
@@ -291,21 +381,21 @@ class _StatItem extends StatelessWidget {
     return Expanded(
       child: Column(
         children: [
-          Icon(icon, size: 20, color: OneUIColors.primaryLight),
+          Icon(icon, size: 20, color: AppColors.primary(context)),
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
+            style:  TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: OneUIColors.textPrimaryLight,
+              color: AppColors.textPrimary(context),
             ),
           ),
           Text(
             label,
-            style: const TextStyle(
+            style:  TextStyle(
               fontSize: 11,
-              color: OneUIColors.textSecondaryLight,
+              color: AppColors.textSecondary(context),
             ),
           ),
         ],
@@ -319,7 +409,7 @@ class _Divider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(width: 1, height: 32, color: OneUIColors.dividerLight);
+    return Container(width: 1, height: 32, color: AppColors.divider(context));
   }
 }
 
@@ -334,10 +424,10 @@ class _SectionHeader extends StatelessWidget {
       alignment: Alignment.centerLeft,
       child: Text(
         title,
-        style: const TextStyle(
+        style:  TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: OneUIColors.textPrimaryLight,
+          color: AppColors.textPrimary(context),
         ),
       ),
     );
@@ -353,19 +443,19 @@ class _SettingsGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: OneUIColors.surfaceLight,
+        color: AppColors.surface(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: OneUIColors.dividerLight, width: 0.5),
+        border: Border.all(color: AppColors.divider(context), width: 0.5),
       ),
       child: Column(
         children: [
           for (int i = 0; i < children.length; i++) ...[
             children[i],
             if (i < children.length - 1)
-              const Divider(
+               Divider(
                 height: 1,
                 indent: 64,
-                color: OneUIColors.dividerLight,
+                color: AppColors.divider(context),
               ),
           ],
         ],
@@ -416,18 +506,18 @@ class _SettingsTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style:  TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: OneUIColors.textPrimaryLight,
+                      color: AppColors.textPrimary(context),
                     ),
                   ),
                   if (subtitle != null)
                     Text(
                       subtitle!,
-                      style: const TextStyle(
+                      style:  TextStyle(
                         fontSize: 12,
-                        color: OneUIColors.textSecondaryLight,
+                        color: AppColors.textSecondary(context),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

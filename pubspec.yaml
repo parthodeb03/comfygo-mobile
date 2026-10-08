@@ -41,6 +41,8 @@ dependencies:
   
   # Rating
   flutter_rating_bar: ^4.0.1
+  pdf: ^3.13.1
+  share_plus: ^12.0.2
 
 dev_dependencies:
   flutter_test:
@@ -52,5 +54,7 @@ flutter:
   
   assets:
     - assets/images/
+    - assets/images/divisions/
+    - assets/images/spots/
     - assets/icons/
     - assets/fonts/

@@ -9,13 +9,47 @@ from ...models.hotel import Hotel
 from ...models.transport import Transport
 from ...models.guide import Guide
 from ...models.user import User, UserRole
-from ...schemas.booking import BookingCreate, BookingResponse
+from ...models.package import Package, PackageTier, PackageStatus, UserPackage
+from ...schemas.booking import BookingCreate, BookingResponse, BookingUpdate
 from ..deps import Principal, get_current_principal, require_non_admin
 
 router = APIRouter(prefix="/bookings", tags=["bookings"])
 
 # Staff roles allowed to change a booking's status (manage flow)
 _STAFF_ROLES = {UserRole.admin, UserRole.hotel_manager, UserRole.guide}
+
+
+def _entitlements_for_user(db: Session, user_id: int) -> Optional[Package]:
+    now = datetime.utcnow()
+    subscription = (
+        db.query(UserPackage)
+        .filter(
+            UserPackage.user_id == user_id,
+            UserPackage.status == PackageStatus.active,
+            UserPackage.start_date <= now,
+            UserPackage.end_date > now,
+        )
+        .order_by(UserPackage.end_date.desc())
+        .first()
+    )
+    if subscription:
+        return subscription.package
+    return db.query(Package).filter(Package.tier == PackageTier.basic).first()
+
+
+def _monthly_booking_count(db: Session, user_id: int) -> int:
+    now = datetime.utcnow()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    next_month = (
+        month_start.replace(year=month_start.year + 1, month=1)
+        if month_start.month == 12
+        else month_start.replace(month=month_start.month + 1)
+    )
+    return db.query(Booking).filter(
+        Booking.tourist_id == user_id,
+        Booking.created_at >= month_start,
+        Booking.created_at < next_month,
+    ).count()
 
 
 def _days_between(check_in: datetime, check_out: Optional[datetime]) -> int:
@@ -151,6 +185,17 @@ def create_booking(
 ):
     require_non_admin(principal)
     assert principal.user is not None
+    if principal.user.role != UserRole.tourist:
+        raise HTTPException(status_code=403, detail='Only tourists can create bookings')
+
+    plan = _entitlements_for_user(db, principal.user.id)
+    if plan is not None and plan.booking_limit >= 0:
+        count = _monthly_booking_count(db, principal.user.id)
+        if count >= plan.booking_limit:
+            raise HTTPException(
+                status_code=403,
+                detail=f'Monthly booking limit reached for {plan.name}. Upgrade your package to book more.',
+            )
 
     if booking.guests < 1:
         raise HTTPException(status_code=400, detail="guests must be at least 1")
@@ -167,11 +212,16 @@ def create_booking(
     )
 
     _check_availability(db, booking.type, item, booking.guests)
+    gross_total = total_price or 0
+    discount_rate = plan.discount_percentage if plan is not None else 0
+    discount_amount = round(gross_total * discount_rate / 100, 2)
+    total_price = round(gross_total - discount_amount, 2)
 
     db_booking = Booking(
         tourist_id=principal.user.id,
         tourist_name=principal.user.full_name,
         total_price=total_price,
+        discount_amount=discount_amount,
         item_name=getattr(item, "name", None),
         **booking.model_dump(),
     )
@@ -217,7 +267,7 @@ def cancel_booking(
 @router.put("/{booking_id}/status", response_model=BookingResponse)
 def update_booking_status(
     booking_id: int,
-    data: dict,
+    data: BookingUpdate,
     principal: Principal = Depends(get_current_principal),
     db: Session = Depends(get_db),
 ):
@@ -231,11 +281,17 @@ def update_booking_status(
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
 
-    if "status" in data:
-        try:
-            new_status = BookingStatus(data["status"])
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid status value")
+    if not principal.is_admin and principal.user is not None:
+        item = _get_item(db, booking.type, booking.item_id)
+        if principal.user.role == UserRole.hotel_manager:
+            if booking.type != BookingType.hotel or item is None or item.manager_id != principal.id:
+                raise HTTPException(status_code=403, detail="This booking is outside your hotel listings")
+        elif principal.user.role == UserRole.guide:
+            if booking.type != BookingType.guide or item is None or item.user_id != principal.id:
+                raise HTTPException(status_code=403, detail="This booking is outside your guide assignments")
+
+    if data.status is not None:
+        new_status = data.status
 
         # Releasing reserved inventory when a booking ends without a stay
         if new_status in (BookingStatus.cancelled, BookingStatus.completed):

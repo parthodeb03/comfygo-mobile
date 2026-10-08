@@ -5,6 +5,7 @@ import '../models/user_model.dart';
 import '../models/booking_model.dart';
 import '../models/payment_model.dart';
 import '../models/hotel_model.dart';
+import '../models/package_model.dart';
 import 'api_client.dart';
 
 /// Admin Service
@@ -261,6 +262,24 @@ class AdminService {
   // ═══════════════════════════════════════════════════
   // GET DASHBOARD STATS
   // ═══════════════════════════════════════════════════
+  Future<List<UserPackage>> getUserPackages({int page = 1, int limit = 100}) async {
+    try {
+      final response = await _apiClient.dio.get(
+        '/api/v1/admin/user-packages',
+        queryParameters: {'page': page, 'limit': limit},
+      );
+      if (response.statusCode == 200) {
+        return (response.data['items'] as List)
+            .map((json) => UserPackage.fromJson(json))
+            .toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      AppLogger.error('Error fetching subscriptions: ${e.message}', e.error, e.stackTrace);
+      return [];
+    }
+  }
+
   Future<Map<String, dynamic>> getStats() async {
     try {
       final response = await _apiClient.dio.get('/api/v1/admin/stats');

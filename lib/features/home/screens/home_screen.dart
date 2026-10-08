@@ -3,11 +3,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/widgets/widgets.dart';
+import '../../../data/tourist_spots.dart';
 import '../../../state/service_providers.dart';
 import '../../../state/auth_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
+
+  static const _homeDivisions = [
+    'Dhaka',
+    'Chittagong',
+    'Sylhet',
+    'Khulna',
+    'Rajshahi',
+    'Barisal',
+    'Rangpur',
+    'Mymensingh',
+  ];
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
@@ -55,6 +68,7 @@ class HomeScreen extends ConsumerWidget {
                       runSpacing: 10,
                       children: [
                         for (final entry in [
+                          ('Spots', '/spots', Icons.landscape_outlined),
                           ('Explore', '/destinations', Icons.explore_outlined),
                           ('Hotels', '/hotels', Icons.hotel_outlined),
                           (
@@ -71,6 +85,59 @@ class HomeScreen extends ConsumerWidget {
                           ),
                       ],
                     ),
+                  ],
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: TravelSection(
+                title: 'Explore by division',
+                subtitle: 'Eight divisions, countless stories.',
+                onSeeAll: () => context.go('/destinations'),
+                child: SizedBox(
+                  height: 116,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _homeDivisions.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 12),
+                    itemBuilder: (context, index) {
+                      final division = _homeDivisions[index];
+                      return TravelDivisionCard(
+                        label: division,
+                        asset: TravelPhotos.forDivision(division),
+                        showCheck: false,
+                        onTap: () =>
+                            context.go('/destinations?division=$division'),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: TravelSection(
+                title: 'Featured tourist spots',
+                subtitle: 'Where to go, how to get there, what to know.',
+                onSeeAll: () => context.go('/spots'),
+                child: Column(
+                  children: [
+                    for (final spot in [
+                      touristSpots[0],
+                      touristSpots[7],
+                      touristSpots[12],
+                    ])
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: TravelRowCard(
+                          title: spot.name,
+                          subtitle: spot.tagline,
+                          meta: '${spot.division} Division',
+                          leadingIcon: Icons.place_rounded,
+                          asset: spot.photo,
+                          heroTag: 'spot_${spot.id}',
+                          onTap: () => context.push('/spots/${spot.id}'),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -99,11 +166,15 @@ class HomeScreen extends ConsumerWidget {
                             TravelCard(
                               title: item.name,
                               subtitle: item.division,
-                              asset: TravelPhotos.forDestination(item.name),
+                              asset: TravelPhotos.forDestination(
+                                item.name,
+                                item.division,
+                              ),
                               imageUrl: item.images.isEmpty
                                   ? null
                                   : item.images.first,
                               price: '৳${item.price.toStringAsFixed(0)}',
+                              heroTag: 'destination_image_${item.id}',
                               onTap: () =>
                                   context.push('/destinations/${item.id}'),
                             ),
@@ -139,6 +210,7 @@ class HomeScreen extends ConsumerWidget {
                               price:
                                   '৳${item.pricePerNight.toStringAsFixed(0)}',
                               priceLabel: '/ night',
+                              heroTag: 'hotel_image_${item.id}',
                               onTap: () => context.push('/hotels/${item.id}'),
                             ),
                         ],

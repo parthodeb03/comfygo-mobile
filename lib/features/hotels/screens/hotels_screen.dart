@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/theme.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../state/service_providers.dart';
 
@@ -33,7 +33,7 @@ class _HotelsScreenState extends ConsumerState<HotelsScreen> {
     final data = ref.watch(hotelsProvider);
 
     return TravelScaffold(
-      backgroundColor: OneUIColors.backgroundLight,
+      backgroundColor: AppColors.background(context),
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
@@ -134,18 +134,18 @@ class _HotelsScreenState extends ConsumerState<HotelsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+             Icon(
               Icons.hotel_rounded,
               size: 48,
-              color: OneUIColors.textHintLight,
+              color: AppColors.textHint(context),
             ),
             const SizedBox(height: 16),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style:  TextStyle(
                 fontSize: 14,
-                color: OneUIColors.textSecondaryLight,
+                color: AppColors.textSecondary(context),
               ),
             ),
             if (onRetry != null) ...[

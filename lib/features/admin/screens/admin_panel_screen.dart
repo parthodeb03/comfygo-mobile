@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../models/models.dart';
@@ -22,6 +25,7 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
   List<Booking>? _bookings;
   List<Payment>? _payments;
   List<Hotel>? _listings;
+  List<UserPackage>? _userPackages;
 
   bool _loading = true;
   bool _acting = false;
@@ -29,7 +33,7 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
     _loadAll();
   }
 
@@ -51,6 +55,7 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
       admin.getAllBookings(limit: 100),
       admin.getAllPayments(limit: 100),
       admin.getAllListings(limit: 100),
+      admin.getUserPackages(limit: 100),
     ]);
 
     if (!mounted) return;
@@ -60,6 +65,7 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
       _bookings = results[2] as List<Booking>;
       _payments = results[3] as List<Payment>;
       _listings = results[4] as List<Hotel>;
+      _userPackages = results[5] as List<UserPackage>;
       _loading = false;
     });
   }
@@ -118,7 +124,7 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
         title: const Text('Void payment?'),
         content: Text(
           'Payment #${payment.id} of ৳${payment.amount.toStringAsFixed(0)} '
-          'will be marked as refunded.',
+          'will be voided and retained in the audit history.',
         ),
         actions: [
           TextButton(
@@ -165,7 +171,7 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: OneUIColors.backgroundLight,
+      backgroundColor: AppColors.background(context),
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
@@ -181,14 +187,14 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
           ),
         ],
       ),
-      body: _loading
+      body: NatureBackground.wrap(child: _loading
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
                 // Stats summary — real numbers
                 Container(
                   padding: const EdgeInsets.all(16),
-                  color: OneUIColors.surfaceLight,
+                  color: AppColors.surface(context),
                   child: Wrap(
                     spacing: 20,
                     runSpacing: 12,
@@ -198,7 +204,7 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
                         icon: Icons.people_rounded,
                         value: '${_stats?['users'] ?? 0}',
                         label: 'Users',
-                        color: OneUIColors.primaryLight,
+                        color: AppColors.primary(context),
                       ),
                       _StatItem(
                         icon: Icons.book_rounded,
@@ -224,11 +230,12 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
 
                 // Tab bar
                 Container(
-                  color: OneUIColors.surfaceLight,
+                  color: AppColors.surface(context),
                   child: TabBar(
                     controller: _tabController,
                     isScrollable: true,
                     tabs: const [
+                      Tab(text: 'Dashboard'),
                       Tab(text: 'Users'),
                       Tab(text: 'Bookings'),
                       Tab(text: 'Payments'),
@@ -243,6 +250,7 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
                   child: TabBarView(
                     controller: _tabController,
                     children: [
+                      _buildDashboardTab(),
                       _buildUsersTab(),
                       _buildBookingsTab(),
                       _buildPaymentsTab(),
@@ -252,7 +260,325 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
                   ),
                 ),
               ],
+            )),
+    );
+  }
+
+  // ── Dashboard (statistical view) ──────────────────────────────────
+
+  Widget _buildDashboardTab() {
+    final bookings = _bookings ?? <Booking>[];
+    final payments = _payments ?? <Payment>[];
+    final revenue = ((_stats?['revenue'] as num?) ?? 0).toDouble();
+
+    final statusData = [
+      (
+        'Pending',
+        bookings.where((b) => b.status == BookingStatus.pending).length,
+        const Color(0xFFFFC107),
+      ),
+      (
+        'Confirmed',
+        bookings.where((b) => b.status == BookingStatus.confirmed).length,
+        const Color(0xFF4CAF50),
+      ),
+      (
+        'Completed',
+        bookings.where((b) => b.status == BookingStatus.completed).length,
+        const Color(0xFF1B7A4F),
+      ),
+      (
+        'Cancelled',
+        bookings.where((b) => b.status == BookingStatus.cancelled).length,
+        const Color(0xFFF44336),
+      ),
+    ];
+
+    final typeData = [
+      (
+        'Hotels',
+        bookings.where((b) => b.type == BookingType.hotel).length,
+        const Color(0xFF1B7A4F),
+      ),
+      (
+        'Transport',
+        bookings.where((b) => b.type == BookingType.transport).length,
+        const Color(0xFF2196F3),
+      ),
+      (
+        'Guides',
+        bookings.where((b) => b.type == BookingType.guide).length,
+        const Color(0xFFFF8F50),
+      ),
+      (
+        'Tours',
+        bookings.where((b) => b.type == BookingType.destination).length,
+        const Color(0xFF7E57C2),
+      ),
+    ];
+
+    final completedPayments =
+        payments.where((p) => p.status == PaymentStatus.completed).toList();
+    final completedTotal = completedPayments.fold<double>(
+      0,
+      (sum, p) => sum + p.amount,
+    );
+    final averagePayment = completedPayments.isEmpty
+        ? 0.0
+        : completedTotal / completedPayments.length;
+    final successRate = payments.isEmpty
+        ? 0.0
+        : completedPayments.length / payments.length;
+
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        _dashboardCard(
+          title: 'Bookings by service',
+          subtitle: 'Distribution across booking types',
+          child: Column(
+            children: [
+              SizedBox(
+                height: 170,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CustomPaint(
+                      size: const Size(150, 150),
+                      painter: _DonutPainter(
+                        values: [
+                          for (final entry in typeData)
+                            entry.$2.toDouble(),
+                        ],
+                        colors: [for (final entry in typeData) entry.$3],
+                      ),
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${bookings.length}',
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary(context),
+                          ),
+                        ),
+                        Text(
+                          'bookings',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              for (final entry in typeData)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: entry.$3,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          entry.$1,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textPrimary(context),
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '${entry.$2}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        _dashboardCard(
+          title: 'Bookings by status',
+          subtitle: 'Live funnel from pending to completed',
+          child: Column(
+            children: [
+              for (final entry in statusData)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 78,
+                        child: Text(
+                          entry.$1,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: AppColors.textSecondary(context),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Stack(
+                            children: [
+                              Container(
+                                height: 16,
+                                color: AppColors.surfaceVariant(context),
+                              ),
+                              FractionallySizedBox(
+                                widthFactor: bookings.isEmpty
+                                    ? 0
+                                    : (entry.$2 / bookings.length)
+                                          .clamp(0.0, 1.0),
+                                child: Container(
+                                  height: 16,
+                                  decoration: BoxDecoration(
+                                    color: entry.$3,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 34,
+                        child: Text(
+                          '${entry.$2}',
+                          textAlign: TextAlign.end,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary(context),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        _dashboardCard(
+          title: 'Revenue summary',
+          subtitle: 'From completed payments',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '৳${_fmtRevenue(revenue)}',
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primary(context),
+                ),
+              ),
+              const SizedBox(height: 14),
+              _dashboardStatRow(
+                'Payments received',
+                '${completedPayments.length} of ${payments.length}',
+              ),
+              _dashboardStatRow(
+                'Average payment',
+                '৳${_fmtRevenue(averagePayment)}',
+              ),
+              _dashboardStatRow('Success rate', '${(successRate * 100).round()}%'),
+              _dashboardStatRow(
+                'Active subscriptions',
+                '${_stats?['active_packages'] ?? 0}',
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  Widget _dashboardCard({
+    required String title,
+    required String subtitle,
+    required Widget child,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.divider(context), width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary(context),
             ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary(context),
+            ),
+          ),
+          const SizedBox(height: 14),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _dashboardStatRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary(context),
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary(context),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -268,11 +594,11 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
         final user = users[index];
         return ListTile(
           leading: CircleAvatar(
-            backgroundColor: OneUIColors.primarySoft,
+            backgroundColor: AppColors.primarySoft(context),
             child: Text(
               user.fullName.isEmpty ? '?' : user.fullName[0].toUpperCase(),
-              style: const TextStyle(
-                color: OneUIColors.primaryLight,
+              style:  TextStyle(
+                color: AppColors.primary(context),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -307,7 +633,7 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: OneUIColors.primarySoft,
+              color: AppColors.primarySoft(context),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
@@ -317,7 +643,7 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
                 BookingType.guide => Icons.person_rounded,
                 BookingType.destination => Icons.location_on_rounded,
               },
-              color: OneUIColors.primaryLight,
+              color: AppColors.primary(context),
               size: 20,
             ),
           ),
@@ -371,21 +697,23 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           ),
           subtitle: Text(
-            '${p.method == PaymentMethod.card ? 'Card' : 'Cash'}'
+            '${_paymentMethodLabel(p.method)}'
             ' • ${_paymentStatusLabel(p.status)}'
             '${p.cardLastFour != null ? ' • *${p.cardLastFour}' : ''}',
             style: const TextStyle(fontSize: 12),
           ),
-          trailing: PopupMenuButton<String>(
-            key: Key('payment-menu-${p.id}'),
-            onSelected: (value) {
-              if (value == 'void') _voidPayment(p);
-            },
-            itemBuilder: (_) => [
-              const PopupMenuItem(value: 'void', child: Text('Void payment')),
-            ],
-            icon: const Icon(Icons.more_vert_rounded, size: 20),
-          ),
+          trailing: p.status == PaymentStatus.voided ||
+                  p.status == PaymentStatus.refunded
+              ? null
+              : TextButton.icon(
+                  onPressed: () => _voidPayment(p),
+                  icon: const Icon(Icons.block_rounded, size: 17),
+                  label: const Text('Void'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: OneUIColors.error,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
         );
       },
     );
@@ -406,12 +734,12 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: OneUIColors.primarySoft,
+              color: AppColors.primarySoft(context),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(
+            child:  Icon(
               Icons.business_rounded,
-              color: OneUIColors.primaryLight,
+              color: AppColors.primary(context),
               size: 20,
             ),
           ),
@@ -465,12 +793,40 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text(
             '${_stats?['active_packages'] ?? 0} active subscriptions',
-            style: const TextStyle(
+            style:  TextStyle(
               fontSize: 13,
-              color: OneUIColors.textSecondaryLight,
+              color: AppColors.textSecondary(context),
             ),
           ),
         ),
+        if ((_userPackages ?? []).isNotEmpty) ...[
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Text('Recent subscriptions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+          ),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _userPackages!.length,
+            separatorBuilder: (_, _) => const Divider(height: 1, indent: 64),
+            itemBuilder: (context, index) {
+              final subscription = _userPackages![index];
+              final color = _getTierColor(subscription.package.tier);
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: color.withValues(alpha: 0.12),
+                  child: Icon(Icons.person_outline_rounded, color: color, size: 20),
+                ),
+                title: Text('${subscription.package.name} ? User #${subscription.userId}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                subtitle: Text('${subscription.status.name} ? ends ${subscription.endDate.toLocal().toString().split(' ').first}', style: const TextStyle(fontSize: 12)),
+              );
+            },
+          ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 18, 16, 4),
+            child: Text('Available tiers', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+          ),
+        ],
         ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -531,6 +887,19 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
     }
   }
 
+  static String _paymentMethodLabel(PaymentMethod method) {
+    switch (method) {
+      case PaymentMethod.card:
+        return 'Card';
+      case PaymentMethod.cash:
+        return 'Cash';
+      case PaymentMethod.bkash:
+        return 'bKash';
+      case PaymentMethod.nagad:
+        return 'Nagad';
+    }
+  }
+
   static String _paymentStatusLabel(PaymentStatus status) {
     switch (status) {
       case PaymentStatus.pending:
@@ -541,6 +910,8 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
         return 'Failed';
       case PaymentStatus.refunded:
         return 'Refunded';
+      case PaymentStatus.voided:
+        return 'Voided';
     }
   }
 
@@ -609,20 +980,69 @@ class _StatItem extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(
+          style:  TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w700,
-            color: OneUIColors.textPrimaryLight,
+            color: AppColors.textPrimary(context),
           ),
         ),
         Text(
           label,
-          style: const TextStyle(
+          style:  TextStyle(
             fontSize: 11,
-            color: OneUIColors.textSecondaryLight,
+            color: AppColors.textSecondary(context),
           ),
         ),
       ],
     );
   }
+}
+
+
+/// Donut chart painter for the dashboard's booking-type distribution.
+class _DonutPainter extends CustomPainter {
+  final List<double> values;
+  final List<Color> colors;
+
+  const _DonutPainter({required this.values, required this.colors});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final total = values.fold<double>(0, (a, b) => a + b);
+    final stroke = 26.0;
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.butt;
+
+    if (total <= 0) {
+      paint.color = const Color(0xFFE1EAE2);
+      canvas.drawCircle(
+        size.center(Offset.zero),
+        (size.shortestSide - stroke) / 2,
+        paint,
+      );
+      return;
+    }
+
+    final rect = Offset.zero & size;
+    const gap = 0.04;
+    var start = -math.pi / 2;
+    for (var i = 0; i < values.length; i++) {
+      final sweep = values[i] / total * 2 * math.pi;
+      paint.color = colors[i % colors.length];
+      canvas.drawArc(
+        rect.deflate(stroke / 2),
+        start + gap,
+        math.max(0.001, sweep - gap * 2),
+        false,
+        paint,
+      );
+      start += sweep;
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DonutPainter oldDelegate) =>
+      oldDelegate.values != values || oldDelegate.colors != colors;
 }

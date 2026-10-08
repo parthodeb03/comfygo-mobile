@@ -6,53 +6,58 @@ class OneUIColors {
   OneUIColors._();
 
   // ═══════════════════════════════════════════════════
-  // PRIMARY - Deep Emerald/Forest Green
+  // PRIMARY - Naturistic Emerald Green
   // ═══════════════════════════════════════════════════
-  static const Color primaryLight = Color(0xFF1F6E4D);
-  static const Color primaryDark = Color(0xFF2A8F63);
-  static const Color primaryVariantLight = Color(0xFF1B5E43);
-  static const Color primarySoft = Color(0xFFE8F5EE);
+  static const Color primaryLight = Color(0xFFB6CC35);
+  static const Color primaryDark = Color(0xFF9EAF28);
+  static const Color primaryVariantLight = Color(0xFF20271A);
+  static const Color primarySoft = Color(0xFFD9E6D2);
+
+  // Button green (works with white text in BOTH light and dark mode)
+  static const Color buttonGreenDark = Color(0xFF20271A);
+  static const Color buttonGreen = Color(0xFFB6CC35);
+  static const Color buttonGreenLight = Color(0xFF9EAF28);
 
   // ═══════════════════════════════════════════════════
   // SECONDARY - Lighter green accents
   // ═══════════════════════════════════════════════════
-  static const Color secondaryLight = Color(0xFF4CAF50);
-  static const Color secondaryDark = Color(0xFF81C784);
+  static const Color secondaryLight = Color(0xFF9EAF28);
+  static const Color secondaryDark = Color(0xFFB6CC35);
 
   // ═══════════════════════════════════════════════════
   // TERRIARY - Warm accent for highlights
   // ═══════════════════════════════════════════════════
-  static const Color tertiaryLight = Color(0xFFFF8F50);
-  static const Color tertiaryDark = Color(0xFFFFAB76);
+  static const Color tertiaryLight = Color(0xFF879078);
+  static const Color tertiaryDark = Color(0xFFAAB596);
 
   // ═══════════════════════════════════════════════════
-  // BACKGROUNDS
+  // BACKGROUNDS - soft, nature-inspired greens
   // ═══════════════════════════════════════════════════
-  static const Color backgroundLight = Color(0xFFFAFAFA);
+  static const Color backgroundLight = Color(0xFFEBE7DA);
   static const Color surfaceLight = Color(0xFFFFFFFF);
-  static const Color surfaceVariantLight = Color(0xFFF3F3F3);
-  static const Color inputFillLight = Color(0xFFF6F6F6);
+  static const Color surfaceVariantLight = Color(0xFFF3F0E6);
+  static const Color inputFillLight = Color(0xFFF3F0E6);
 
   // Dark Mode
-  static const Color backgroundDark = Color(0xFF121212);
-  static const Color surfaceDark = Color(0xFF1E1E1E);
-  static const Color surfaceVariantDark = Color(0xFF2C2C2C);
+  static const Color backgroundDark = Color(0xFF20271A);
+  static const Color surfaceDark = Color(0xFF2A3022);
+  static const Color surfaceVariantDark = Color(0xFF383D30);
 
   // ═══════════════════════════════════════════════════
-  // TEXT
+  // TEXT — tuned for WCAG-AA readability on their backgrounds
   // ═══════════════════════════════════════════════════
-  static const Color textPrimaryLight = Color(0xFF1A1A1A);
-  static const Color textSecondaryLight = Color(0xFF8A8A8A);
-  static const Color textHintLight = Color(0xFFBDBDBD);
+  static const Color textPrimaryLight = Color(0xFF20271A);
+  static const Color textSecondaryLight = Color(0xFF707266);
+  static const Color textHintLight = Color(0xFF858678);
 
-  static const Color textPrimaryDark = Color(0xFFE0E0E0);
-  static const Color textSecondaryDark = Color(0xFF9E9E9E);
-  static const Color textHintDark = Color(0xFF616161);
+  static const Color textPrimaryDark = Color(0xFFF4F0E4);
+  static const Color textSecondaryDark = Color(0xFFCBC7B7);
+  static const Color textHintDark = Color(0xFFAAA695);
 
   // ═══════════════════════════════════════════════════
   // STATUS
   // ═══════════════════════════════════════════════════
-  static const Color success = Color(0xFF4CAF50);
+  static const Color success = Color(0xFF9EAF28);
   static const Color warning = Color(0xFFFFC107);
   static const Color error = Color(0xFFF44336);
   static const Color info = Color(0xFF2196F3);
@@ -60,14 +65,14 @@ class OneUIColors {
   // ═══════════════════════════════════════════════════
   // DIVIDER & BORDER
   // ═══════════════════════════════════════════════════
-  static const Color dividerLight = Color(0xFFE8E8E8);
-  static const Color dividerDark = Color(0xFF3A3A3A);
+  static const Color dividerLight = Color(0xFFDDD9CA);
+  static const Color dividerDark = Color(0xFF414536);
 
   // ═══════════════════════════════════════════════════
   // PACKAGE TIER COLORS
   // ═══════════════════════════════════════════════════
   static const Color tierBasic = Color(0xFF78909C);
-  static const Color tierPro = Color(0xFF1F6E4D);
+  static const Color tierPro = Color(0xFFB6CC35);
   static const Color tierPremium = Color(0xFFFFB300);
   static const Color tierUltimate = Color(0xFF9C27B0);
 
@@ -75,7 +80,7 @@ class OneUIColors {
   // BOOKING STATUS
   // ═══════════════════════════════════════════════════
   static const Color statusPending = Color(0xFFFFC107);
-  static const Color statusConfirmed = Color(0xFF4CAF50);
+  static const Color statusConfirmed = Color(0xFF9EAF28);
   static const Color statusCancelled = Color(0xFFF44336);
-  static const Color statusCompleted = Color(0xFF1F6E4D);
+  static const Color statusCompleted = Color(0xFFB6CC35);
 }

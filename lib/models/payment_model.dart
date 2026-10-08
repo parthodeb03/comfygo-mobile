@@ -1,6 +1,6 @@
-enum PaymentMethod { card, cash }
+enum PaymentMethod { card, cash, bkash, nagad }
 
-enum PaymentStatus { pending, completed, failed, refunded }
+enum PaymentStatus { pending, completed, failed, refunded, voided }
 
 class Payment {
   final int id;
@@ -11,6 +11,7 @@ class Payment {
   final PaymentStatus status;
   final String? transactionId;
   final String? cardLastFour;
+  final String? walletNumber;
   final String? notes;
   final DateTime createdAt;
 
@@ -23,6 +24,7 @@ class Payment {
     required this.status,
     this.transactionId,
     this.cardLastFour,
+    this.walletNumber,
     this.notes,
     required this.createdAt,
   });
@@ -37,6 +39,7 @@ class Payment {
       status: _parseStatus(json['status']),
       transactionId: json['transaction_id'],
       cardLastFour: json['card_last_four'],
+      walletNumber: json['wallet_number'],
       notes: json['notes'],
       createdAt: DateTime.parse(json['created_at']),
     );
@@ -52,6 +55,7 @@ class Payment {
       'status': status.name,
       'transaction_id': transactionId,
       'card_last_four': cardLastFour,
+      'wallet_number': walletNumber,
       'notes': notes,
       'created_at': createdAt.toIso8601String(),
     };
@@ -63,6 +67,10 @@ class Payment {
         return PaymentMethod.card;
       case 'cash':
         return PaymentMethod.cash;
+      case 'bkash':
+        return PaymentMethod.bkash;
+      case 'nagad':
+        return PaymentMethod.nagad;
       default:
         return PaymentMethod.cash;
     }
@@ -78,6 +86,8 @@ class Payment {
         return PaymentStatus.failed;
       case 'refunded':
         return PaymentStatus.refunded;
+      case 'voided':
+        return PaymentStatus.voided;
       default:
         return PaymentStatus.pending;
     }

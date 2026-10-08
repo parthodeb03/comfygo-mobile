@@ -104,7 +104,7 @@ class AuthService {
   }
 
   // ═══════════════════════════════════════════════════
-  // FORGOT PASSWORD
+  // FORGOT PASSWORD — request 6-digit code
   // ═══════════════════════════════════════════════════
   Future<AuthResult> forgotPassword({required String email}) async {
     try {
@@ -115,12 +115,70 @@ class AuthService {
 
       if (response.statusCode == 200) {
         return AuthResult.success(
-          message: response.data['detail'] ?? 'Password reset email sent',
+          message: response.data['detail'] ?? 'A 6-digit code has been sent',
+          // No email provider is wired up in development: the backend echoes
+          // the code so the UI can offer a dev shortcut. Never logged.
+          resetCode: response.data['dev_code'],
         );
       }
 
       return AuthResult.failure(
-        message: response.data['detail'] ?? 'Failed to send reset email',
+        message: response.data['detail'] ?? 'Failed to send the code',
+      );
+    } on DioException catch (e) {
+      return AuthResult.failure(message: _handleError(e));
+    }
+  }
+
+  // ═══════════════════════════════════════════════════
+  // FORGOT PASSWORD — verify 6-digit code
+  // ═══════════════════════════════════════════════════
+  Future<AuthResult> verifyResetCode({
+    required String email,
+    required String code,
+  }) async {
+    try {
+      final response = await _apiClient.dio.post(
+        '/api/v1/auth/verify-code',
+        data: {'email': email, 'code': code},
+      );
+
+      if (response.statusCode == 200) {
+        return AuthResult.success(
+          message: 'Code verified',
+          resetCode: response.data['reset_token'],
+        );
+      }
+
+      return AuthResult.failure(
+        message: response.data['detail'] ?? 'Invalid or expired code',
+      );
+    } on DioException catch (e) {
+      return AuthResult.failure(message: _handleError(e));
+    }
+  }
+
+  // ═══════════════════════════════════════════════════
+  // FORGOT PASSWORD — set new password
+  // ═══════════════════════════════════════════════════
+  Future<AuthResult> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await _apiClient.dio.post(
+        '/api/v1/auth/reset-password',
+        data: {'token': token, 'new_password': newPassword},
+      );
+
+      if (response.statusCode == 200) {
+        return AuthResult.success(
+          message: response.data['detail'] ?? 'Password updated',
+        );
+      }
+
+      return AuthResult.failure(
+        message: response.data['detail'] ?? 'Could not reset password',
       );
     } on DioException catch (e) {
       return AuthResult.failure(message: _handleError(e));
@@ -226,10 +284,16 @@ class AuthResult {
   final String? token;
   final String? message;
 
-  AuthResult.success({this.user, this.token, this.message}) : isSuccess = true;
+  /// Reset flow: the 6-digit code (from forgot-password) or the short-lived
+  /// reset token (from verify-code), depending on which call produced it.
+  final String? resetCode;
+
+  AuthResult.success({this.user, this.token, this.message, this.resetCode})
+    : isSuccess = true;
 
   AuthResult.failure({required this.message})
     : isSuccess = false,
       user = null,
-      token = null;
+      token = null,
+      resetCode = null;
 }

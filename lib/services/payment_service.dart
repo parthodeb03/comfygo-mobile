@@ -102,6 +102,41 @@ class PaymentService {
   }
 
   // ═══════════════════════════════════════════════════
+  // CREATE PAYMENT - Mobile wallet (bKash / Nagad)
+  // ═══════════════════════════════════════════════════
+  Future<Payment?> createWalletPayment({
+    required int bookingId,
+    required double amount,
+    required String method, // 'bkash' | 'nagad'
+    required String walletNumber,
+  }) async {
+    try {
+      final response = await _apiClient.dio.post(
+        '/api/v1/payments',
+        data: {
+          'booking_id': bookingId,
+          'amount': amount,
+          'method': method,
+          'wallet_number': walletNumber,
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return Payment.fromJson(response.data);
+      }
+
+      return null;
+    } on DioException catch (e) {
+      AppLogger.error(
+        'Error creating wallet payment: ${e.message}',
+        e.error,
+        e.stackTrace,
+      );
+      throw apiExceptionFrom(e);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════
   // CREATE PAYMENT - Cash
   // ═══════════════════════════════════════════════════
   Future<Payment?> createCashPayment({

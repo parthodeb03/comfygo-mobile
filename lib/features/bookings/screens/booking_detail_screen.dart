@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../models/models.dart';
+import '../../../services/invoice_pdf.dart';
 import '../../../state/service_providers.dart';
 
 class BookingDetailScreen extends ConsumerStatefulWidget {
@@ -83,6 +85,16 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
     }
   }
 
+  Future<void> _downloadInvoice(Booking booking) async {
+    try {
+      await InvoicePdf.share(booking);
+    } catch (_) {
+      if (mounted) {
+        _showSnack('Could not create the invoice. Please try again.');
+      }
+    }
+  }
+
   void _showSnack(String message) {
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
@@ -101,7 +113,7 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: OneUIColors.backgroundLight,
+      backgroundColor: AppColors.background(context),
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
@@ -109,7 +121,7 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
         ),
         title: const Text('Booking Details'),
       ),
-      body: FutureBuilder<Booking?>(
+      body: NatureBackground.wrap(child: FutureBuilder<Booking?>(
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
@@ -125,7 +137,7 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
           }
           return _buildContent(booking);
         },
-      ),
+      )),
     );
   }
 
@@ -160,10 +172,10 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                   booking.itemName.isEmpty
                       ? 'Booking #${booking.id}'
                       : booking.itemName,
-                  style: const TextStyle(
+                  style:  TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: OneUIColors.textPrimaryLight,
+                    color: AppColors.textPrimary(context),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -190,6 +202,16 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
           _buildSection('Price Summary', [
             _buildRow('Total', '৳${_fmtPrice(booking.totalPrice)}', isBold: true),
           ]),
+
+          const SizedBox(height: 16),
+
+          CGButton(
+            key: const Key('download-invoice'),
+            label: 'Download Invoice (PDF)',
+            icon: Icons.picture_as_pdf_outlined,
+            isOutlined: true,
+            onPressed: () => _downloadInvoice(booking),
+          ),
 
           const SizedBox(height: 24),
 
@@ -228,19 +250,19 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: OneUIColors.surfaceLight,
+        color: AppColors.surface(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: OneUIColors.dividerLight, width: 0.5),
+        border: Border.all(color: AppColors.divider(context), width: 0.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style:  TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: OneUIColors.textPrimaryLight,
+              color: AppColors.textPrimary(context),
             ),
           ),
           const SizedBox(height: 12),
@@ -259,9 +281,9 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
           Flexible(
             child: Text(
               label,
-              style: const TextStyle(
+              style:  TextStyle(
                 fontSize: 14,
-                color: OneUIColors.textSecondaryLight,
+                color: AppColors.textSecondary(context),
               ),
             ),
           ),
@@ -273,8 +295,8 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
                 fontSize: 14,
                 fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
                 color: isBold
-                    ? OneUIColors.primaryLight
-                    : OneUIColors.textPrimaryLight,
+                    ? AppColors.primary(context)
+                    : AppColors.textPrimary(context),
               ),
             ),
           ),

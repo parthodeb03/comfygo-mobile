@@ -16,14 +16,31 @@ from ...schemas.user import (
     RegisterRequest,
     AuthResponse,
     UserResponse,
-    ForgotPasswordRequest
+    ForgotPasswordRequest,
+    VerifyResetCodeRequest,
+    ResetPasswordRequest,
+    RefreshTokenRequest,
+    UserUpdate,
 )
 from ...models.user import User, UserRole
+from ...core.rate_limit import rate_limit
+from ...services import reset_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+# Rate-limit dependencies (per IP, sliding window — see app/core/rate_limit.py)
+_login_limit = rate_limit("auth:login", "AUTH_RATE_LIMIT")
+_register_limit = rate_limit("auth:register", "AUTH_RATE_LIMIT")
+_forgot_limit = rate_limit("auth:forgot", "RESET_RATE_LIMIT")
+_verify_limit = rate_limit("auth:verify", "RESET_RATE_LIMIT")
+_reset_limit = rate_limit("auth:reset", "RESET_RATE_LIMIT")
+
 @router.post("/login", response_model=AuthResponse)
-def login(request: LoginRequest, db: Session = Depends(get_db)):
+def login(
+    request: LoginRequest,
+    db: Session = Depends(get_db),
+    _limit: None = Depends(_login_limit),
+):
     user = authenticate_user(db, request.email, request.password)
     if not user:
         raise HTTPException(
@@ -41,7 +58,11 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
     )
 
 @router.post("/register", response_model=AuthResponse)
-def register(request: RegisterRequest, db: Session = Depends(get_db)):
+def register(
+    request: RegisterRequest,
+    db: Session = Depends(get_db),
+    _limit: None = Depends(_register_limit),
+):
     # Admin accounts are created internally — never through public signup
     if request.role == UserRole.admin:
         raise HTTPException(
@@ -83,22 +104,41 @@ def register(request: RegisterRequest, db: Session = Depends(get_db)):
     )
 
 @router.post("/forgot-password")
-def forgot_password(request: ForgotPasswordRequest):
-    # In production, send email with reset link
-    return {"detail": "Password reset email sent"}
+def forgot_password(
+    request: ForgotPasswordRequest,
+    db: Session = Depends(get_db),
+    _limit: None = Depends(_forgot_limit),
+):
+    """Issue a 6-digit reset code (see reset_service for delivery notes)."""
+    return reset_service.issue_code(db, request.email)
+
+@router.post("/verify-code")
+def verify_code(
+    request: VerifyResetCodeRequest,
+    db: Session = Depends(get_db),
+    _limit: None = Depends(_verify_limit),
+):
+    """Check the 6-digit code and return a short-lived reset token."""
+    token = reset_service.verify_code(db, request.email, request.code)
+    return {"detail": "Code verified", "reset_token": token}
+
+@router.post("/reset-password")
+def reset_password(
+    request: ResetPasswordRequest,
+    db: Session = Depends(get_db),
+    _limit: None = Depends(_reset_limit),
+):
+    """Set a new password using the token from /verify-code."""
+    reset_service.reset_password(db, request.token, request.new_password)
+    return {"detail": "Password updated"}
 
 @router.post("/refresh", response_model=dict)
-def refresh(request: dict, db: Session = Depends(get_db)):
+def refresh(request: RefreshTokenRequest, db: Session = Depends(get_db)):
     """Issue a new access token for a valid refresh token.
 
     The Flutter ApiClient calls this automatically when it receives a 401.
     """
-    token = request.get("refresh_token")
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="refresh_token is required",
-        )
+    token = request.refresh_token
 
     try:
         payload = jwt.decode(
@@ -159,7 +199,7 @@ def get_profile(principal: Principal = Depends(get_current_principal)):
 
 @router.put("/profile", response_model=UserResponse)
 def update_profile(
-    data: dict,
+    data: UserUpdate,
     principal: Principal = Depends(get_current_principal),
     db: Session = Depends(get_db),
 ):
@@ -168,11 +208,11 @@ def update_profile(
 
     # Only allow updating safe, mutable fields
     allowed_fields = {
-        "full_name", "phone", "address", "nationality", "bio",
+        "full_name", "phone", "address", "nationality", "bio", "profile_image",
         "languages", "specialization", "experience", "daily_rate",
     }
-    for key, value in data.items():
-        if key in allowed_fields and value is not None:
+    for key, value in data.model_dump(exclude_unset=True, exclude_none=True).items():
+        if key in allowed_fields:
             setattr(current_user, key, value)
 
     db.add(current_user)

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../state/auth_provider.dart';
@@ -103,8 +104,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: OneUIColors.backgroundLight,
-      body: SafeArea(
+      backgroundColor: AppColors.background(context),
+      body: NatureBackground.wrap(child: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnim,
           child: SlideTransition(
@@ -124,7 +125,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         width: 72,
                         height: 72,
                         decoration: BoxDecoration(
-                          color: OneUIColors.primaryLight,
+                          color: AppColors.primary(context),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Icon(
@@ -138,12 +139,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     const SizedBox(height: OneUISpacing.xxl),
 
                     // Title with emoji
-                    const Text(
+                     Text(
                       'Welcome back 👋',
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
-                        color: OneUIColors.textPrimaryLight,
+                        color: AppColors.textPrimary(context),
                       ),
                     ),
                     const SizedBox(height: OneUISpacing.sm),
@@ -151,7 +152,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       'Sign in to continue to ComfyGo',
                       style: TextStyle(
                         fontSize: 14,
-                        color: OneUIColors.textSecondaryLight,
+                        color: AppColors.textSecondary(context),
                       ),
                     ),
 
@@ -191,7 +192,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           _obscurePassword
                               ? Icons.visibility_off_rounded
                               : Icons.visibility_rounded,
-                          color: OneUIColors.textSecondaryLight,
+                          color: AppColors.textSecondary(context),
                           size: 20,
                         ),
                         onPressed: () => setState(
@@ -221,12 +222,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                        child: const Text(
+                        child:  Text(
                           'Forgot Password?',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: OneUIColors.primaryLight,
+                            color: AppColors.primary(context),
                           ),
                         ),
                       ),
@@ -251,7 +252,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         Text(
                           "Don't have an account? ",
                           style: TextStyle(
-                            color: OneUIColors.textSecondaryLight,
+                            color: AppColors.textSecondary(context),
                             fontSize: 14,
                           ),
                         ),
@@ -259,10 +260,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           onTap: _isLoading
                               ? null
                               : () => context.push('/signup'),
-                          child: const Text(
+                          child:  Text(
                             'Sign Up',
                             style: TextStyle(
-                              color: OneUIColors.primaryLight,
+                              color: AppColors.primary(context),
                               fontWeight: FontWeight.w700,
                               fontSize: 14,
                             ),
@@ -278,7 +279,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             ),
           ),
         ),
-      ),
+      )),
     );
   }
 
@@ -287,10 +288,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       alignment: Alignment.centerLeft,
       child: Text(
         text,
-        style: const TextStyle(
+        style:  TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w500,
-          color: OneUIColors.textSecondaryLight,
+          color: AppColors.textSecondary(context),
         ),
       ),
     );

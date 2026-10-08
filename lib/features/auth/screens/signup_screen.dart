@@ -1,7 +1,9 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../state/auth_provider.dart';
@@ -81,14 +83,14 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: OneUIColors.backgroundLight,
+      backgroundColor: AppColors.background(context),
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => context.pop(),
         ),
       ),
-      body: SafeArea(
+      body: NatureBackground.wrap(child: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: OneUISpacing.lg),
           child: Form(
@@ -97,12 +99,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Title
-                const Text(
+                 Text(
                   'Create Account',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
-                    color: OneUIColors.textPrimaryLight,
+                    color: AppColors.textPrimary(context),
                   ),
                 ),
                 const SizedBox(height: OneUISpacing.sm),
@@ -110,7 +112,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   'Start your journey with ComfyGo',
                   style: TextStyle(
                     fontSize: 14,
-                    color: OneUIColors.textSecondaryLight,
+                    color: AppColors.textSecondary(context),
                   ),
                 ),
 
@@ -192,7 +194,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       _obscurePassword
                           ? Icons.visibility_off_rounded
                           : Icons.visibility_rounded,
-                      color: OneUIColors.textSecondaryLight,
+                      color: AppColors.textSecondary(context),
                       size: 20,
                     ),
                     onPressed: () =>
@@ -222,22 +224,26 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     text: 'By registering, you agree to our ',
                     style: TextStyle(
                       fontSize: 12,
-                      color: OneUIColors.textSecondaryLight,
+                      color: AppColors.textSecondary(context),
                     ),
-                    children: const [
+                    children:  [
                       TextSpan(
                         text: 'Terms of Service',
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () => context.push('/terms'),
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: OneUIColors.primaryLight,
+                          color: AppColors.primary(context),
                         ),
                       ),
                       TextSpan(text: ' and '),
                       TextSpan(
                         text: 'Privacy Policy',
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () => context.push('/privacy'),
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: OneUIColors.primaryLight,
+                          color: AppColors.primary(context),
                         ),
                       ),
                     ],
@@ -255,16 +261,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     Text(
                       'Already have an account? ',
                       style: TextStyle(
-                        color: OneUIColors.textSecondaryLight,
+                        color: AppColors.textSecondary(context),
                         fontSize: 14,
                       ),
                     ),
                     GestureDetector(
                       onTap: () => context.pop(),
-                      child: const Text(
+                      child:  Text(
                         'Sign In',
                         style: TextStyle(
-                          color: OneUIColors.primaryLight,
+                          color: AppColors.primary(context),
                           fontWeight: FontWeight.w700,
                           fontSize: 14,
                         ),
@@ -278,7 +284,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             ),
           ),
         ),
-      ),
+      )),
     );
   }
 
@@ -286,7 +292,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: OneUIColors.surfaceVariantLight,
+        color: AppColors.surfaceVariant(context),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -300,7 +306,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? OneUIColors.primaryLight
+                      ? AppColors.primary(context)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -312,7 +318,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     fontWeight: FontWeight.w600,
                     color: isSelected
                         ? Colors.white
-                        : OneUIColors.textSecondaryLight,
+                        : AppColors.textSecondary(context),
                   ),
                 ),
               ),
@@ -328,10 +334,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       alignment: Alignment.centerLeft,
       child: Text(
         text,
-        style: const TextStyle(
+        style:  TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w500,
-          color: OneUIColors.textSecondaryLight,
+          color: AppColors.textSecondary(context),
         ),
       ),
     );

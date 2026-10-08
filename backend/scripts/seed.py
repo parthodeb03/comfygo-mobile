@@ -10,10 +10,12 @@ from passlib.context import CryptContext
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from app.core.config import settings
 from app.core.database import engine, SessionLocal, Base
 from app.models import (
     User, Admin, Destination, Hotel, Transport, Guide,
     Booking, Payment, Package, UserPackage,
+    Favorite, Review, ContactMessage,
     UserRole, BookingStatus, BookingType,
     PaymentStatus, PaymentMethod, PackageTier, PackageStatus
 )
@@ -61,6 +63,9 @@ IMAGES = {
 }
 
 def seed_database():
+    if not settings.ADMIN_EMAIL or not settings.ADMIN_PASSWORD:
+        raise RuntimeError("Set ADMIN_EMAIL and ADMIN_PASSWORD in backend/.env before seeding.")
+
     # Create all tables
     Base.metadata.create_all(bind=engine)
     
@@ -78,9 +83,9 @@ def seed_database():
         # ADMIN ACCOUNT
         # ═══════════════════════════════════════════
         admin = Admin(
-            email="admin@comfygo.com",
+            email=settings.ADMIN_EMAIL,
             full_name="System Administrator",
-            hashed_password=hash_password("admin123")
+            hashed_password=hash_password(settings.ADMIN_PASSWORD)
         )
         db.add(admin)
         db.flush()
@@ -367,7 +372,7 @@ def seed_database():
             Package(
                 name="Pro",
                 tier=PackageTier.pro,
-                price=4.99,
+                price=499,
                 description="Pro tier with priority listing",
                 booking_limit=10,
                 discount_percentage=5,
@@ -376,7 +381,7 @@ def seed_database():
             Package(
                 name="Premium",
                 tier=PackageTier.premium,
-                price=9.99,
+                price=999,
                 description="Premium tier with featured listing",
                 booking_limit=-1,  # unlimited
                 discount_percentage=10,
@@ -386,7 +391,7 @@ def seed_database():
             Package(
                 name="Ultimate",
                 tier=PackageTier.ultimate,
-                price=19.99,
+                price=1999,
                 description="Ultimate tier with all features",
                 booking_limit=-1,  # unlimited
                 discount_percentage=20,
@@ -456,16 +461,84 @@ def seed_database():
         db.add_all(payments)
         db.flush()
         print(f"[OK] {len(payments)} payments created")
-        
+
+        # ═══════════════════════════════════════════
+        # COMPLETED BOOKING + REVIEW (ratings demo)
+        # ═══════════════════════════════════════════
+        completed_booking = Booking(
+            tourist_id=tourists[2].id,
+            tourist_name=tourists[2].full_name,
+            type=BookingType.hotel,
+            status=BookingStatus.completed,
+            item_id=hotels[1].id,
+            item_name=hotels[1].name,
+            check_in=datetime.utcnow() - timedelta(days=30),
+            check_out=datetime.utcnow() - timedelta(days=27),
+            guests=2,
+            total_price=15000,
+        )
+        db.add(completed_booking)
+        db.flush()
+        db.add(Review(
+            user_id=tourists[2].id,
+            booking_id=completed_booking.id,
+            item_type="hotel",
+            item_id=hotels[1].id,
+            rating=5,
+            comment="Beautiful stay, staff were incredibly helpful.",
+        ))
+        db.flush()
+        print("[OK] completed booking + review created")
+
+        # ═══════════════════════════════════════════
+        # SAMPLE FAVORITES
+        # ═══════════════════════════════════════════
+        favorites = [
+            Favorite(
+                user_id=tourists[0].id,
+                item_type="destination",
+                item_id=destinations[0].id,
+                item_name=destinations[0].name,
+                item_image=destinations[0].images[0] if destinations[0].images else None,
+            ),
+            Favorite(
+                user_id=tourists[0].id,
+                item_type="hotel",
+                item_id=hotels[0].id,
+                item_name=hotels[0].name,
+                item_image=hotels[0].images[0] if hotels[0].images else None,
+            ),
+        ]
+        db.add_all(favorites)
+        db.flush()
+        print(f"[OK] {len(favorites)} favorites created")
+
+        # ═══════════════════════════════════════════
+        # SAMPLE CONTACT MESSAGES (admin inbox)
+        # ═══════════════════════════════════════════
+        contact_messages = [
+            ContactMessage(
+                name="Tanvir Ahmed",
+                email="tanvir@example.com",
+                message="When will the Sylhet tour package be available in July?",
+            ),
+            ContactMessage(
+                name="Nusrat Jahan",
+                email="nusrat@example.com",
+                message="I need to change the date of my existing booking. Please advise.",
+            ),
+        ]
+        db.add_all(contact_messages)
+        db.flush()
+        print(f"[OK] {len(contact_messages)} contact messages created")
+
         # Commit all changes
         db.commit()
         
         print("\n" + "="*50)
         print("[OK] Database seeded successfully!")
         print("="*50)
-        print("\nAdmin credentials:")
-        print("  Email: admin@comfygo.com")
-        print("  Password: admin123")
+        print(f"\nAdmin account seeded for: {settings.ADMIN_EMAIL}")
         print("\nSample user credentials:")
         print("  Email: ahmed@email.com")
         print("  Password: password123")

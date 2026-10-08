@@ -105,13 +105,8 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        await tester.scrollUntilVisible(
-          find.text('per person'),
-          300,
-          scrollable: find.byType(Scrollable).first,
-        );
-        await tester.pumpAndSettle();
-        expect(find.text('per person'), findsOneWidget);
+        expect(find.text('Select\ndestination'), findsOneWidget);
+        expect(find.text('A scenic destination'), findsOneWidget);
         expect(tester.takeException(), isNull);
       });
     }

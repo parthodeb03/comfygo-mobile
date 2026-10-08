@@ -1,6 +1,14 @@
 """ComfyGo backend smoke test - covers public data, auth, protected routes, images."""
 import json
+import os
 import sys
+from dotenv import load_dotenv
+
+load_dotenv()
+ADMIN_EMAIL = os.getenv('ADMIN_EMAIL')
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD')
+if not ADMIN_EMAIL or not ADMIN_PASSWORD:
+    raise SystemExit('Set ADMIN_EMAIL and ADMIN_PASSWORD in backend/.env before running smoke tests.')
 import urllib.request
 import urllib.error
 
@@ -90,7 +98,7 @@ has_prof_field = any(isinstance(it, dict) and "profile_image" in it for it in gi
 check("image fields in schemas", has_img_field and has_prof_field, f"destinations.images={has_img_field} guides.profile_image={has_prof_field}")
 
 # ---- auth: admin login (admins authenticate via /admin/login) ----
-s, b = req("POST", "/admin/login", {"email": "admin@comfygo.com", "password": "admin123"})
+s, b = req("POST", "/admin/login", {"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
 admin_token = (b.get("access_token") or b.get("token") or (b.get("data") or {}).get("access_token")) if isinstance(b, dict) else None
 check("admin login", s in (200, 201) and admin_token, f"status={s}")
 
@@ -100,7 +108,7 @@ user_token = (b.get("access_token") or b.get("token") or (b.get("data") or {}).g
 check("user login", s in (200, 201) and user_token, f"status={s}")
 
 # ---- wrong password rejected ----
-s, b = req("POST", "/auth/login", {"email": "admin@comfygo.com", "password": "wrongpass"})
+s, b = req("POST", "/auth/login", {"email": ADMIN_EMAIL, "password": "wrongpass"})
 check("wrong password rejected", s in (400, 401, 403), f"status={s}")
 
 # ---- /auth/me ----

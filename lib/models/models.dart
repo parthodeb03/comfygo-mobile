@@ -6,3 +6,5 @@ export 'guide_model.dart';
 export 'booking_model.dart';
 export 'payment_model.dart';
 export 'package_model.dart';
+export 'favorite_model.dart';
+export 'review_model.dart';

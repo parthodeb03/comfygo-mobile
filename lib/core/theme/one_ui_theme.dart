@@ -21,7 +21,7 @@ class OneUITheme {
       // Color Scheme
       colorScheme: const ColorScheme.light(
         primary: OneUIColors.primaryLight,
-        onPrimary: Colors.white,
+        onPrimary: Color(0xFF20271A),
         primaryContainer: OneUIColors.primarySoft,
         onPrimaryContainer: OneUIColors.primaryVariantLight,
         secondary: OneUIColors.secondaryLight,
@@ -89,20 +89,44 @@ class OneUITheme {
         ),
       ),
 
-      // Elevated Button - full-width green
+      // Elevated Button - full-width green, highly visible white text
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: OneUIColors.primaryLight,
-          foregroundColor: Colors.white,
+          foregroundColor: Color(0xFF20271A),
           elevation: 0,
+          shadowColor: OneUIColors.buttonGreen.withValues(alpha: 0.45),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(28),
           ),
           textStyle: const TextStyle(
             fontFamily: OneUITypography.fontFamily,
             fontSize: 16,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.3,
+            color: Colors.white,
+          ),
+        ),
+      ),
+
+      // Filled Button - vibrant CTA
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: OneUIColors.primaryLight,
+          foregroundColor: Color(0xFF20271A),
+          elevation: 0,
+          shadowColor: OneUIColors.buttonGreen.withValues(alpha: 0.45),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
+          textStyle: const TextStyle(
+            fontFamily: OneUITypography.fontFamily,
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.3,
+            color: Colors.white,
           ),
         ),
       ),
@@ -114,7 +138,7 @@ class OneUITheme {
           side: const BorderSide(color: Color(0xFFE0E0E0), width: 1),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(28),
           ),
           textStyle: const TextStyle(
             fontFamily: OneUITypography.fontFamily,
@@ -146,26 +170,26 @@ class OneUITheme {
           vertical: 16,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(28),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(28),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(28),
           borderSide: const BorderSide(
             color: OneUIColors.primaryLight,
             width: 1.5,
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(28),
           borderSide: const BorderSide(color: OneUIColors.error, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(28),
           borderSide: const BorderSide(color: OneUIColors.error, width: 1.5),
         ),
         hintStyle: const TextStyle(
@@ -284,7 +308,7 @@ class OneUITheme {
 
       colorScheme: const ColorScheme.dark(
         primary: OneUIColors.primaryDark,
-        onPrimary: Colors.white,
+        onPrimary: Color(0xFF20271A),
         primaryContainer: OneUIColors.primaryVariantLight,
         onPrimaryContainer: OneUIColors.primarySoft,
         secondary: OneUIColors.secondaryDark,
@@ -350,17 +374,41 @@ class OneUITheme {
 
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: OneUIColors.primaryDark,
-          foregroundColor: Colors.white,
+          backgroundColor: OneUIColors.buttonGreen,
+          foregroundColor: Color(0xFF20271A),
           elevation: 0,
+          shadowColor: OneUIColors.buttonGreen.withValues(alpha: 0.5),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(28),
           ),
           textStyle: const TextStyle(
             fontFamily: OneUITypography.fontFamily,
             fontSize: 16,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.3,
+            color: Colors.white,
+          ),
+        ),
+      ),
+
+      // Filled Button - vibrant CTA
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: OneUIColors.buttonGreen,
+          foregroundColor: Color(0xFF20271A),
+          elevation: 0,
+          shadowColor: OneUIColors.buttonGreen.withValues(alpha: 0.5),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
+          textStyle: const TextStyle(
+            fontFamily: OneUITypography.fontFamily,
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.3,
+            color: Colors.white,
           ),
         ),
       ),
@@ -371,7 +419,7 @@ class OneUITheme {
           side: const BorderSide(color: Color(0xFF424242), width: 1),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(28),
           ),
           textStyle: const TextStyle(
             fontFamily: OneUITypography.fontFamily,
@@ -401,26 +449,26 @@ class OneUITheme {
           vertical: 16,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(28),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(28),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(28),
           borderSide: const BorderSide(
             color: OneUIColors.primaryDark,
             width: 1.5,
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(28),
           borderSide: const BorderSide(color: OneUIColors.error, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(28),
           borderSide: const BorderSide(color: OneUIColors.error, width: 1.5),
         ),
         hintStyle: const TextStyle(

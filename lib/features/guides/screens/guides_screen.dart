@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/theme.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../state/service_providers.dart';
 
@@ -33,7 +33,7 @@ class _GuidesScreenState extends ConsumerState<GuidesScreen> {
     final data = ref.watch(guidesProvider);
 
     return TravelScaffold(
-      backgroundColor: OneUIColors.backgroundLight,
+      backgroundColor: AppColors.background(context),
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
@@ -94,19 +94,24 @@ class _GuidesScreenState extends ConsumerState<GuidesScreen> {
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 sliver: SliverToBoxAdapter(
-                  child: TravelGrid(
-                    children: List.generate(data.guides.length, (index) {
-                      final item = data.guides[index];
-                      return CGListingCard(
-                        imageAsset: TravelPhotos.guides,
-                        imageUrl: item.profileImage,
-                        name: item.name,
-                        subtitle: item.specialization,
-                        price: '৳${item.dailyRate.toStringAsFixed(0)}/day',
-                        heroTag: 'guide_image_${item.id}',
-                        onTap: () => context.push('/guides/${item.id}'),
-                      );
-                    }),
+                  child: Column(
+                    children: [
+                      for (final item in data.guides)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: TravelRowCard(
+                            title: item.name,
+                            subtitle: item.specialization,
+                            meta:
+                                '৳${item.dailyRate.toStringAsFixed(0)} per day',
+                            leadingIcon: Icons.badge_outlined,
+                            imageUrl: item.profileImage,
+                            asset: TravelPhotos.guides,
+                            heroTag: 'guide_image_${item.id}',
+                            onTap: () => context.push('/guides/${item.id}'),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
@@ -124,17 +129,17 @@ class _GuidesScreenState extends ConsumerState<GuidesScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+             Icon(
               Icons.hiking_rounded,
               size: 48,
-              color: OneUIColors.textHintLight,
+              color: AppColors.textHint(context),
             ),
             const SizedBox(height: 16),
             Text(
               message,
-              style: const TextStyle(
+              style:  TextStyle(
                 fontSize: 14,
-                color: OneUIColors.textSecondaryLight,
+                color: AppColors.textSecondary(context),
               ),
             ),
           ],

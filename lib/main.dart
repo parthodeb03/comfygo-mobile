@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/theme/app_colors.dart';
 import 'core/theme/theme.dart';
 import 'core/router/app_router.dart';
 import 'core/services/network_service.dart';
@@ -116,20 +117,33 @@ class _ComfyGoAppState extends ConsumerState<ComfyGoApp> {
       themeMode: themeState.themeMode,
       routerConfig: router,
       builder: (context, child) {
-        return Stack(
-          children: [
-            // Main app content
-            authState.isInitialized ? child! : _buildLoadingScreen(),
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: themeState.isDarkMode
+              ? const SystemUiOverlayStyle(
+                  statusBarColor: Colors.transparent,
+                  statusBarIconBrightness: Brightness.light,
+                  statusBarBrightness: Brightness.dark,
+                )
+              : const SystemUiOverlayStyle(
+                  statusBarColor: Colors.transparent,
+                  statusBarIconBrightness: Brightness.dark,
+                  statusBarBrightness: Brightness.light,
+                ),
+          child: Stack(
+            children: [
+              // Main app content
+              authState.isInitialized ? child! : _buildLoadingScreen(),
 
-            // Offline banner (non-blocking, at the top)
-            if (_showOfflineBanner)
-              Positioned(
-                top: MediaQuery.of(context).padding.top,
-                left: 0,
-                right: 0,
-                child: _buildOfflineBanner(),
-              ),
-          ],
+              // Offline banner (non-blocking, at the top)
+              if (_showOfflineBanner)
+                Positioned(
+                  top: MediaQuery.of(context).padding.top,
+                  left: 0,
+                  right: 0,
+                  child: _buildOfflineBanner(context),
+                ),
+            ],
+          ),
         );
       },
     );
@@ -137,7 +151,7 @@ class _ComfyGoAppState extends ConsumerState<ComfyGoApp> {
 
   Widget _buildLoadingScreen() {
     return Scaffold(
-      backgroundColor: OneUIColors.backgroundLight,
+      backgroundColor: AppColors.background(context),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -146,38 +160,42 @@ class _ComfyGoAppState extends ConsumerState<ComfyGoApp> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: OneUIColors.primaryLight.withValues(alpha: 0.1),
+                color: AppColors.primary(context).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(OneUISpacing.radiusXl),
               ),
-              child: const Icon(
+              child:  Icon(
                 Icons.flight_takeoff_rounded,
                 size: 40,
-                color: OneUIColors.primaryLight,
+                color: AppColors.primary(context),
               ),
             ),
             const SizedBox(height: OneUISpacing.xxl),
-            const Text(
+             Text(
               'ComfyGo',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
-                color: OneUIColors.textPrimaryLight,
+                color: AppColors.textPrimary(context),
               ),
             ),
             const SizedBox(height: OneUISpacing.lg),
-            const CircularProgressIndicator(color: OneUIColors.primaryLight),
+             CircularProgressIndicator(color: AppColors.primary(context)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildOfflineBanner() {
+  Widget _buildOfflineBanner(BuildContext context) {
+    final dark = AppColors.isDark(context);
+    final bg = dark ? const Color(0xFF3A2A10) : const Color(0xFFFFF3E0);
+    final titleColor = dark ? const Color(0xFFFFCC80) : const Color(0xFFE65100);
+    final bodyColor = dark ? const Color(0xFFFFE0B2) : const Color(0xFFBF360C);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF3E0),
+        color: bg,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFFFB74D), width: 1),
         boxShadow: [
@@ -192,11 +210,11 @@ class _ComfyGoAppState extends ConsumerState<ComfyGoApp> {
         children: [
           const Icon(
             Icons.wifi_off_rounded,
-            color: Color(0xFFE65100),
+            color: Color(0xFFFFB74D),
             size: 20,
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -206,12 +224,12 @@ class _ComfyGoAppState extends ConsumerState<ComfyGoApp> {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFFE65100),
+                    color: titleColor,
                   ),
                 ),
                 Text(
                   'Start server or run start.bat',
-                  style: TextStyle(fontSize: 11, color: Color(0xFFBF360C)),
+                  style: TextStyle(fontSize: 11, color: bodyColor),
                 ),
               ],
             ),

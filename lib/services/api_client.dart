@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -15,6 +16,9 @@ class ApiClient {
 
   ApiClient({FlutterSecureStorage? storage})
     : _storage = storage ?? const FlutterSecureStorage() {
+    if (!kDebugMode && Uri.parse(ApiConstants.baseUrl).scheme != 'https') {
+      throw StateError('Release builds require an HTTPS API_BASE_URL.');
+    }
     _dio = Dio(
       BaseOptions(
         baseUrl: ApiConstants.baseUrl,

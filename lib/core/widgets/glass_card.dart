@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../theme/app_colors.dart';
 import '../theme/theme.dart';
 import 'travel_widgets.dart';
 
-/// Primary green button — full-width, rounded corners, micro-interaction
-class CGButton extends StatelessWidget {
+/// Primary green button — full-width, gradient fill, glow shadow and a
+/// press micro-interaction.
+class CGButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
   final bool isLoading;
@@ -26,82 +28,158 @@ class CGButton extends StatelessWidget {
   });
 
   @override
+  State<CGButton> createState() => _CGButtonState();
+}
+
+class _CGButtonState extends State<CGButton> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (_pressed == value || !mounted) return;
+    setState(() => _pressed = value);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      width: width ?? double.infinity,
-      constraints: BoxConstraints(minHeight: height),
-      child: isOutlined
-          ? OutlinedButton(
-              onPressed: isLoading ? null : onPressed,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: OneUIColors.primaryLight,
-                side: const BorderSide(
-                  color: OneUIColors.primaryLight,
-                  width: 1.5,
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+    final primary = AppColors.primary(context);
+    final enabled = widget.onPressed != null && !widget.isLoading;
+    final outlined = widget.isOutlined;
+
+    final Color contentColor = !enabled
+        ? (outlined ? AppColors.textHint(context) : Colors.white70)
+        : outlined
+        ? primary
+        : Colors.white;
+
+    return SizedBox(
+      width: widget.width ?? double.infinity,
+      // IntrinsicHeight keeps the button at its content height (min [widget.height])
+      // instead of letting the inner Center stretch to fill a parent's bounded
+      // height (e.g. inside a Row in a bottom bar, which otherwise swallows the
+      // whole screen and leaves the body zero height).
+      child: IntrinsicHeight(
+        child: Listener(
+          onPointerDown: enabled ? (_) => _setPressed(true) : null,
+          onPointerUp: (_) => _setPressed(false),
+          onPointerCancel: (_) => _setPressed(false),
+          child: AnimatedScale(
+            scale: _pressed ? 0.97 : 1.0,
+            duration: const Duration(milliseconds: 130),
+            curve: Curves.easeOut,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: outlined
+                    ? null
+                    : LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: enabled
+                            ? const [
+                                OneUIColors.buttonGreenDark,
+                                OneUIColors.buttonGreen,
+                                OneUIColors.buttonGreenLight,
+                              ]
+                            : [Colors.grey.shade500, Colors.grey.shade400],
+                        stops: enabled ? const [0.0, 0.55, 1.0] : null,
+                      ),
+                color: outlined
+                    ? enabled
+                          ? primary.withValues(alpha: 0.07)
+                          : Colors.transparent
+                    : null,
+                borderRadius: BorderRadius.circular(16),
+                border: outlined
+                    ? Border.all(
+                        color: enabled ? primary : AppColors.divider(context),
+                        width: 1.6,
+                      )
+                    : null,
+                boxShadow: enabled && !outlined
+                    ? [
+                        const BoxShadow(
+                          color: Color(0x661B7A4F),
+                          blurRadius: 18,
+                          offset: Offset(0, 6),
+                        ),
+                      ]
+                    : const [],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: widget.isLoading ? null : widget.onPressed,
+                    borderRadius: BorderRadius.circular(16),
+                    splashColor: outlined
+                        ? primary.withValues(alpha: 0.12)
+                        : Colors.white.withValues(alpha: 0.20),
+                    highlightColor: outlined
+                        ? primary.withValues(alpha: 0.06)
+                        : Colors.white.withValues(alpha: 0.10),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: widget.height),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 22,
+                          vertical: 14,
+                        ),
+                        child: Center(
+                          child: _buildChild(contentColor, primary),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
-              child: _buildChild(),
-            )
-          : ElevatedButton(
-              onPressed: isLoading ? null : onPressed,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: OneUIColors.primaryLight,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              child: _buildChild(),
             ),
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _buildChild() {
-    if (isLoading) {
-      return const SizedBox(
+  Widget _buildChild(Color contentColor, Color spinnerColor) {
+    if (widget.isLoading) {
+      return SizedBox(
         width: 22,
         height: 22,
         child: CircularProgressIndicator(
           strokeWidth: 2.5,
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          valueColor: AlwaysStoppedAnimation<Color>(
+            widget.isOutlined ? spinnerColor : Colors.white,
+          ),
         ),
       );
     }
-    if (icon != null) {
+    final text = Text(
+      widget.label,
+      textAlign: TextAlign.center,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        fontSize: 16.5,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.4,
+        color: contentColor,
+      ),
+    );
+    if (widget.icon != null) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 20),
+          Icon(widget.icon, size: 20, color: contentColor),
           const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              label,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-          ),
+          Flexible(child: text),
         ],
       );
     }
-    return Text(
-      label,
-      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-    );
+    return text;
   }
 }
 
-/// Social sign-in button — white with thin gray border
+/// Social sign-in button — surface fill with thin border
 class CGSocialButton extends StatelessWidget {
   final String label;
   final Widget icon;
@@ -122,9 +200,9 @@ class CGSocialButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          foregroundColor: OneUIColors.textPrimaryLight,
-          backgroundColor: Colors.white,
-          side: const BorderSide(color: Color(0xFFE0E0E0), width: 1),
+          foregroundColor: AppColors.textPrimary(context),
+          backgroundColor: AppColors.surface(context),
+          side: BorderSide(color: AppColors.divider(context), width: 1),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
@@ -197,8 +275,9 @@ class _CGChipState extends State<CGChip> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final activeBg = widget.activeColor ?? OneUIColors.primaryLight;
-    final inactiveBg = widget.inactiveColor ?? OneUIColors.surfaceVariantLight;
+    final activeBg = widget.activeColor ?? AppColors.primary(context);
+    final inactiveBg =
+        widget.inactiveColor ?? AppColors.surfaceVariant(context);
 
     return GestureDetector(
       onTapDown: (_) => _controller.forward(),
@@ -224,7 +303,7 @@ class _CGChipState extends State<CGChip> with SingleTickerProviderStateMixin {
               fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
               color: widget.isSelected
                   ? Colors.white
-                  : OneUIColors.textSecondaryLight,
+                  : AppColors.textSecondary(context),
             ),
             child: Text(widget.label),
           ),
@@ -271,7 +350,7 @@ class CGCard extends StatelessWidget {
         margin: margin,
         padding: padding ?? const EdgeInsets.all(OneUISpacing.lg),
         decoration: BoxDecoration(
-          color: color ?? OneUIColors.surfaceLight,
+          color: color ?? AppColors.surface(context),
           borderRadius: BorderRadius.circular(borderRadius),
           border: border,
         ),
@@ -312,7 +391,7 @@ class CGListingCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: OneUIColors.surfaceLight,
+          color: AppColors.surface(context),
           borderRadius: BorderRadius.circular(16),
         ),
         clipBehavior: Clip.antiAlias,
@@ -322,7 +401,7 @@ class CGListingCard extends StatelessWidget {
             // Image
             Stack(
               children: [
-                _buildImage(),
+                _buildImage(context),
                 if (badge != null) Positioned(top: 10, left: 10, child: badge!),
               ],
             ),
@@ -334,10 +413,10 @@ class CGListingCard extends StatelessWidget {
                 children: [
                   Text(
                     name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: OneUIColors.textPrimaryLight,
+                      color: AppColors.textPrimary(context),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -346,9 +425,9 @@ class CGListingCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       subtitle!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: OneUIColors.textSecondaryLight,
+                        color: AppColors.textSecondary(context),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -358,10 +437,10 @@ class CGListingCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       price!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: OneUIColors.primaryLight,
+                        color: AppColors.primary(context),
                       ),
                     ),
                   ],
@@ -374,11 +453,11 @@ class CGListingCard extends StatelessWidget {
     );
   }
 
-  Widget _buildImage() {
+  Widget _buildImage(BuildContext context) {
     final imageWidget = Container(
       height: imageHeight,
       width: double.infinity,
-      color: OneUIColors.surfaceVariantLight,
+      color: AppColors.surfaceVariant(context),
       child: TravelPhoto(
         url: imageUrl,
         asset: imageAsset ?? TravelPhotos.forDestination(name),
@@ -447,7 +526,7 @@ class _CGStepperState extends State<CGStepper> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: OneUIColors.surfaceVariantLight,
+        color: AppColors.surfaceVariant(context),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -459,10 +538,10 @@ class _CGStepperState extends State<CGStepper> {
             child: Text(
               '$_value',
               key: ValueKey(_value),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: OneUIColors.textPrimaryLight,
+                color: AppColors.textPrimary(context),
               ),
             ),
           ),
@@ -483,8 +562,8 @@ class _CGStepperState extends State<CGStepper> {
           icon,
           size: 20,
           color: enabled
-              ? OneUIColors.textPrimaryLight
-              : OneUIColors.textHintLight,
+              ? AppColors.textPrimary(context)
+              : AppColors.textHint(context),
         ),
       ),
     );
@@ -517,10 +596,10 @@ class CGBannerCard extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(OneUISpacing.lg),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [OneUIColors.primaryLight, Color(0xFF2A8F63)],
+            colors: [AppColors.primary(context), Color(0xFF2A8F63)],
           ),
           borderRadius: BorderRadius.circular(16),
         ),
@@ -574,10 +653,10 @@ class CGSectionHeader extends StatelessWidget {
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: OneUIColors.textPrimaryLight,
+                color: AppColors.textPrimary(context),
               ),
             ),
           ),
@@ -589,12 +668,12 @@ class CGSectionHeader extends StatelessWidget {
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: const Text(
+              child: Text(
                 'See All',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: OneUIColors.primaryLight,
+                  color: AppColors.primary(context),
                 ),
               ),
             ),
@@ -615,11 +694,14 @@ class CGSplashBackground extends StatelessWidget {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [OneUIColors.primaryVariantLight, OneUIColors.primaryLight],
+          colors: [
+            AppColors.primaryVariant(context),
+            AppColors.primary(context),
+          ],
         ),
       ),
       child: child,
@@ -743,7 +825,7 @@ class _CGFavoriteButtonState extends State<CGFavoriteButton>
           alignment: Alignment.center,
           child: Icon(
             _isFavorited ? Icons.favorite : Icons.favorite_border_rounded,
-            color: _isFavorited ? Colors.red : OneUIColors.textSecondaryLight,
+            color: _isFavorited ? Colors.red : AppColors.textSecondary(context),
             size: 22,
           ),
         ),
@@ -822,7 +904,7 @@ class GlassBackground extends StatelessWidget {
           imagePath,
           fit: BoxFit.cover,
           errorBuilder: (_, _, _) =>
-              Container(color: OneUIColors.backgroundLight),
+              Container(color: AppColors.background(context)),
         ),
         // Gradient overlay
         Container(
@@ -888,6 +970,7 @@ class GlassInput extends StatelessWidget {
   final FocusNode? focusNode;
   final TextInputAction? textInputAction;
   final bool enabled;
+  final int maxLines;
 
   const GlassInput({
     super.key,
@@ -902,6 +985,7 @@ class GlassInput extends StatelessWidget {
     this.focusNode,
     this.textInputAction,
     this.enabled = true,
+    this.maxLines = 1,
   });
 
   @override
@@ -915,19 +999,21 @@ class GlassInput extends StatelessWidget {
       focusNode: focusNode,
       textInputAction: textInputAction,
       enabled: enabled,
-      style: const TextStyle(color: OneUIColors.textPrimaryLight, fontSize: 15),
+      maxLines: obscureText ? 1 : maxLines,
+      style: TextStyle(color: AppColors.textPrimary(context), fontSize: 15),
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: const TextStyle(
-          color: OneUIColors.textHintLight,
-          fontSize: 15,
-        ),
+        hintStyle: TextStyle(color: AppColors.textHint(context), fontSize: 15),
         prefixIcon: prefixIcon != null
-            ? Icon(prefixIcon, color: OneUIColors.textSecondaryLight, size: 20)
+            ? Icon(
+                prefixIcon,
+                color: AppColors.textSecondary(context),
+                size: 20,
+              )
             : null,
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: OneUIColors.inputFillLight,
+        fillColor: AppColors.inputFill(context),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
@@ -938,10 +1024,7 @@ class GlassInput extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-            color: OneUIColors.primaryLight,
-            width: 1.5,
-          ),
+          borderSide: BorderSide(color: AppColors.primary(context), width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),

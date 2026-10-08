@@ -9,15 +9,23 @@ from ...models.hotel import Hotel
 from ...models.package import UserPackage, PackageStatus
 from ...services.auth_service import authenticate_admin, create_access_token
 from ...schemas.user import AdminLoginRequest, AuthResponse, UserResponse
-from ...schemas.payment import PaymentResponse
+from ...schemas.payment import PaymentResponse, VoidRequest
 from ...schemas.booking import BookingResponse
 from ...schemas.hotel import HotelResponse
+from ...schemas.package import UserPackageResponse
 from ..deps import get_current_admin
+from ...core.rate_limit import rate_limit
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
+_admin_login_limit = rate_limit("admin:login", "AUTH_RATE_LIMIT")
+
 @router.post("/login", response_model=AuthResponse)
-def admin_login(request: AdminLoginRequest, db: Session = Depends(get_db)):
+def admin_login(
+    request: AdminLoginRequest,
+    db: Session = Depends(get_db),
+    _limit: None = Depends(_admin_login_limit),
+):
     admin = authenticate_admin(db, request.email, request.password)
     if not admin:
         raise HTTPException(status_code=401, detail="Invalid admin credentials")
@@ -168,17 +176,39 @@ def remove_listing(
 @router.put("/payments/{payment_id}/void", response_model=PaymentResponse)
 def void_payment(
     payment_id: int,
-    data: dict,
+    data: VoidRequest,
     _: Admin = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
     payment = db.query(Payment).filter(Payment.id == payment_id).first()
     if payment:
-        payment.status = PaymentStatus.refunded
+        payment.status = PaymentStatus.voided
+        payment.notes = data.reason
         db.commit()
         db.refresh(payment)
         return PaymentResponse.model_validate(payment)
     raise HTTPException(status_code=404, detail="Payment not found")
+
+@router.get("/user-packages", response_model=dict)
+def get_user_packages(
+    status: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    _: Admin = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    query = db.query(UserPackage)
+    if status:
+        query = query.filter(UserPackage.status == status)
+    total = query.count()
+    items = query.order_by(UserPackage.id.desc()).offset((page - 1) * limit).limit(limit).all()
+    return {
+        "items": [UserPackageResponse.model_validate(item) for item in items],
+        "total": total,
+        "page": page,
+        "limit": limit,
+    }
+
 
 @router.get("/stats")
 def get_stats(_: Admin = Depends(get_current_admin), db: Session = Depends(get_db)):

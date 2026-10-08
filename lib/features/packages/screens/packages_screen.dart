@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../state/service_providers.dart';
@@ -69,10 +70,10 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
               children: [
                 Text(
                   '৳${price.toStringAsFixed(2)} / month',
-                  style: const TextStyle(
+                  style:  TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: OneUIColors.primaryLight,
+                    color: AppColors.primary(context),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -81,15 +82,15 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
                   controller: numberController,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
-                    hintText: 'Card Number',
+                    hintText: '4242 4242 4242 4242 (sandbox)',
                     prefixIcon: Icon(Icons.credit_card_rounded, size: 20),
                     isDense: true,
                     border: OutlineInputBorder(),
                   ),
                   validator: (v) {
                     final digits = (v ?? '').replaceAll(' ', '');
-                    if (digits.length < 13 || digits.length > 19) {
-                      return 'Enter a valid card number';
+                    if (digits != '4242424242424242') {
+                      return 'Sandbox card: 4242 4242 4242 4242';
                     }
                     return null;
                   },
@@ -315,7 +316,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
         : Package.predefinedPackages;
 
     return Scaffold(
-      backgroundColor: OneUIColors.backgroundLight,
+      backgroundColor: AppColors.background(context),
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
@@ -323,7 +324,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
         ),
         title: const Text('Packages'),
       ),
-      body: packagesState.isLoading
+      body: NatureBackground.wrap(child: packagesState.isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
@@ -331,20 +332,20 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Title
-                  const Text(
+                   Text(
                     'Choose Your Plan',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
-                      color: OneUIColors.textPrimaryLight,
+                      color: AppColors.textPrimary(context),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Unlock premium features and save more on your travels',
+                    'Unlock premium features and save more on your travels. Sandbox payments only; no card is charged.',
                     style: TextStyle(
                       fontSize: 14,
-                      color: OneUIColors.textSecondaryLight,
+                      color: AppColors.textSecondary(context),
                     ),
                   ),
 
@@ -375,12 +376,12 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
 
                   const SizedBox(height: 12),
 
-                  const Center(
+                   Center(
                     child: Text(
                       'By subscribing, you agree to our Terms of Service',
                       style: TextStyle(
                         fontSize: 12,
-                        color: OneUIColors.textHintLight,
+                        color: AppColors.textHint(context),
                       ),
                     ),
                   ),
@@ -388,7 +389,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
                   const SizedBox(height: 24),
                 ],
               ),
-            ),
+            )),
     );
   }
 
@@ -418,17 +419,17 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
               children: [
                 Text(
                   'Your plan: ${current.package.name}',
-                  style: const TextStyle(
+                  style:  TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: OneUIColors.textPrimaryLight,
+                    color: AppColors.textPrimary(context),
                   ),
                 ),
                 Text(
                   'Active until ${_fmtDate(current.endDate)}',
-                  style: const TextStyle(
+                  style:  TextStyle(
                     fontSize: 12,
-                    color: OneUIColors.textSecondaryLight,
+                    color: AppColors.textSecondary(context),
                   ),
                 ),
               ],
@@ -452,10 +453,10 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? color.withValues(alpha: 0.05)
-              : OneUIColors.surfaceLight,
+              : AppColors.surface(context),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? color : OneUIColors.dividerLight,
+            color: isSelected ? color : AppColors.divider(context),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -532,7 +533,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
                       '/month',
                       style: TextStyle(
                         fontSize: 13,
-                        color: OneUIColors.textSecondaryLight,
+                        color: AppColors.textSecondary(context),
                       ),
                     ),
                   ),
@@ -570,9 +571,9 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
+              style:  TextStyle(
                 fontSize: 13,
-                color: OneUIColors.textSecondaryLight,
+                color: AppColors.textSecondary(context),
               ),
             ),
           ),

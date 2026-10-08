@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for API calls on a physical phone (release builds too). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="ComfyGo"
         android:name="${applicationName}"

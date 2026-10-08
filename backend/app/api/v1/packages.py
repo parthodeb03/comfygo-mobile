@@ -51,8 +51,8 @@ def _validate_payment(package: Package, subscription: UserPackageCreate) -> None
             status_code=400,
             detail="payment_method must be 'card' or 'cash' for paid plans",
         )
-    if method == "card" and not subscription.card_number:
-        raise HTTPException(status_code=400, detail="Card details required")
+    if method == "card" and subscription.card_number != "4242424242424242":
+        raise HTTPException(status_code=400, detail="Use the sandbox test card 4242 4242 4242 4242")
 
 
 @user_package_router.get("/current", response_model=UserPackageResponse)

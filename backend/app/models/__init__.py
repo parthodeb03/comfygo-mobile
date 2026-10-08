@@ -6,6 +6,10 @@ from .guide import Guide
 from .booking import Booking, BookingStatus, BookingType
 from .payment import Payment, PaymentMethod, PaymentStatus
 from .package import Package, UserPackage, PackageTier, PackageStatus
+from .favorite import Favorite
+from .review import Review
+from .contact import ContactMessage
+from .password_reset import PasswordReset
 
 __all__ = [
     "User",
@@ -25,4 +29,8 @@ __all__ = [
     "UserPackage",
     "PackageTier",
     "PackageStatus",
+    "Favorite",
+    "Review",
+    "ContactMessage",
+    "PasswordReset",
 ]

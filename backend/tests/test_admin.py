@@ -191,7 +191,7 @@ def test_void_payment(client, admin_headers, tourist_headers, db):
         body = resp.json()
         # Returns the updated payment, not just a detail string
         assert body["id"] == payment.id
-        assert body["status"] == "refunded"
+        assert body["status"] == "voided"
     finally:
         db.rollback()
 

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../models/models.dart';
 import '../../../services/api_exception.dart';
+import '../../../services/invoice_pdf.dart';
 import '../../../state/service_providers.dart';
 
 class PaymentScreen extends ConsumerStatefulWidget {
@@ -28,6 +30,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   final _expiryController = TextEditingController();
   final _cvvController = TextEditingController();
   final _cardholderController = TextEditingController();
+  final _walletController = TextEditingController();
 
   @override
   void initState() {
@@ -41,6 +44,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     _expiryController.dispose();
     _cvvController.dispose();
     _cardholderController.dispose();
+    _walletController.dispose();
     super.dispose();
   }
 
@@ -62,8 +66,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
   String? _validateCard() {
     final number = _cardNumberController.text.replaceAll(' ', '').trim();
-    if (number.isEmpty || number.length < 13 || number.length > 19) {
-      return 'Enter a valid card number';
+    if (number != '4242424242424242') {
+      return 'Sandbox only: use 4242 4242 4242 4242';
     }
     if (number.replaceAll(RegExp(r'\d'), '').isNotEmpty) {
       return 'Card number must contain only digits';
@@ -80,6 +84,17 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     return null;
   }
 
+  bool get _isWalletMethod =>
+      _selectedMethod == 'bkash' || _selectedMethod == 'nagad';
+
+  String? _validateWallet() {
+    final number = _walletController.text.trim();
+    if (!RegExp(r'^01\d{9}$').hasMatch(number)) {
+      return 'Enter an 11-digit wallet number (01…)';
+    }
+    return null;
+  }
+
   // ── Payment ─────────────────────────────────────────────────────────────
 
   Future<void> _handlePayment() async {
@@ -87,6 +102,12 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
     if (_selectedMethod == 'card') {
       final error = _validateCard();
+      if (error != null) {
+        _showSnack(error);
+        return;
+      }
+    } else if (_isWalletMethod) {
+      final error = _validateWallet();
       if (error != null) {
         _showSnack(error);
         return;
@@ -106,10 +127,17 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 cvv: _cvvController.text.trim(),
                 cardholderName: _cardholderController.text.trim(),
               )
-          : await ref.read(paymentServiceProvider).createCashPayment(
-                bookingId: widget.bookingId,
-                amount: _amount,
-              );
+          : _isWalletMethod
+              ? await ref.read(paymentServiceProvider).createWalletPayment(
+                    bookingId: widget.bookingId,
+                    amount: _amount,
+                    method: _selectedMethod,
+                    walletNumber: _walletController.text.trim(),
+                  )
+              : await ref.read(paymentServiceProvider).createCashPayment(
+                    bookingId: widget.bookingId,
+                    amount: _amount,
+                  );
 
       if (!mounted) return;
 
@@ -144,18 +172,34 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
   void _showSuccessDialog() {
     final isCard = _selectedMethod == 'card';
+    final isWallet = _isWalletMethod;
+    final booking = _booking;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(isCard ? 'Payment Successful' : 'Payment Recorded'),
+        title: Text(isCard || isWallet ? 'Payment Successful' : 'Payment Recorded'),
         content: Text(
           isCard
-              ? 'Your payment has been processed successfully.'
-              : 'Your cash payment has been recorded and will be '
-                    'confirmed by our team.',
+              ? 'Sandbox payment simulated successfully. No card was charged.'
+              : isWallet
+                  ? 'Sandbox ${_selectedMethod == 'bkash' ? 'bKash' : 'Nagad'} payment simulated successfully. No money moved.'
+                  : 'Your cash payment has been recorded and will be '
+                        'confirmed by our team.',
         ),
         actions: [
+          if (booking != null)
+            TextButton(
+              key: const Key('dialog-download-invoice'),
+              onPressed: () async {
+                try {
+                  await InvoicePdf.share(booking);
+                } catch (_) {
+                  // The dialog stays open; user can retry or close.
+                }
+              },
+              child: const Text('Download Invoice'),
+            ),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
@@ -173,7 +217,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: OneUIColors.backgroundLight,
+      backgroundColor: AppColors.background(context),
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
@@ -181,7 +225,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         ),
         title: const Text('Payment'),
       ),
-      body: _loadingBooking
+      body: NatureBackground.wrap(child: _loadingBooking
           ? const Center(child: CircularProgressIndicator())
           : _booking == null
           ? TravelEmpty(
@@ -198,18 +242,18 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: OneUIColors.primarySoft,
+                      color: AppColors.primarySoft(context),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                         Text(
                           'Order Summary',
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: OneUIColors.textPrimaryLight,
+                            color: AppColors.textPrimary(context),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -237,12 +281,12 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                   const SizedBox(height: 24),
 
                   // Payment method
-                  const Text(
+                   Text(
                     'Payment Method',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: OneUIColors.textPrimaryLight,
+                      color: AppColors.textPrimary(context),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -253,6 +297,26 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                           'card',
                           'Card',
                           Icons.credit_card_rounded,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildMethodCard(
+                          'bkash',
+                          'bKash',
+                          Icons.account_balance_wallet_rounded,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildMethodCard(
+                          'nagad',
+                          'Nagad',
+                          Icons.account_balance_wallet_outlined,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -270,19 +334,19 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
                   // Card details
                   if (_selectedMethod == 'card') ...[
-                    const Text(
+                     Text(
                       'Card Details',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: OneUIColors.textPrimaryLight,
+                        color: AppColors.textPrimary(context),
                       ),
                     ),
                     const SizedBox(height: 12),
                     GlassInput(
                       key: const Key('card-number'),
                       controller: _cardNumberController,
-                      hintText: 'Card Number',
+                      hintText: '4242 4242 4242 4242 (sandbox)',
                       prefixIcon: Icons.credit_card_rounded,
                       keyboardType: TextInputType.number,
                     ),
@@ -318,6 +382,53 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     ),
                   ],
 
+                  if (_isWalletMethod) ...[
+                     Text(
+                      '${_selectedMethod == 'bkash' ? 'bKash' : 'Nagad'} Wallet',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary(context),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    GlassInput(
+                      key: const Key('wallet-number'),
+                      controller: _walletController,
+                      hintText: '01XXXXXXXXX (11 digits)',
+                      prefixIcon: Icons.phone_android_rounded,
+                      keyboardType: TextInputType.phone,
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: OneUIColors.primarySoft.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline_rounded,
+                            color: OneUIColors.primaryDark,
+                            size: 20,
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Sandbox simulation — you will get a transaction ID instantly and no money moves.',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppColors.textSecondary(context),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
                   if (_selectedMethod == 'cash') ...[
                     Container(
                       width: double.infinity,
@@ -326,7 +437,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                         color: OneUIColors.statusPending.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Row(
+                      child:  Row(
                         children: [
                           Icon(
                             Icons.info_outline_rounded,
@@ -339,7 +450,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                               'Pay with cash upon arrival. Please have the exact amount ready.',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: OneUIColors.textSecondaryLight,
+                                color: AppColors.textSecondary(context),
                               ),
                             ),
                           ),
@@ -354,14 +465,16 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     key: const Key('pay-button'),
                     label: _selectedMethod == 'card'
                         ? 'Pay ৳${_fmtPrice(_amount)}'
-                        : 'Confirm Cash Payment',
+                        : _isWalletMethod
+                            ? 'Pay with ${_selectedMethod == 'bkash' ? 'bKash' : 'Nagad'}'
+                            : 'Confirm Cash Payment',
                     isLoading: _isLoading,
                     onPressed: _handlePayment,
                   ),
 
                   const SizedBox(height: 12),
 
-                  const Center(
+                   Center(
                     child: Wrap(
                       alignment: WrapAlignment.center,
                       crossAxisAlignment: WrapCrossAlignment.center,
@@ -369,14 +482,14 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                         Icon(
                           Icons.lock_outline_rounded,
                           size: 14,
-                          color: OneUIColors.textHintLight,
+                          color: AppColors.textHint(context),
                         ),
                         SizedBox(width: 4),
                         Text(
-                          'Secure payment powered by SSL',
+                          'Sandbox only ? no real card is charged',
                           style: TextStyle(
                             fontSize: 12,
-                            color: OneUIColors.textHintLight,
+                            color: AppColors.textHint(context),
                           ),
                         ),
                       ],
@@ -386,7 +499,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                   const SizedBox(height: 24),
                 ],
               ),
-            ),
+            )),
     );
   }
 
@@ -400,9 +513,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style:  TextStyle(
               fontSize: 14,
-              color: OneUIColors.textSecondaryLight,
+              color: AppColors.textSecondary(context),
             ),
           ),
           if (value.isNotEmpty)
@@ -412,8 +525,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 fontSize: 14,
                 fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
                 color: isBold
-                    ? OneUIColors.primaryLight
-                    : OneUIColors.textPrimaryLight,
+                    ? AppColors.primary(context)
+                    : AppColors.textPrimary(context),
               ),
             ),
         ],
@@ -431,13 +544,13 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? OneUIColors.primarySoft
-              : OneUIColors.surfaceLight,
+              ? AppColors.primarySoft(context)
+              : AppColors.surface(context),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected
-                ? OneUIColors.primaryLight
-                : OneUIColors.dividerLight,
+                ? AppColors.primary(context)
+                : AppColors.divider(context),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -447,8 +560,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               icon,
               size: 28,
               color: isSelected
-                  ? OneUIColors.primaryLight
-                  : OneUIColors.textSecondaryLight,
+                  ? AppColors.primary(context)
+                  : AppColors.textSecondary(context),
             ),
             const SizedBox(height: 8),
             Text(
@@ -457,8 +570,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 color: isSelected
-                    ? OneUIColors.primaryLight
-                    : OneUIColors.textSecondaryLight,
+                    ? AppColors.primary(context)
+                    : AppColors.textSecondary(context),
               ),
             ),
           ],

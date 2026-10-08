@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../state/service_providers.dart';
@@ -25,8 +26,8 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
     final data = ref.watch(bookingsProvider);
 
     return Scaffold(
-      backgroundColor: OneUIColors.backgroundLight,
-      body: SafeArea(
+      backgroundColor: AppColors.background(context),
+      body: NatureBackground.wrap(child: SafeArea(
         child: CustomScrollView(
           slivers: [
             // ─── Header ──────────────────────────────────────
@@ -36,12 +37,12 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                     Text(
                       'My Bookings',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
-                        color: OneUIColors.textPrimaryLight,
+                        color: AppColors.textPrimary(context),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -49,7 +50,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
                       'Your plans, your memories, all in one place.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: OneUIColors.textSecondaryLight,
+                        color: AppColors.textSecondary(context),
                       ),
                     ),
                   ],
@@ -130,7 +131,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
           ],
         ),
-      ),
+      )),
     );
   }
 
@@ -146,18 +147,18 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+             Icon(
               Icons.book_outlined,
               size: 48,
-              color: OneUIColors.textHintLight,
+              color: AppColors.textHint(context),
             ),
             const SizedBox(height: 16),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style:  TextStyle(
                 fontSize: 14,
-                color: OneUIColors.textSecondaryLight,
+                color: AppColors.textSecondary(context),
               ),
             ),
             if (actionLabel != null && onAction != null) ...[
@@ -247,9 +248,9 @@ class _BookingCardState extends State<_BookingCard>
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: OneUIColors.surfaceLight,
+            color: AppColors.surface(context),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: OneUIColors.dividerLight, width: 0.5),
+            border: Border.all(color: AppColors.divider(context), width: 0.5),
           ),
           child: Row(
             children: [
@@ -257,12 +258,12 @@ class _BookingCardState extends State<_BookingCard>
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: OneUIColors.primarySoft,
+                  color: AppColors.primarySoft(context),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child:  Icon(
                   Icons.flight_takeoff_rounded,
-                  color: OneUIColors.primaryLight,
+                  color: AppColors.primary(context),
                   size: 24,
                 ),
               ),
@@ -273,10 +274,10 @@ class _BookingCardState extends State<_BookingCard>
                   children: [
                     Text(
                       widget.name,
-                      style: const TextStyle(
+                      style:  TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: OneUIColors.textPrimaryLight,
+                        color: AppColors.textPrimary(context),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -284,9 +285,9 @@ class _BookingCardState extends State<_BookingCard>
                     const SizedBox(height: 4),
                     Text(
                       '${widget.type} \u2022 ${widget.date}',
-                      style: const TextStyle(
+                      style:  TextStyle(
                         fontSize: 12,
-                        color: OneUIColors.textSecondaryLight,
+                        color: AppColors.textSecondary(context),
                       ),
                     ),
                   ],
@@ -306,10 +307,10 @@ class _BookingCardState extends State<_BookingCard>
                     const SizedBox(height: 6),
                     Text(
                       widget.price,
-                      style: const TextStyle(
+                      style:  TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: OneUIColors.primaryLight,
+                        color: AppColors.primary(context),
                       ),
                     ),
                   ],

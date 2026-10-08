@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
 from ..models.package import PackageTier, PackageStatus
@@ -26,6 +26,7 @@ class PackageResponse(PackageBase):
         from_attributes = True
 
 class UserPackageCreate(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     package_id: int
     payment_method: str
     card_number: Optional[str] = None

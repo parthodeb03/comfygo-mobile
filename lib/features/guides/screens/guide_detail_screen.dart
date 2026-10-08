@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/theme.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../models/models.dart';
 import '../../../state/service_providers.dart';
@@ -33,7 +33,7 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: OneUIColors.backgroundLight,
+      backgroundColor: AppColors.background(context),
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
@@ -41,7 +41,7 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
         ),
         title: const Text('Guide Profile'),
       ),
-      body: FutureBuilder<Guide?>(
+      body: NatureBackground.wrap(child: FutureBuilder<Guide?>(
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
@@ -57,7 +57,7 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
           }
           return _buildContent(guide);
         },
-      ),
+      )),
     );
   }
 
@@ -71,9 +71,9 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: OneUIColors.surfaceLight,
+              color: AppColors.surface(context),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: OneUIColors.dividerLight, width: 0.5),
+              border: Border.all(color: AppColors.divider(context), width: 0.5),
             ),
             child: Column(
               children: [
@@ -81,15 +81,15 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                   tag: 'guide_image_${widget.id}',
                   child: CircleAvatar(
                     radius: 40,
-                    backgroundColor: OneUIColors.primarySoft,
+                    backgroundColor: AppColors.primarySoft(context),
                     child: guide.profileImage == null ||
                             guide.profileImage!.isEmpty
                         ? Text(
                             guide.name.isEmpty
                                 ? '?'
                                 : guide.name[0].toUpperCase(),
-                            style: const TextStyle(
-                              color: OneUIColors.primaryLight,
+                            style:  TextStyle(
+                              color: AppColors.primary(context),
                               fontSize: 32,
                               fontWeight: FontWeight.w700,
                             ),
@@ -110,18 +110,18 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                 const SizedBox(height: 12),
                 Text(
                   guide.name,
-                  style: const TextStyle(
+                  style:  TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: OneUIColors.textPrimaryLight,
+                    color: AppColors.textPrimary(context),
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   guide.specialization,
-                  style: const TextStyle(
+                  style:  TextStyle(
                     fontSize: 14,
-                    color: OneUIColors.textSecondaryLight,
+                    color: AppColors.textSecondary(context),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -147,26 +147,26 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                       const SizedBox(width: 16),
                       Text(
                         '${guide.experience} years experience',
-                        style: const TextStyle(
+                        style:  TextStyle(
                           fontSize: 13,
-                          color: OneUIColors.textSecondaryLight,
+                          color: AppColors.textSecondary(context),
                         ),
                       ),
                     ],
                     if (guide.location != null &&
                         guide.location!.isNotEmpty) ...[
                       const SizedBox(width: 16),
-                      const Icon(
+                       Icon(
                         Icons.location_on_rounded,
                         size: 14,
-                        color: OneUIColors.primaryLight,
+                        color: AppColors.primary(context),
                       ),
                       const SizedBox(width: 2),
                       Text(
                         guide.location!,
-                        style: const TextStyle(
+                        style:  TextStyle(
                           fontSize: 13,
-                          color: OneUIColors.textSecondaryLight,
+                          color: AppColors.textSecondary(context),
                         ),
                       ),
                     ],
@@ -179,14 +179,14 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
           const SizedBox(height: 24),
 
           // About
-          const Align(
+           Align(
             alignment: Alignment.centerLeft,
             child: Text(
               'About',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: OneUIColors.textPrimaryLight,
+                color: AppColors.textPrimary(context),
               ),
             ),
           ),
@@ -197,9 +197,9 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
               guide.bio == null || guide.bio!.isEmpty
                   ? '${guide.name} is a verified ComfyGo guide.'
                   : guide.bio!,
-              style: const TextStyle(
+              style:  TextStyle(
                 fontSize: 14,
-                color: OneUIColors.textSecondaryLight,
+                color: AppColors.textSecondary(context),
                 height: 1.6,
               ),
             ),
@@ -208,14 +208,14 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
           // Languages
           if (guide.languages.isNotEmpty) ...[
             const SizedBox(height: 24),
-            const Align(
+             Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 'Languages',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: OneUIColors.textPrimaryLight,
+                  color: AppColors.textPrimary(context),
                 ),
               ),
             ),
@@ -237,7 +237,7 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: OneUIColors.primarySoft,
+              color: AppColors.primarySoft(context),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
@@ -246,29 +246,29 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                       Text(
                         'Daily Rate',
                         style: TextStyle(
                           fontSize: 12,
-                          color: OneUIColors.textSecondaryLight,
+                          color: AppColors.textSecondary(context),
                         ),
                       ),
                       Text(
                         '৳${_fmtPrice(guide.dailyRate)}/day',
-                        style: const TextStyle(
+                        style:  TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
-                          color: OneUIColors.primaryLight,
+                          color: AppColors.primary(context),
                         ),
                       ),
                     ],
                   ),
                 ),
                 CGButton(
-                  label: 'Hire Guide',
-                  width: 130,
+                  label: 'View Hotels',
+                  width: 140,
                   height: 44,
-                  onPressed: () => context.push('/book/guide/${guide.id}'),
+                  onPressed: () => context.push('/hotels'),
                 ),
               ],
             ),

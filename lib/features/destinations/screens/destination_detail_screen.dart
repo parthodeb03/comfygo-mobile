@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import '../../../core/theme/theme.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../models/models.dart';
 import '../../../state/service_providers.dart';
@@ -24,8 +22,6 @@ class _DestinationDetailScreenState
   Destination? _destination;
   bool _isFavorited = false;
 
-  String get _favKey => 'fav_destination_${widget.id}';
-
   @override
   void initState() {
     super.initState();
@@ -34,15 +30,36 @@ class _DestinationDetailScreenState
   }
 
   Future<void> _loadFavorite() async {
-    final prefs = await SharedPreferences.getInstance();
+    final favorite = await ref
+        .read(favoriteServiceProvider)
+        .getFavorites()
+        .catchError((Object _) => <Favorite>[]);
     if (!mounted) return;
-    setState(() => _isFavorited = prefs.getBool(_favKey) ?? false);
+    setState(() => _isFavorited = favorite.any((f) => f.itemId == widget.id));
   }
 
   Future<void> _toggleFavorite(bool value) async {
     setState(() => _isFavorited = value);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_favKey, value);
+    if (value) {
+      await ref.read(favoriteServiceProvider).toggleFavorite(
+            'destination',
+            widget.id,
+          );
+    } else {
+      // find and remove the local favourite
+      final list = await ref
+          .read(favoriteServiceProvider)
+          .getFavorites()
+          .catchError((Object _) => <Favorite>[]);
+      final target = list.firstWhere(
+        (f) => f.itemType == 'destination' && f.itemId == widget.id,
+        orElse: () => throw Exception('missing'),
+      );
+      await ref.read(favoriteServiceProvider).removeFavorite(
+            'destination',
+            target.itemId,
+          );
+    }
   }
 
   Future<Destination?> _fetch() async {
@@ -58,22 +75,24 @@ class _DestinationDetailScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: OneUIColors.backgroundLight,
+      backgroundColor: AppColors.background(context),
       bottomNavigationBar: _destination == null
           ? null
           : _buildBookBar(_destination!),
-      body: FutureBuilder<Destination?>(
-        future: _future,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final destination = snapshot.data;
-          if (destination == null) {
-            return _buildErrorState();
-          }
-          return _buildContent(destination);
-        },
+      body: NatureBackground.wrap(
+        child: FutureBuilder<Destination?>(
+          future: _future,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final destination = snapshot.data;
+            if (destination == null) {
+              return _buildErrorState();
+            }
+            return _buildContent(destination);
+          },
+        ),
       ),
     );
   }
@@ -86,7 +105,8 @@ class _DestinationDetailScreenState
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: TravelEmpty(
-              message: 'This destination could not be loaded. '
+              message:
+                  'This destination could not be loaded. '
                   'Check your connection and try again.',
               onRetry: _retry,
             ),
@@ -115,10 +135,10 @@ class _DestinationDetailScreenState
                     Expanded(
                       child: Text(
                         destination.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w700,
-                          color: OneUIColors.textPrimaryLight,
+                          color: AppColors.textPrimary(context),
                         ),
                       ),
                     ),
@@ -158,18 +178,18 @@ class _DestinationDetailScreenState
                 // Location
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.location_on_rounded,
                       size: 16,
-                      color: OneUIColors.primaryLight,
+                      color: AppColors.primary(context),
                     ),
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(
                         '${destination.location}, ${destination.division}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
-                          color: OneUIColors.primaryLight,
+                          color: AppColors.primary(context),
                         ),
                       ),
                     ),
@@ -199,20 +219,20 @@ class _DestinationDetailScreenState
                 const SizedBox(height: 24),
 
                 // About
-                const Text(
+                Text(
                   'About',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: OneUIColors.textPrimaryLight,
+                    color: AppColors.textPrimary(context),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   destination.description,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: OneUIColors.textSecondaryLight,
+                    color: AppColors.textSecondary(context),
                     height: 1.6,
                   ),
                 ),
@@ -221,12 +241,12 @@ class _DestinationDetailScreenState
                 if (destination.activities != null &&
                     destination.activities!.isNotEmpty) ...[
                   const SizedBox(height: 24),
-                  const Text(
+                  Text(
                     'Activities',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: OneUIColors.textPrimaryLight,
+                      color: AppColors.textPrimary(context),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -254,7 +274,7 @@ class _DestinationDetailScreenState
       expandedHeight: 300,
       floating: false,
       pinned: true,
-      backgroundColor: OneUIColors.backgroundLight,
+      backgroundColor: AppColors.background(context),
       surfaceTintColor: Colors.transparent,
       leading: IconButton(
         icon: Container(
@@ -263,9 +283,9 @@ class _DestinationDetailScreenState
             color: Colors.white.withValues(alpha: 0.9),
             shape: BoxShape.circle,
           ),
-          child: const Icon(
+          child: Icon(
             Icons.arrow_back_ios_new_rounded,
-            color: OneUIColors.textPrimaryLight,
+            color: AppColors.textPrimary(context),
             size: 18,
           ),
         ),
@@ -275,6 +295,7 @@ class _DestinationDetailScreenState
         CGFavoriteButton(
           isFavorited: _isFavorited,
           onChanged: _toggleFavorite,
+          key: ValueKey('_fav_${widget.id}'),
         ),
         const SizedBox(width: 12),
       ],
@@ -284,12 +305,12 @@ class _DestinationDetailScreenState
           child: Container(
             width: double.infinity,
             height: double.infinity,
-            color: OneUIColors.surfaceVariantLight,
+            color: AppColors.surfaceVariant(context),
             child: TravelPhoto(
               url: (destination?.images.isNotEmpty ?? false)
                   ? destination!.images.first
                   : null,
-              asset: TravelPhotos.forDestination(name),
+              asset: TravelPhotos.forDestination(name, destination?.division),
               label: name.isEmpty ? null : name,
             ),
           ),
@@ -303,7 +324,7 @@ class _DestinationDetailScreenState
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -313,38 +334,48 @@ class _DestinationDetailScreenState
         ],
       ),
       child: SafeArea(
-        child: Row(
-          children: [
-            Column(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final price = Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'Starting from',
+                Text(
+                  'Packages from',
                   style: TextStyle(
                     fontSize: 12,
-                    color: OneUIColors.textSecondaryLight,
+                    color: AppColors.textSecondary(context),
                   ),
                 ),
                 Text(
-                  '৳${_fmtPrice(destination.price)}',
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: OneUIColors.primaryLight,
+                  'BDT ${_fmtPrice(destination.price)}',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primary(context),
                   ),
                 ),
               ],
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: CGButton(
-                label: 'Book Now',
-                onPressed: () =>
-                    context.push('/book/destination/${destination.id}'),
-              ),
-            ),
-          ],
+            );
+            final action = CGButton(
+              label: 'Find Places to Stay',
+              onPressed: () => context.push('/hotels'),
+            );
+            if (constraints.maxWidth < 360) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [price, const SizedBox(height: 10), action],
+              );
+            }
+            return Row(
+              children: [
+                price,
+                const SizedBox(width: 16),
+                Expanded(child: action),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -354,20 +385,20 @@ class _DestinationDetailScreenState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: OneUIColors.surfaceVariantLight,
+        color: AppColors.surfaceVariant(context),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: OneUIColors.textSecondaryLight),
+          Icon(icon, size: 14, color: AppColors.textSecondary(context)),
           const SizedBox(width: 6),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: OneUIColors.textSecondaryLight,
+              color: AppColors.textSecondary(context),
             ),
           ),
         ],

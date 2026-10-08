@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../state/auth_provider.dart';
 
+/// Forgot password — 3-step flow matching the spec:
+///   1. enter email → 6-digit code is issued
+///   2. verify the 6-digit code
+///   3. set a new password
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -15,156 +20,263 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
-  String _selectedMethod = 'email';
+  int _step = 1; // 1 = email, 2 = code, 3 = new password
+
   final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
+  final _codeController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmController = TextEditingController();
+
+  final _emailFormKey = GlobalKey<FormState>();
+  final _codeFormKey = GlobalKey<FormState>();
+  final _passwordFormKey = GlobalKey<FormState>();
+
   bool _isLoading = false;
-  bool _isSent = false;
+  String? _resetToken;
+  String? _devCode; // shown only when the backend echoes it (no email provider)
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
     _emailController.dispose();
-    _phoneController.dispose();
+    _codeController.dispose();
+    _passwordController.dispose();
+    _confirmController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleSend() async {
-    if (!_formKey.currentState!.validate()) return;
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message, style: const TextStyle(fontSize: 13)),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+  }
 
+  // ── Step 1: request code ────────────────────────────────────────────────
+
+  Future<void> _requestCode() async {
+    if (!_emailFormKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
-    final email = _selectedMethod == 'email'
-        ? _emailController.text.trim()
-        : _phoneController.text.trim();
-
-    final success = await ref
+    final result = await ref
         .read(authProvider.notifier)
-        .forgotPassword(email: email);
+        .requestCode(email: _emailController.text.trim());
 
     if (!mounted) return;
     setState(() {
       _isLoading = false;
-      _isSent = success;
+      if (result) {
+        _step = 2;
+        _devCode = ref.read(authProvider.notifier).lastResetCode;
+      }
     });
+    if (!result) {
+      _showSnack(
+        ref.read(authProvider).error ?? 'Could not send the code',
+      );
+    }
   }
+
+  // ── Step 2: verify code ─────────────────────────────────────────────────
+
+  Future<void> _verifyCode() async {
+    if (!_codeFormKey.currentState!.validate()) return;
+    setState(() => _isLoading = true);
+
+    final result = await ref.read(authProvider.notifier).verifyResetCode(
+          email: _emailController.text.trim(),
+          code: _codeController.text.trim(),
+        );
+
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+      if (result) {
+        _step = 3;
+        _resetToken = ref.read(authProvider.notifier).lastResetToken;
+      }
+    });
+    if (!result) {
+      _showSnack(
+        ref.read(authProvider).error ?? 'Invalid or expired code',
+      );
+    }
+  }
+
+  // ── Step 3: set new password ────────────────────────────────────────────
+
+  String? _validatePassword(String? v) {
+    final value = v ?? '';
+    if (value.length < 8) return 'At least 8 characters';
+    if (!RegExp(r'[A-Za-z]').hasMatch(value)) return 'Add a letter';
+    if (!RegExp(r'\d').hasMatch(value)) return 'Add a number';
+    return null;
+  }
+
+  Future<void> _setPassword() async {
+    if (!_passwordFormKey.currentState!.validate()) return;
+    setState(() => _isLoading = true);
+
+    final result = await ref.read(authProvider.notifier).resetPassword(
+          token: _resetToken ?? '',
+          newPassword: _passwordController.text,
+        );
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (result) {
+      _showSnack('Password updated — sign in with your new password');
+      context.pop();
+    } else {
+      _showSnack(
+        ref.read(authProvider).error ?? 'Could not reset password',
+      );
+    }
+  }
+
+  // ── Build ───────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: OneUIColors.backgroundLight,
+      backgroundColor: AppColors.background(context),
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => context.pop(),
+          onPressed: _step > 1
+              ? () => setState(() => _step -= 1)
+              : () => context.pop(),
         ),
+        title: const Text('Reset Password'),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: OneUISpacing.lg),
-          child: _isSent ? _buildSuccessView() : _buildFormView(),
+      body: NatureBackground.wrap(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: OneUISpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: OneUISpacing.lg),
+                _buildStepIndicator(),
+                const SizedBox(height: OneUISpacing.xxl),
+                if (_step == 1) _buildEmailStep(),
+                if (_step == 2) _buildCodeStep(),
+                if (_step == 3) _buildPasswordStep(),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildFormView() {
+  Widget _buildStepIndicator() {
+    Widget dot(int number) {
+      final active = _step >= number;
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: active ? AppColors.primary(context) : AppColors.divider(context),
+        ),
+        child: Center(
+          child: Text(
+            '$number',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: active ? Colors.white : AppColors.textHint(context),
+            ),
+          ),
+        ),
+      );
+    }
+
+    Widget line(bool done) => Expanded(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            height: 2,
+            margin: const EdgeInsets.symmetric(horizontal: 6),
+            color: done
+                ? AppColors.primary(context)
+                : AppColors.divider(context),
+          ),
+        );
+
+    return Row(
+      children: [
+        dot(1),
+        line(_step > 1),
+        dot(2),
+        line(_step > 2),
+        dot(3),
+      ],
+    );
+  }
+
+  Widget _buildTitle(String title, String subtitle) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: OneUISpacing.lg),
-
-        // Title
-        const Text(
-          'Forgot Password',
+        Text(
+          title,
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w700,
-            color: OneUIColors.textPrimaryLight,
+            color: AppColors.textPrimary(context),
           ),
         ),
         const SizedBox(height: OneUISpacing.sm),
         Text(
-          'Choose how you want to reset your password',
-          style: TextStyle(fontSize: 14, color: OneUIColors.textSecondaryLight),
+          subtitle,
+          style: TextStyle(fontSize: 14, color: AppColors.textSecondary(context)),
         ),
-
         const SizedBox(height: OneUISpacing.xxl),
+      ],
+    );
+  }
 
-        // Option cards
-        _buildOptionCard(
-          icon: Icons.email_outlined,
-          title: 'Reset via Email',
-          subtitle: 'We\'ll send a reset link to your email',
-          isSelected: _selectedMethod == 'email',
-          onTap: () => setState(() => _selectedMethod = 'email'),
+  Widget _buildEmailStep() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildTitle(
+          'Forgot Password',
+          'Enter your email and we\'ll send you a 6-digit code',
         ),
-
-        const SizedBox(height: OneUISpacing.md),
-
-        _buildOptionCard(
-          icon: Icons.phone_outlined,
-          title: 'Reset via Phone',
-          subtitle: 'We\'ll send an OTP to your phone number',
-          isSelected: _selectedMethod == 'phone',
-          onTap: () => setState(() => _selectedMethod = 'phone'),
-        ),
-
-        const SizedBox(height: OneUISpacing.xxl),
-
-        // Input field
         Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildLabel(
-                _selectedMethod == 'email' ? 'Email address' : 'Phone number',
-              ),
-              const SizedBox(height: OneUISpacing.sm),
-              GlassInput(
-                controller: _selectedMethod == 'email'
-                    ? _emailController
-                    : _phoneController,
-                hintText: _selectedMethod == 'email'
-                    ? 'Enter your email'
-                    : 'Enter your phone number',
-                prefixIcon: _selectedMethod == 'email'
-                    ? Icons.email_outlined
-                    : Icons.phone_outlined,
-                keyboardType: _selectedMethod == 'email'
-                    ? TextInputType.emailAddress
-                    : TextInputType.phone,
-                textInputAction: TextInputAction.done,
-                enabled: !_isLoading,
-                validator: (v) {
-                  if (v == null || v.isEmpty) {
-                    return _selectedMethod == 'email'
-                        ? 'Enter your email'
-                        : 'Enter your phone number';
-                  }
-                  if (_selectedMethod == 'email' && !v.contains('@')) {
-                    return 'Enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-            ],
+          key: _emailFormKey,
+          child: GlassInput(
+            controller: _emailController,
+            hintText: 'Enter your email',
+            prefixIcon: Icons.email_outlined,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.done,
+            enabled: !_isLoading,
+            validator: (v) {
+              final value = (v ?? '').trim();
+              if (value.isEmpty) return 'Enter your email';
+              if (!value.contains('@')) return 'Enter a valid email';
+              return null;
+            },
           ),
         ),
-
         const SizedBox(height: OneUISpacing.xxl),
-
-        // Send button
         CGButton(
-          label: 'Send Reset Link',
+          label: 'Send Code',
           isLoading: _isLoading,
-          onPressed: _handleSend,
+          onPressed: _requestCode,
         ),
-
         const SizedBox(height: OneUISpacing.xxl),
-
-        // Back to login
         Center(
           child: GestureDetector(
             onTap: () => context.pop(),
@@ -173,14 +285,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 text: 'Remember your password? ',
                 style: TextStyle(
                   fontSize: 14,
-                  color: OneUIColors.textSecondaryLight,
+                  color: AppColors.textSecondary(context),
                 ),
-                children: const [
+                children: [
                   TextSpan(
                     text: 'Sign In',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: OneUIColors.primaryLight,
+                      color: AppColors.primary(context),
                     ),
                   ),
                 ],
@@ -188,168 +300,163 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             ),
           ),
         ),
-
         const SizedBox(height: OneUISpacing.xxl),
       ],
     );
   }
 
-  Widget _buildSuccessView() {
+  Widget _buildCodeStep() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: OneUISpacing.massive),
-
-        // Success icon
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            color: OneUIColors.primarySoft,
-            shape: BoxShape.circle,
+        _buildTitle(
+          'Enter the Code',
+          'We sent a 6-digit code to ${_emailController.text.trim()}.\n'
+              'It expires in 10 minutes.',
+        ),
+        if (_devCode != null) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            margin: const EdgeInsets.only(bottom: OneUISpacing.lg),
+            decoration: BoxDecoration(
+              color: AppColors.primarySoft(context),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.developer_mode_rounded,
+                    size: 20, color: AppColors.primary(context)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Development code: $_devCode',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary(context),
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    _codeController.text = _devCode!;
+                  },
+                  child: const Text('Use it'),
+                ),
+              ],
+            ),
           ),
-          child: const Icon(
-            Icons.mark_email_read_rounded,
-            size: 40,
-            color: OneUIColors.primaryLight,
+        ],
+        Form(
+          key: _codeFormKey,
+          child: GlassInput(
+            controller: _codeController,
+            hintText: '6-digit code',
+            prefixIcon: Icons.pin_rounded,
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.done,
+            enabled: !_isLoading,
+            validator: (v) {
+              final value = (v ?? '').trim();
+              if (!RegExp(r'^\d{6}$').hasMatch(value)) {
+                return 'Enter the 6-digit code';
+              }
+              return null;
+            },
           ),
         ),
-
         const SizedBox(height: OneUISpacing.xxl),
-
-        const Text(
-          'Check Your Email',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: OneUIColors.textPrimaryLight,
+        CGButton(
+          label: 'Verify Code',
+          isLoading: _isLoading,
+          onPressed: _verifyCode,
+        ),
+        const SizedBox(height: OneUISpacing.md),
+        Center(
+          child: TextButton(
+            onPressed: _isLoading
+                ? null
+                : () async {
+                    setState(() => _isLoading = true);
+                    final ok = await ref
+                        .read(authProvider.notifier)
+                        .requestCode(email: _emailController.text.trim());
+                    if (!mounted) return;
+                    setState(() {
+                      _isLoading = false;
+                      if (ok) {
+                        _devCode =
+                            ref.read(authProvider.notifier).lastResetCode;
+                        _codeController.clear();
+                      }
+                    });
+                    _showSnack(ok ? 'A new code was sent' : 'Could not send a new code');
+                  },
+            child: Text(
+              'Didn\'t receive it? Resend code',
+              style: TextStyle(fontSize: 14, color: AppColors.primary(context)),
+            ),
           ),
         ),
-        const SizedBox(height: OneUISpacing.sm),
-        Text(
-          'We\'ve sent a password reset link to\n${_selectedMethod == "email" ? _emailController.text : _phoneController.text}',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 14, color: OneUIColors.textSecondaryLight),
-        ),
-
-        const SizedBox(height: OneUISpacing.xxl),
-
-        CGButton(label: 'Back to Sign In', onPressed: () => context.pop()),
-
         const SizedBox(height: OneUISpacing.lg),
-
-        TextButton(
-          onPressed: () {
-            setState(() {
-              _isSent = false;
-              _selectedMethod = 'email';
-            });
-          },
-          child: const Text(
-            'Didn\'t receive it? Try again',
-            style: TextStyle(fontSize: 14, color: OneUIColors.primaryLight),
-          ),
-        ),
-
-        const SizedBox(height: OneUISpacing.xxl),
       ],
     );
   }
 
-  Widget _buildOptionCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(OneUISpacing.lg),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? OneUIColors.primarySoft
-              : OneUIColors.surfaceLight,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected
-                ? OneUIColors.primaryLight
-                : OneUIColors.dividerLight,
-            width: isSelected ? 1.5 : 1,
+  Widget _buildPasswordStep() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildTitle('New Password', 'Choose a strong password for your account'),
+        Form(
+          key: _passwordFormKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GlassInput(
+                controller: _passwordController,
+                hintText: 'New password',
+                prefixIcon: Icons.lock_outline_rounded,
+                obscureText: _obscurePassword,
+                enabled: !_isLoading,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_off_rounded
+                        : Icons.visibility_rounded,
+                    size: 20,
+                  ),
+                  onPressed: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
+                ),
+                validator: _validatePassword,
+              ),
+              const SizedBox(height: OneUISpacing.md),
+              GlassInput(
+                controller: _confirmController,
+                hintText: 'Confirm new password',
+                prefixIcon: Icons.lock_outline_rounded,
+                obscureText: _obscurePassword,
+                enabled: !_isLoading,
+                validator: (v) {
+                  if ((v ?? '') != _passwordController.text) {
+                    return 'Passwords do not match';
+                  }
+                  return null;
+                },
+              ),
+            ],
           ),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? OneUIColors.primaryLight
-                    : OneUIColors.surfaceVariantLight,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                size: 24,
-                color: isSelected
-                    ? Colors.white
-                    : OneUIColors.textSecondaryLight,
-              ),
-            ),
-            const SizedBox(width: OneUISpacing.lg),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected
-                          ? OneUIColors.primaryVariantLight
-                          : OneUIColors.textPrimaryLight,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: OneUIColors.textSecondaryLight,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              isSelected
-                  ? Icons.radio_button_checked_rounded
-                  : Icons.radio_button_off_rounded,
-              size: 22,
-              color: isSelected
-                  ? OneUIColors.primaryLight
-                  : OneUIColors.textHintLight,
-            ),
-          ],
+        const SizedBox(height: OneUISpacing.xxl),
+        CGButton(
+          label: 'Set New Password',
+          isLoading: _isLoading,
+          onPressed: _setPassword,
         ),
-      ),
-    );
-  }
-
-  Widget _buildLabel(String text) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: OneUIColors.textSecondaryLight,
-        ),
-      ),
+        const SizedBox(height: OneUISpacing.xxl),
+      ],
     );
   }
 }

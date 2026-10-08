@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:comfygo/core/widgets/travel_widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,11 +14,13 @@ import 'package:comfygo/models/models.dart';
 import 'package:comfygo/services/services.dart';
 import 'package:comfygo/state/auth_provider.dart';
 import 'package:comfygo/state/service_providers.dart';
+import 'package:comfygo/features/admin/screens/admin_login_screen.dart';
 import 'package:comfygo/features/admin/screens/admin_panel_screen.dart';
 import 'package:comfygo/features/auth/screens/forgot_password_screen.dart';
 import 'package:comfygo/features/auth/screens/login_screen.dart';
 import 'package:comfygo/features/auth/screens/signup_screen.dart';
 import 'package:comfygo/features/bookings/screens/booking_detail_screen.dart';
+import 'package:comfygo/features/bookings/screens/booking_form_screen.dart';
 import 'package:comfygo/features/bookings/screens/bookings_screen.dart';
 import 'package:comfygo/features/destinations/screens/destination_detail_screen.dart';
 import 'package:comfygo/features/destinations/screens/destinations_screen.dart';
@@ -63,18 +66,28 @@ class _Destinations implements DestinationService {
     Destination.fromJson(sample),
     Destination.fromJson({...sample, 'id': 2}),
   ]);
+
+  @override
+  Future<Destination?> getDestinationById(int id) async =>
+      Destination.fromJson(sample);
 }
 
 class _Hotels implements HotelService {
   @override
   dynamic noSuchMethod(Invocation i) =>
       Future<List<Hotel>>.value([Hotel.fromJson(sample)]);
+
+  @override
+  Future<Hotel?> getHotelById(int id) async => Hotel.fromJson(sample);
 }
 
 class _Guides implements GuideService {
   @override
   dynamic noSuchMethod(Invocation i) =>
       Future<List<Guide>>.value([Guide.fromJson(sample)]);
+
+  @override
+  Future<Guide?> getGuideById(int id) async => Guide.fromJson(sample);
 }
 
 class _Transports implements TransportService {
@@ -82,23 +95,60 @@ class _Transports implements TransportService {
   dynamic noSuchMethod(Invocation i) => Future<List<Transport>>.value([
     Transport.fromJson({...sample, 'type': 'bus'}),
   ]);
+
+  @override
+  Future<Transport?> getTransportById(int id) async =>
+      Transport.fromJson({...sample, 'type': 'bus'});
 }
 
 class _Bookings implements BookingService {
   @override
   dynamic noSuchMethod(Invocation i) =>
       Future<List<Booking>>.value([Booking.fromJson(sample)]);
+
+  @override
+  Future<Booking?> getBookingById(int id) async => Booking.fromJson(sample);
 }
 
 class _Packages implements PackageService {
   @override
   dynamic noSuchMethod(Invocation i) =>
       Future<List<Package>>.value(Package.predefinedPackages);
+
+  @override
+  Future<UserPackage?> getMyPackage() async {
+    final pkg = Package.predefinedPackages.first;
+    final start = DateTime(2026, 10, 1);
+    return UserPackage(
+      id: 1,
+      userId: 1,
+      packageId: pkg.id,
+      package: pkg,
+      status: PackageStatus.active,
+      startDate: start,
+      endDate: DateTime(2026, 10, 31),
+      createdAt: start,
+    );
+  }
 }
 
 void main() {
   const capture = bool.fromEnvironment('CAPTURE_DESIGN');
   setUpAll(() async {
+    // Platform interfaces used by the real service layer (secure token
+    // storage + connectivity pre-flight check). Unimplemented channel
+    // calls never complete under FakeAsync, which would leave screens
+    // stuck on their loading spinner and hang pumpAndSettle forever.
+    FlutterSecureStorage.setMockInitialValues({});
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+      const MethodChannel('dev.fluttercommunity.plus/connectivity'),
+      (call) async {
+        if (call.method == 'check') return <String>['wifi'];
+        return null;
+      },
+    );
+
     if (capture) {
       final loader = FontLoader('Roboto');
       loader.addFont(
@@ -118,10 +168,15 @@ void main() {
   });
   final screens = <String, Widget>{
     'AdminPanelScreen': const AdminPanelScreen(),
+    'AdminLoginScreen': const AdminLoginScreen(),
     'ForgotPasswordScreen': const ForgotPasswordScreen(),
     'LoginScreen': const LoginScreen(),
     'SignupScreen': const SignupScreen(),
     'BookingDetailScreen': const BookingDetailScreen(id: 1),
+    'BookingFormScreen': const BookingFormScreen(
+      type: 'hotel',
+      itemId: 1,
+    ),
     'BookingsScreen': const BookingsScreen(),
     'DestinationDetailScreen': const DestinationDetailScreen(id: 1),
     'DestinationsScreen': const DestinationsScreen(),

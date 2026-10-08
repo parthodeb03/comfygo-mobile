@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../state/auth_provider.dart';
@@ -71,7 +72,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: OneUIColors.backgroundLight,
+      backgroundColor: AppColors.background(context),
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
@@ -79,7 +80,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
         ),
         title: const Text('Admin Login'),
       ),
-      body: SafeArea(
+      body: NatureBackground.wrap(child: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: OneUISpacing.lg),
           child: Form(
@@ -92,7 +93,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                   width: 72,
                   height: 72,
                   decoration: BoxDecoration(
-                    color: OneUIColors.primaryLight,
+                    color: AppColors.primary(context),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Icon(
@@ -104,12 +105,12 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
 
                 const SizedBox(height: OneUISpacing.xxl),
 
-                const Text(
+                 Text(
                   'Administrator',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
-                    color: OneUIColors.textPrimaryLight,
+                    color: AppColors.textPrimary(context),
                   ),
                 ),
                 const SizedBox(height: OneUISpacing.sm),
@@ -117,7 +118,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                   'Sign in to manage ComfyGo',
                   style: TextStyle(
                     fontSize: 14,
-                    color: OneUIColors.textSecondaryLight,
+                    color: AppColors.textSecondary(context),
                   ),
                 ),
 
@@ -157,7 +158,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                       _obscurePassword
                           ? Icons.visibility_off_rounded
                           : Icons.visibility_rounded,
-                      color: OneUIColors.textSecondaryLight,
+                      color: AppColors.textSecondary(context),
                       size: 20,
                     ),
                     onPressed: () =>
@@ -183,7 +184,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
             ),
           ),
         ),
-      ),
+      )),
     );
   }
 
@@ -192,10 +193,10 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
       alignment: Alignment.centerLeft,
       child: Text(
         text,
-        style: const TextStyle(
+        style:  TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w500,
-          color: OneUIColors.textSecondaryLight,
+          color: AppColors.textSecondary(context),
         ),
       ),
     );

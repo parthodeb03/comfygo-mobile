@@ -188,15 +188,78 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Forgot Password
-  Future<bool> forgotPassword({required String email}) async {
+  /// Forgot Password — step 1: request a 6-digit code
+  Future<bool> forgotPassword({required String email}) => requestCode(email: email);
+
+  String? _lastResetCode;
+  String? _lastResetToken;
+
+  /// The 6-digit code echoed by the backend (dev only — no email provider).
+  String? get lastResetCode => _lastResetCode;
+
+  /// Short-lived token returned after a successful code verification.
+  String? get lastResetToken => _lastResetToken;
+
+  Future<bool> requestCode({required String email}) async {
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
       final result = await _authService.forgotPassword(email: email);
+      _lastResetCode = result.resetCode;
+      state = state.copyWith(
+        isLoading: false,
+        error: result.isSuccess ? null : result.message,
+        clearError: result.isSuccess,
+      );
+      return result.isSuccess;
+    } catch (e) {
+      state = state.copyWith(
+        error: 'Connection failed. Please check your network.',
+        isLoading: false,
+      );
+      return false;
+    }
+  }
 
-      state = state.copyWith(isLoading: false);
+  /// Step 2: verify the 6-digit code → reset token
+  Future<bool> verifyResetCode({required String email, required String code}) async {
+    state = state.copyWith(isLoading: true, clearError: true);
 
+    try {
+      final result = await _authService.verifyResetCode(email: email, code: code);
+      _lastResetToken = result.resetCode;
+      state = state.copyWith(
+        isLoading: false,
+        error: result.isSuccess ? null : result.message,
+        clearError: result.isSuccess,
+      );
+      return result.isSuccess;
+    } catch (e) {
+      state = state.copyWith(
+        error: 'Connection failed. Please check your network.',
+        isLoading: false,
+      );
+      return false;
+    }
+  }
+
+  /// Step 3: set the new password
+  Future<bool> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    try {
+      final result = await _authService.resetPassword(
+        token: token,
+        newPassword: newPassword,
+      );
+      state = state.copyWith(
+        isLoading: false,
+        error: result.isSuccess ? null : result.message,
+        clearError: result.isSuccess,
+      );
       return result.isSuccess;
     } catch (e) {
       state = state.copyWith(

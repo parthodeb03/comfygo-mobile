@@ -30,6 +30,7 @@ class Booking(Base):
     check_out = Column(DateTime(timezone=True))
     guests = Column(Integer, default=1)
     total_price = Column(Float, nullable=False)
+    discount_amount = Column(Float, nullable=False, default=0)
     notes = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

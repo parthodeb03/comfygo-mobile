@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../core/theme/theme.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../models/models.dart';
 import '../../../state/service_providers.dart';
@@ -54,18 +54,20 @@ class _HotelDetailScreenState extends ConsumerState<HotelDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: OneUIColors.backgroundLight,
+      backgroundColor: AppColors.background(context),
       bottomNavigationBar: _hotel == null ? null : _buildBookBar(_hotel!),
-      body: FutureBuilder<Hotel?>(
-        future: _future,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final hotel = snapshot.data;
-          if (hotel == null) return _buildErrorState();
-          return _buildContent(hotel);
-        },
+      body: NatureBackground.wrap(
+        child: FutureBuilder<Hotel?>(
+          future: _future,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final hotel = snapshot.data;
+            if (hotel == null) return _buildErrorState();
+            return _buildContent(hotel);
+          },
+        ),
       ),
     );
   }
@@ -78,7 +80,8 @@ class _HotelDetailScreenState extends ConsumerState<HotelDetailScreen> {
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: TravelEmpty(
-              message: 'This hotel could not be loaded. '
+              message:
+                  'This hotel could not be loaded. '
                   'Check your connection and try again.',
               onRetry: _retry,
             ),
@@ -93,150 +96,156 @@ class _HotelDetailScreenState extends ConsumerState<HotelDetailScreen> {
       slivers: [
         _appBar(hotel),
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title + Rating
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        hotel.name,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: OneUIColors.textPrimaryLight,
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFFD9E6D2),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title + Rating
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          hotel.name,
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary(context),
+                          ),
                         ),
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF8E1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.star_rounded,
-                            size: 16,
-                            color: Color(0xFFFFB300),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            hotel.rating.toStringAsFixed(1),
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFFE6A100),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF8E1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.star_rounded,
+                              size: 16,
+                              color: Color(0xFFFFB300),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 8),
-
-                // Location
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on_rounded,
-                      size: 16,
-                      color: OneUIColors.primaryLight,
-                    ),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        '${hotel.address}, ${hotel.division}',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: OneUIColors.primaryLight,
+                            const SizedBox(width: 4),
+                            Text(
+                              hotel.rating.toStringAsFixed(1),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFFE6A100),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Location
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on_rounded,
+                        size: 16,
+                        color: AppColors.primary(context),
+                      ),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          '${hotel.address}, ${hotel.division}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.primary(context),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Amenities
+                  if (hotel.amenities.isNotEmpty) ...[
+                    Text(
+                      'Amenities',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary(context),
+                      ),
                     ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: hotel.amenities
+                          .map((a) => CGChip(label: a))
+                          .toList(),
+                    ),
+                    const SizedBox(height: 24),
                   ],
-                ),
 
-                const SizedBox(height: 24),
-
-                // Amenities
-                if (hotel.amenities.isNotEmpty) ...[
-                  const Text(
-                    'Amenities',
+                  // About
+                  Text(
+                    'About',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: OneUIColors.textPrimaryLight,
+                      color: AppColors.textPrimary(context),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    hotel.description,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary(context),
+                      height: 1.6,
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Stay details — real availability instead of mock room cards
+                  Text(
+                    'Stay Details',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary(context),
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: hotel.amenities
-                        .map((a) => CGChip(label: a))
-                        .toList(),
+                  _buildInfoRow(
+                    Icons.payments_rounded,
+                    'Price per night',
+                    '৳${_fmtPrice(hotel.pricePerNight)}',
                   ),
-                  const SizedBox(height: 24),
+                  _buildInfoRow(
+                    Icons.meeting_room_rounded,
+                    'Rooms available',
+                    '${hotel.availableRooms} of ${hotel.totalRooms}',
+                  ),
+                  if (hotel.phone != null && hotel.phone!.isNotEmpty)
+                    _buildInfoRow(Icons.phone_rounded, 'Phone', hotel.phone!),
+                  if (hotel.email != null && hotel.email!.isNotEmpty)
+                    _buildInfoRow(Icons.email_rounded, 'Email', hotel.email!),
+
+                  const SizedBox(height: 100),
                 ],
-
-                // About
-                const Text(
-                  'About',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: OneUIColors.textPrimaryLight,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  hotel.description,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: OneUIColors.textSecondaryLight,
-                    height: 1.6,
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Stay details — real availability instead of mock room cards
-                const Text(
-                  'Stay Details',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: OneUIColors.textPrimaryLight,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _buildInfoRow(
-                  Icons.payments_rounded,
-                  'Price per night',
-                  '৳${_fmtPrice(hotel.pricePerNight)}',
-                ),
-                _buildInfoRow(
-                  Icons.meeting_room_rounded,
-                  'Rooms available',
-                  '${hotel.availableRooms} of ${hotel.totalRooms}',
-                ),
-                if (hotel.phone != null && hotel.phone!.isNotEmpty)
-                  _buildInfoRow(Icons.phone_rounded, 'Phone', hotel.phone!),
-                if (hotel.email != null && hotel.email!.isNotEmpty)
-                  _buildInfoRow(Icons.email_rounded, 'Email', hotel.email!),
-
-                const SizedBox(height: 100),
-              ],
+              ),
             ),
           ),
         ),
@@ -247,10 +256,10 @@ class _HotelDetailScreenState extends ConsumerState<HotelDetailScreen> {
   Widget _appBar(Hotel? hotel) {
     final name = hotel?.name ?? '';
     return SliverAppBar(
-      expandedHeight: 300,
+      expandedHeight: 380,
       floating: false,
       pinned: true,
-      backgroundColor: OneUIColors.backgroundLight,
+      backgroundColor: AppColors.background(context),
       surfaceTintColor: Colors.transparent,
       leading: IconButton(
         icon: Container(
@@ -259,19 +268,16 @@ class _HotelDetailScreenState extends ConsumerState<HotelDetailScreen> {
             color: Colors.white.withValues(alpha: 0.9),
             shape: BoxShape.circle,
           ),
-          child: const Icon(
+          child: Icon(
             Icons.arrow_back_ios_new_rounded,
-            color: OneUIColors.textPrimaryLight,
+            color: AppColors.textPrimary(context),
             size: 18,
           ),
         ),
         onPressed: () => context.pop(),
       ),
       actions: [
-        CGFavoriteButton(
-          isFavorited: _isFavorited,
-          onChanged: _toggleFavorite,
-        ),
+        CGFavoriteButton(isFavorited: _isFavorited, onChanged: _toggleFavorite),
         const SizedBox(width: 12),
       ],
       flexibleSpace: FlexibleSpaceBar(
@@ -280,13 +286,63 @@ class _HotelDetailScreenState extends ConsumerState<HotelDetailScreen> {
           child: Container(
             width: double.infinity,
             height: double.infinity,
-            color: OneUIColors.surfaceVariantLight,
-            child: TravelPhoto(
-              url: (hotel?.images.isNotEmpty ?? false)
-                  ? hotel!.images.first
-                  : null,
-              asset: TravelPhotos.hotels,
-              label: name.isEmpty ? null : name,
+            color: AppColors.surfaceVariant(context),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                TravelPhoto(
+                  url: (hotel?.images.isNotEmpty ?? false)
+                      ? hotel!.images.first
+                      : null,
+                  asset: TravelPhotos.hotels,
+                  label: name.isEmpty ? null : name,
+                ),
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Color(0x22000000),
+                        Colors.transparent,
+                        Color(0xBB000000),
+                      ],
+                      stops: [0, .42, 1],
+                    ),
+                  ),
+                ),
+                if (name.isNotEmpty)
+                  Positioned(
+                    left: 24,
+                    right: 24,
+                    bottom: 42,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${hotel?.division ?? ''}  ·  ${hotel?.rating.toStringAsFixed(1) ?? ''} ★',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            height: 1.05,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
           ),
         ),
@@ -299,7 +355,7 @@ class _HotelDetailScreenState extends ConsumerState<HotelDetailScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -313,7 +369,7 @@ class _HotelDetailScreenState extends ConsumerState<HotelDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Column(
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -321,7 +377,7 @@ class _HotelDetailScreenState extends ConsumerState<HotelDetailScreen> {
                   'Starting from',
                   style: TextStyle(
                     fontSize: 12,
-                    color: OneUIColors.textSecondaryLight,
+                    color: AppColors.textSecondary(context),
                   ),
                 ),
               ],
@@ -329,12 +385,19 @@ class _HotelDetailScreenState extends ConsumerState<HotelDetailScreen> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
-                  '৳${_fmtPrice(hotel.pricePerNight)}/night',
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: OneUIColors.primaryLight,
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '৳${_fmtPrice(hotel.pricePerNight)}/night',
+                      maxLines: 1,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary(context),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -359,25 +422,38 @@ class _HotelDetailScreenState extends ConsumerState<HotelDetailScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(icon, size: 18, color: OneUIColors.primaryLight),
-          const SizedBox(width: 10),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 14,
-              color: OneUIColors.textSecondaryLight,
+          Flexible(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 18, color: AppColors.primary(context)),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary(context),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          const Spacer(),
           Flexible(
             child: Text(
               value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.end,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: OneUIColors.textPrimaryLight,
+                color: AppColors.textPrimary(context),
               ),
             ),
           ),

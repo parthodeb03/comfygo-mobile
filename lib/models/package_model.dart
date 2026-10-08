@@ -96,7 +96,7 @@ class Package {
       id: 2,
       name: 'Pro',
       tier: PackageTier.pro,
-      price: 4.99,
+      price: 499,
       description: 'Pro tier with priority listing',
       bookingLimit: 10,
       discountPercentage: 5,
@@ -107,7 +107,7 @@ class Package {
       id: 3,
       name: 'Premium',
       tier: PackageTier.premium,
-      price: 9.99,
+      price: 999,
       description: 'Premium tier with featured listing',
       bookingLimit: -1, // unlimited
       discountPercentage: 10,
@@ -119,7 +119,7 @@ class Package {
       id: 4,
       name: 'Ultimate',
       tier: PackageTier.ultimate,
-      price: 19.99,
+      price: 1999,
       description: 'Ultimate tier with all features',
       bookingLimit: -1, // unlimited
       discountPercentage: 20,

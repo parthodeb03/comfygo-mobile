@@ -34,7 +34,7 @@ def test_create_hotel_booking_computes_price(client, tourist_headers):
     assert booking["guests"] == 2
     # price_per_night × 3 nights, computed server-side
     assert booking["total_price"] == pytest_approx(
-        hotel["price_per_night"] * 3
+        hotel["price_per_night"] * 3 * 0.8
     )
 
     # One room reserved
@@ -53,7 +53,7 @@ def test_create_destination_booking(client, tourist_headers):
     booking = resp.json()
     assert booking["item_name"] == dest["name"]
     # Destination price is per person
-    assert booking["total_price"] == pytest_approx(dest["price"] * 4)
+    assert booking["total_price"] == pytest_approx(dest["price"] * 4 * 0.8)
 
 
 def test_create_transport_booking_reserves_seats(client, tourist_headers):
@@ -67,7 +67,7 @@ def test_create_transport_booking_reserves_seats(client, tourist_headers):
     )
     assert resp.status_code in (200, 201), resp.text
     booking = resp.json()
-    assert booking["total_price"] == pytest_approx(transport["price"] * 2)
+    assert booking["total_price"] == pytest_approx(transport["price"] * 2 * 0.8)
 
     after = client.get(f"/api/v1/transports/{transport['id']}").json()
     assert after["available_seats"] == seats_before - 2
@@ -83,7 +83,7 @@ def test_create_guide_booking(client, tourist_headers):
     assert resp.status_code in (200, 201), resp.text
     booking = resp.json()
     assert booking["item_name"] == guide["name"]
-    assert booking["total_price"] == pytest_approx(guide["daily_rate"] * 2)
+    assert booking["total_price"] == pytest_approx(guide["daily_rate"] * 2 * 0.8)
 
 
 def test_create_unknown_item_404(client, tourist_headers):
@@ -254,14 +254,14 @@ def test_admin_can_update_status(client, admin_headers, tourist_headers):
     assert fetched["status"] == "confirmed"
 
 
-def test_invalid_status_value_400(client, admin_headers, tourist_headers):
+def test_invalid_status_value_returns_validation_error(client, admin_headers, tourist_headers):
     booking = _create_pending_booking(client, tourist_headers)
     resp = client.put(
         f"/api/v1/bookings/{booking['id']}/status",
         headers=admin_headers,
         json={"status": "banana"},
     )
-    assert resp.status_code == 400
+    assert resp.status_code == 422
 
 
 def test_status_update_requires_auth(client, tourist_headers):
@@ -295,6 +295,70 @@ def test_admin_endpoints_require_admin(client, tourist_headers):
         client.get("/api/v1/admin/bookings", headers=tourist_headers).status_code
         == 403
     )
+
+
+def test_basic_monthly_booking_limit(client, fresh_email):
+    registered = client.post("/api/v1/auth/register", json={
+        "email": fresh_email,
+        "full_name": "Basic Plan Test",
+        "password": "password123",
+        "role": "tourist",
+    })
+    assert registered.status_code == 200, registered.text
+    headers = {"Authorization": f"Bearer {registered.json()['access_token']}"}
+    destination = first_item(client, "/api/v1/destinations")
+
+    for _ in range(3):
+        response = client.post(
+            "/api/v1/bookings",
+            headers=headers,
+            json=make_booking_payload("destination", destination["id"]),
+        )
+        assert response.status_code == 200, response.text
+
+    limited = client.post(
+        "/api/v1/bookings",
+        headers=headers,
+        json=make_booking_payload("destination", destination["id"]),
+    )
+    assert limited.status_code == 403
+    assert "limit" in limited.json()["detail"].lower()
+
+
+def test_pro_package_discount_is_applied(client, fresh_email):
+    registered = client.post("/api/v1/auth/register", json={
+        "email": fresh_email,
+        "full_name": "Discount Plan Test",
+        "password": "password123",
+        "role": "tourist",
+    })
+    assert registered.status_code == 200, registered.text
+    headers = {"Authorization": f"Bearer {registered.json()['access_token']}"}
+    packages = client.get("/api/v1/packages").json()["items"]
+    pro = next(item for item in packages if item["tier"] == "pro")
+    subscribed = client.post(
+        "/api/v1/user-packages",
+        headers=headers,
+        json={
+            "package_id": pro["id"],
+            "payment_method": "card",
+            "card_number": "4242424242424242",
+            "expiry_date": "12/28",
+            "cvv": "123",
+        },
+    )
+    assert subscribed.status_code == 200, subscribed.text
+
+    destination = first_item(client, "/api/v1/destinations")
+    response = client.post(
+        "/api/v1/bookings",
+        headers=headers,
+        json=make_booking_payload("destination", destination["id"], guests=2),
+    )
+    assert response.status_code == 200, response.text
+    gross = destination["price"] * 2
+    assert response.json()["total_price"] == pytest_approx(gross * 0.95)
+    assert response.json()["discount_amount"] == pytest_approx(gross * 0.05)
 
 
 def pytest_approx(value, rel=1e-6):

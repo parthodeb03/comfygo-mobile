@@ -1,184 +1,59 @@
-# ComfyGo - Travel Agency App
+# ComfyGo
 
-A full-stack travel agency application built with Flutter (Samsung One UI design) and FastAPI backend.
+ComfyGo is a Flutter travel booking app with a FastAPI and PostgreSQL backend. The mobile screens follow the cream, charcoal, sage, and lime reference in photos/img.png. Flutter state management uses Riverpod.
 
 ## Features
 
-### User Roles
-- **Tourist**: Browse destinations, book hotels/transport/guides, make payments
-- **Guide**: Manage profile, view bookings, update availability
-- **Hotel Manager**: Manage hotel listings, view bookings, update availability
-- **Admin**: Full access to all data, manage users/bookings/payments/listings
+- Tourist, Guide, and Hotel Manager accounts; hidden Admin login
+- Destination, hotel, transport, and guide discovery and details
+- Bookings, payment records, package subscriptions, and admin management
+- Secure token storage, cached photos, and loading/error states
 
-### Core Features
-- Authentication with JWT tokens
-- Role-based dashboards
-- Destination browsing with search and filters
-- Hotel/Transport/Guide booking system
-- Payment processing (Card & Cash)
-- Package/Subscription system (Basic, Pro, Premium, Ultimate)
-- Admin panel for system management
+## Backend setup
 
-## Tech Stack
+Requires Python 3.11+, PostgreSQL, and Android Studio/Flutter.
 
-### Mobile App
-- **Framework**: Flutter (Dart)
-- **State Management**: Riverpod
-- **Navigation**: GoRouter
-- **HTTP Client**: Dio
-- **Secure Storage**: flutter_secure_storage
-- **Design**: Samsung One UI
+    cd backend
+    python -m venv .venv
+    .\.venv\Scripts\Activate.ps1
+    pip install -r requirements.txt
+    Copy-Item .env.example .env
+    python -c "import secrets; print(secrets.token_urlsafe(48))"
 
-### Backend
-- **Framework**: FastAPI (Python)
-- **Database**: PostgreSQL
-- **ORM**: SQLAlchemy
-- **Authentication**: JWT (python-jose)
-- **Password Hashing**: bcrypt (passlib)
+Paste the generated value into SECRET_KEY in backend/.env, replace the PostgreSQL DATABASE_URL placeholder with your database credentials, then set ADMIN_EMAIL and a strong ADMIN_PASSWORD. The seed script stores only a bcrypt hash; there is no built-in admin credential. Keep .env private.
 
-## Project Structure
+Create the comfygo PostgreSQL database, then from backend/ run:
 
-```
-comfygo/
-├── lib/                    # Flutter app
-│   ├── core/              # Core utilities
-│   │   ├── theme/         # One UI design system
-│   │   ├── widgets/       # Reusable widgets
-│   │   ├── router/        # GoRouter configuration
-│   │   └── constants/     # API constants
-│   ├── features/          # Feature screens
-│   │   ├── auth/          # Login, Signup, Forgot Password
-│   │   ├── home/          # Home screen
-│   │   ├── destinations/  # Destinations list/detail
-│   │   ├── hotels/        # Hotels list/detail
-│   │   ├── transports/    # Transport list
-│   │   ├── guides/        # Guides list/detail
-│   │   ├── bookings/      # Bookings list/detail
-│   │   ├── payments/      # Payment screen
-│   │   ├── packages/      # Package/Subscription
-│   │   ├── admin/         # Admin panel
-│   │   └── profile/       # User profile
-│   ├── models/            # Data models
-│   ├── services/          # API services
-│   └── state/             # Riverpod providers
-├── backend/               # FastAPI backend
-│   ├── app/
-│   │   ├── api/v1/        # API routes
-│   │   ├── core/          # Configuration
-│   │   ├── models/        # SQLAlchemy models
-│   │   ├── schemas/       # Pydantic schemas
-│   │   └── services/      # Business logic
-│   └── scripts/           # Seed scripts
-└── assets/                # App assets
-```
+    alembic upgrade head
+    python scripts/seed.py
+    uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
-## Setup Instructions
+API docs are at http://localhost:8000/docs. The admin login is opened by tapping the ComfyGo logo five times on the login screen.
 
-### Prerequisites
-- Flutter SDK (3.0+)
-- Python 3.8+
-- PostgreSQL
-- Android Studio (for Android development)
+The seed includes a sample tourist (ahmed@email.com / password123) and other role accounts. Change sample passwords before any shared deployment. Seed destination and listing photo URLs come from Unsplash; review each source and its current license terms before release.
 
-### 1. Backend Setup
+## Android app
 
-```bash
-# Navigate to backend directory
-cd backend
+From the repository root:
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+    flutter pub get
+    flutter run
 
-# Install dependencies
-pip install -r requirements.txt
+The Android emulator uses http://10.0.2.2:8000 by default. For a physical phone, pass the computer's LAN address:
 
-# Create .env file
-cat > .env << EOF
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/comfygo
-SECRET_KEY=your-secret-key-here
-EOF
+    flutter run --dart-define=API_BASE_URL=http://YOUR_PC_LAN_IP:8000
 
-# Create database
-createdb comfygo
+Local development uses HTTP. Release builds require an HTTPS API URL. Put the backend behind a TLS-enabled reverse proxy for deployment.
 
-# Run seed script
-python scripts/seed.py
+## Packages and payments
 
-# Start the server
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
+Current proposed monthly tiers are Basic (?0, 3 bookings), Pro (?499, 10 bookings, a 5% discount, and priority listing), Premium (?999, unlimited bookings, a 10% discount, and featured listing), and Ultimate (?1,999, unlimited bookings, a 20% discount, VIP support, and exclusive packages). Subscriptions are available to non-admin users; listing benefits apply to guide and hotel-manager listings.
 
-### 2. Flutter App Setup
+Card payments are simulated for sandbox development and do not charge a card or contact a payment processor. Cash payments remain pending until an admin confirms collection. Choose and integrate a real provider before accepting production payments.
 
-```bash
-# Navigate to project root
-cd ..
+## Verification
 
-# Install Flutter dependencies
-flutter pub get
+Backend flow tests use an isolated temporary SQLite database:
 
-# Run the app (Android)
-flutter run
-```
-
-### 3. Android Studio Setup
-
-1. Open Android Studio
-2. Open the project folder
-3. Wait for Gradle sync to complete
-4. Select an emulator or connected device
-5. Click Run (▶️) or use `flutter run`
-
-## Default Credentials
-
-### Admin Account
-- **Email**: admin@comfygo.com
-- **Password**: admin123
-
-### Sample User
-- **Email**: ahmed@email.com
-- **Password**: password123
-
-## API Documentation
-
-Once the backend is running, visit:
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
-
-## Package Tiers
-
-| Tier | Price | Bookings | Discount | Features |
-|------|-------|----------|----------|----------|
-| Basic | Free | 3/month | 0% | Basic access |
-| Pro | $4.99/month | 10/month | 5% | Priority listing |
-| Premium | $9.99/month | Unlimited | 10% | Featured listing |
-| Ultimate | $19.99/month | Unlimited | 20% | VIP support, exclusive packages |
-
-## State Management
-
-This app uses **Riverpod** for state management:
-- `authProvider`: Handles authentication state
-- `themeProvider`: Manages light/dark theme
-- `navigationProvider`: Controls bottom navigation
-
-## Design System
-
-The app follows **Samsung One UI** design language:
-- Large collapsing titles
-- Rounded cards with generous padding
-- Soft pastel accent colors
-- One UI color palette for light/dark modes
-- Spring-based animations
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+    cd backend
+    python -m pytest -q

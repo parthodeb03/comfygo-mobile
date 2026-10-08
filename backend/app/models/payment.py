@@ -7,12 +7,15 @@ import enum
 class PaymentMethod(str, enum.Enum):
     card = "card"
     cash = "cash"
+    bkash = "bkash"
+    nagad = "nagad"
 
 class PaymentStatus(str, enum.Enum):
     pending = "pending"
     completed = "completed"
     failed = "failed"
     refunded = "refunded"
+    voided = "voided"
 
 class Payment(Base):
     __tablename__ = "payments"
@@ -25,6 +28,7 @@ class Payment(Base):
     status = Column(Enum(PaymentStatus), default=PaymentStatus.pending)
     transaction_id = Column(String)
     card_last_four = Column(String)
+    wallet_number = Column(String)  # bKash / Nagad wallet phone number
     notes = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     

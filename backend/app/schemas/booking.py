@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from typing import Optional
 from datetime import datetime
 from ..models.booking import BookingStatus, BookingType
@@ -24,6 +24,7 @@ class BookingCreate(BookingBase):
     pass
 
 class BookingUpdate(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     status: Optional[BookingStatus] = None
     check_out: Optional[datetime] = None
     notes: Optional[str] = None
@@ -35,6 +36,7 @@ class BookingResponse(BookingBase):
     status: BookingStatus
     item_name: Optional[str] = None
     total_price: float
+    discount_amount: float = 0
     created_at: datetime
     updated_at: Optional[datetime] = None
 

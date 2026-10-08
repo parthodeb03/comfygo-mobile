@@ -1,6 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+
+import 'nature_background.dart';
 
 /// Unique photography for each section of the app
 abstract final class TravelPhotos {
@@ -34,21 +39,127 @@ abstract final class TravelPhotos {
   // Journey
   static const String journey = 'assets/images/bg_thanchi.jfif';
 
-  /// Get a unique photo for a destination by name
-  static String forDestination(String name) {
+  // ───────────────────────────────────────────────────────────
+  // DIVISION PHOTOS — real photography, one per division
+  // ───────────────────────────────────────────────────────────
+  static const String divDhaka = 'assets/images/divisions/dhaka.jpg';
+  static const String divChittagong = 'assets/images/divisions/chittagong.jpg';
+  static const String divSylhet = 'assets/images/divisions/sylhet.jpg';
+  static const String divRajshahi = 'assets/images/divisions/rajshahi.jpg';
+  static const String divKhulna = 'assets/images/divisions/khulna.jpg';
+  static const String divBarisal = 'assets/images/divisions/barisal.jpg';
+  static const String divRangpur = 'assets/images/divisions/rangpur.jpg';
+  static const String divMymensingh = 'assets/images/divisions/mymensingh.jpg';
+
+  // ───────────────────────────────────────────────────────────
+  // SPOT PHOTOS — real photography, one per tourist spot
+  // ───────────────────────────────────────────────────────────
+  static const String spotCoxsBazar = 'assets/images/spots/coxs_bazar.jpg';
+  static const String spotSundarbans = 'assets/images/spots/sundarbans.jpg';
+  static const String spotBandarban = 'assets/images/spots/bandarban.jpg';
+  static const String spotNilgiri = 'assets/images/spots/nilgiri.jpg';
+  static const String spotSrimangal = 'assets/images/spots/srimangal.jpg';
+  static const String spotJaflong = 'assets/images/spots/jaflong.jpg';
+  static const String spotRatargul = 'assets/images/spots/ratargul.jpg';
+  static const String spotAhsanManzil = 'assets/images/spots/ahsan_manzil.jpg';
+  static const String spotLalbagh = 'assets/images/spots/lalbagh.jpg';
+  static const String spotParliament = 'assets/images/spots/parliament.jpg';
+  static const String spotSonargaon = 'assets/images/spots/sonargaon.jpg';
+  static const String spotPaharpur = 'assets/images/spots/paharpur.jpg';
+  static const String spotKantanagar = 'assets/images/spots/kantanagar.jpg';
+  static const String spotBagerhat = 'assets/images/spots/bagerhat.jpg';
+  static const String spotKuakata = 'assets/images/spots/kuakata.jpg';
+  static const String spotKaptai = 'assets/images/spots/kaptai.jpg';
+  static const String spotPatenga = 'assets/images/spots/patenga.jpg';
+  static const String spotSajek = 'assets/images/spots/sajek.jpg';
+  static const String spotTajhat = 'assets/images/spots/tajhat.jpg';
+  static const String spotBagha = 'assets/images/spots/bagha.jpg';
+  static const String spotRajbari =
+      'assets/images/spots/mymensingh_rajbari.jpg';
+  static const String spotSaintMartin = 'assets/images/spots/saint_martin.jpg';
+
+  /// Division name (as stored in data) -> photo asset.
+  static const Map<String, String> divisionPhotos = {
+    'dhaka': divDhaka,
+    'chittagong': divChittagong,
+    'chattogram': divChittagong,
+    'sylhet': divSylhet,
+    'rajshahi': divRajshahi,
+    'khulna': divKhulna,
+    'barisal': divBarisal,
+    'barishal': divBarisal,
+    'rangpur': divRangpur,
+    'mymensingh': divMymensingh,
+  };
+
+  /// Spot keyword -> photo asset. Checked in order, so put the most
+  /// specific keywords first.
+  static const List<MapEntry<String, String>> spotPhotos = [
+    MapEntry('sundarban', spotSundarbans),
+    MapEntry('mangrove', spotSundarbans),
+    MapEntry('st. martin', spotSaintMartin),
+    MapEntry('st martin', spotSaintMartin),
+    MapEntry('saint martin', spotSaintMartin),
+    MapEntry('cox', spotCoxsBazar),
+    MapEntry('nilgiri', spotNilgiri),
+    MapEntry('thanchi', spotNilgiri),
+    MapEntry('bandarban', spotBandarban),
+    MapEntry('sajek', spotSajek),
+    MapEntry('rangamati', spotKaptai),
+    MapEntry('kaptai', spotKaptai),
+    MapEntry('patenga', spotPatenga),
+    MapEntry('srimangal', spotSrimangal),
+    MapEntry('srimongol', spotSrimangal),
+    MapEntry('tea', spotSrimangal),
+    MapEntry('jaflong', spotJaflong),
+    MapEntry('ratargul', spotRatargul),
+    MapEntry('ahsan', spotAhsanManzil),
+    MapEntry('pink palace', spotAhsanManzil),
+    MapEntry('lalbagh', spotLalbagh),
+    MapEntry('sangsad', spotParliament),
+    MapEntry('parliament', spotParliament),
+    MapEntry('sonargaon', spotSonargaon),
+    MapEntry('panam', spotSonargaon),
+    MapEntry('paharpur', spotPaharpur),
+    MapEntry('somapura', spotPaharpur),
+    MapEntry('kantanagar', spotKantanagar),
+    MapEntry('bagerhat', spotBagerhat),
+    MapEntry('sixty dome', spotBagerhat),
+    MapEntry('shat gombuj', spotBagerhat),
+    MapEntry('kuakata', spotKuakata),
+    MapEntry('bagha', spotBagha),
+    MapEntry('tajhat', spotTajhat),
+    MapEntry('rajbari', spotRajbari),
+    MapEntry('island', spotSaintMartin),
+    MapEntry('forest', spotRatargul),
+    MapEntry('hill', spotBandarban),
+    MapEntry('beach', spotCoxsBazar),
+    MapEntry('sea', spotCoxsBazar),
+  ];
+
+  /// Photo for a division name ("Dhaka", "Chittagong", "Barisal", ...).
+  static String forDivision(String? division) {
+    if (division == null || division.trim().isEmpty) return explore;
+    final key = division.trim().toLowerCase().replaceAll(
+      RegExp(r'[^a-z ]'),
+      '',
+    );
+    return divisionPhotos[key] ??
+        divisionPhotos[key.split(' ').first] ??
+        explore;
+  }
+
+  /// Get the best photo for a destination: spot first, then division.
+  static String forDestination(String name, [String? division]) {
     final lower = name.toLowerCase();
-    if (lower.contains('sundarbans') || lower.contains('mangrove')) {
-      return sundarbans;
+    for (final entry in spotPhotos) {
+      if (lower.contains(entry.key)) return entry.value;
     }
-    if (lower.contains('cox') ||
-        lower.contains('sea') ||
-        lower.contains('beach')) {
-      return coxsBazar;
+    final fromDivision = forDivision(division);
+    if (fromDivision != explore) return fromDivision;
+    for (final entry in divisionPhotos.entries) {
+      if (lower.contains(entry.key)) return entry.value;
     }
-    if (lower.contains('sylhet') || lower.contains('tea')) return sylhet;
-    if (lower.contains('bandarban') || lower.contains('hill')) return bandarban;
-    if (lower.contains('dhaka') || lower.contains('city')) return dhaka;
-    if (lower.contains('forest') || lower.contains('nature')) return forest;
     if (lower.contains('journey') || lower.contains('road')) return journey;
     return explore;
   }
@@ -64,6 +175,7 @@ class TravelPhoto extends StatelessWidget {
     this.asset = TravelPhotos.explore,
     this.label,
   });
+
   @override
   Widget build(BuildContext context) {
     Widget fallback() => Image.asset(
@@ -73,23 +185,36 @@ class TravelPhoto extends StatelessWidget {
       height: double.infinity,
       semanticLabel: label ?? 'Bangladesh travel scenery',
       errorBuilder: (_, _, _) => const ColoredBox(
-        color: Color(0xFF1B5E43),
+        color: Color(0xFFD9E6D2),
         child: Center(
-          child: Icon(Icons.landscape_rounded, color: Colors.white, size: 40),
+          child: Icon(
+            Icons.landscape_rounded,
+            color: Color(0xFF707266),
+            size: 40,
+          ),
         ),
       ),
     );
     final source = url?.trim();
     if (source == null || source.isEmpty) return fallback();
-    return Image.network(
-      source,
+    return CachedNetworkImage(
+      imageUrl: source,
       fit: BoxFit.cover,
       width: double.infinity,
       height: double.infinity,
-      semanticLabel: label,
-      errorBuilder: (_, _, _) => fallback(),
-      frameBuilder: (context, child, frame, sync) =>
-          frame == null ? fallback() : child,
+      imageBuilder: (context, provider) => Image(
+        image: provider,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        semanticLabel: label,
+      ),
+      placeholder: (context, _) => Shimmer.fromColors(
+        baseColor: const Color(0xFFE6E3D7),
+        highlightColor: const Color(0xFFF5F2E9),
+        child: const SizedBox.expand(child: ColoredBox(color: Colors.white)),
+      ),
+      errorWidget: (context, _, _) => fallback(),
     );
   }
 }
@@ -128,7 +253,7 @@ class TravelScaffold extends StatelessWidget {
                 data: MediaQuery.of(context).copyWith(
                   size: Size(width, MediaQuery.sizeOf(context).height),
                 ),
-                child: body,
+                child: NatureBackground.wrap(child: body),
               ),
             ),
           );
@@ -159,12 +284,25 @@ class TravelGrid extends StatelessWidget {
               .floor()
               .clamp(1, 4);
       final width = (constraints.maxWidth - spacing * (columns - 1)) / columns;
-      return Wrap(
-        spacing: spacing,
-        runSpacing: spacing,
-        children: [
-          for (final child in children) SizedBox(width: width, child: child),
-        ],
+      return AnimationLimiter(
+        child: Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: [
+            for (int i = 0; i < children.length; i++)
+              SizedBox(
+                width: width,
+                child: AnimationConfiguration.staggeredList(
+                  position: i,
+                  duration: const Duration(milliseconds: 420),
+                  child: SlideAnimation(
+                    verticalOffset: 26.0,
+                    child: FadeInAnimation(child: children[i]),
+                  ),
+                ),
+              ),
+          ],
+        ),
       );
     },
   );
@@ -313,6 +451,7 @@ class TravelCard extends StatelessWidget {
   final String? badge;
   final String? price;
   final String? priceLabel;
+  final String? heroTag;
   final VoidCallback? onTap;
   const TravelCard({
     super.key,
@@ -324,11 +463,51 @@ class TravelCard extends StatelessWidget {
     this.badge,
     this.price,
     this.priceLabel,
+    this.heroTag,
     this.onTap,
   });
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final image = AspectRatio(
+      aspectRatio: 1.65,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          TravelPhoto(
+            url: imageUrl,
+            asset: asset,
+            label: imageUrl == null ? null : title,
+          ),
+          if (badge != null)
+            Positioned(
+              left: 14,
+              right: 14,
+              top: 14,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1B5E43),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
+                  child: Text(
+                    badge!,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
     return Material(
       color: theme.colorScheme.surface,
       clipBehavior: Clip.antiAlias,
@@ -338,45 +517,7 @@ class TravelCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AspectRatio(
-              aspectRatio: 1.65,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  TravelPhoto(
-                    url: imageUrl,
-                    asset: asset,
-                    label: imageUrl == null ? null : title,
-                  ),
-                  if (badge != null)
-                    Positioned(
-                      left: 14,
-                      right: 14,
-                      top: 14,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1B5E43),
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 7,
-                          ),
-                          child: Text(
-                            badge!,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
+            if (heroTag != null) Hero(tag: heroTag!, child: image) else image,
             Padding(
               padding: const EdgeInsets.all(18),
               child: Column(
@@ -459,6 +600,133 @@ class TravelCard extends StatelessWidget {
   }
 }
 
+/// Row-directional card: photo on the left, content on the right.
+/// Used for spots, bookings, transports and other list-style browsing.
+class TravelRowCard extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final String? meta;
+  final String? trailing;
+  final String asset;
+  final String? imageUrl;
+  final String? heroTag;
+  final IconData? leadingIcon;
+  final VoidCallback? onTap;
+  final double imageSize;
+
+  const TravelRowCard({
+    super.key,
+    required this.title,
+    required this.asset,
+    this.subtitle,
+    this.meta,
+    this.trailing,
+    this.imageUrl,
+    this.heroTag,
+    this.leadingIcon,
+    this.onTap,
+    this.imageSize = 92,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final photo = SizedBox(
+      width: imageSize,
+      height: imageSize,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: TravelPhoto(url: imageUrl, asset: asset, label: title),
+      ),
+    );
+    return Material(
+      color: theme.colorScheme.surface,
+      clipBehavior: Clip.antiAlias,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (heroTag != null) Hero(tag: heroTag!, child: photo) else photo,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        subtitle!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                    if (meta != null) ...[
+                      const SizedBox(height: 7),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (leadingIcon != null) ...[
+                            Icon(
+                              leadingIcon,
+                              size: 14,
+                              color: theme.colorScheme.primary,
+                            ),
+                            const SizedBox(width: 5),
+                          ],
+                          Flexible(
+                            child: Text(
+                              meta!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (trailing != null)
+                Text(
+                  trailing!,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                )
+              else
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class TravelSection extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -527,4 +795,109 @@ class TravelEmpty extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// Photo tile for browsing destinations division by division.
+class TravelDivisionCard extends StatelessWidget {
+  final String label;
+  final String asset;
+  final bool isSelected;
+  final bool showCheck;
+  final double width;
+  final double height;
+  final VoidCallback? onTap;
+
+  const TravelDivisionCard({
+    super.key,
+    required this.label,
+    required this.asset,
+    this.isSelected = false,
+    this.showCheck = true,
+    this.width = 124,
+    this.height = 104,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOut,
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isSelected ? scheme.primary : Colors.transparent,
+            width: 2.5,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: scheme.primary.withValues(alpha: 0.35),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : const [],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              TravelPhoto(asset: asset, label: label),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0x00000000), Color(0xCC000000)],
+                    stops: [0.45, 1.0],
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 10,
+                right: 10,
+                bottom: 8,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    shadows: [Shadow(blurRadius: 6, color: Color(0xFF000000))],
+                  ),
+                ),
+              ),
+              if (isSelected && showCheck)
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      color: scheme.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check_rounded,
+                      size: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

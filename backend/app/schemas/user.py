@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from typing import Optional, List
 from datetime import datetime
 from ..models.user import UserRole
@@ -23,6 +23,7 @@ class UserCreate(UserBase):
 
 # Update schemas
 class UserUpdate(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     full_name: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[str] = None
@@ -30,6 +31,9 @@ class UserUpdate(BaseModel):
     bio: Optional[str] = None
     languages: Optional[List[str]] = None
     profile_image: Optional[str] = None
+    specialization: Optional[str] = None
+    experience: Optional[int] = Field(default=None, ge=0, le=80)
+    daily_rate: Optional[float] = Field(default=None, ge=0)
 
 # Response schemas
 class UserResponse(UserBase):
@@ -61,8 +65,16 @@ class AuthResponse(BaseModel):
     token_type: str = "bearer"
     user: UserResponse
 
+class RefreshTokenRequest(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    refresh_token: str
+
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
+
+class VerifyResetCodeRequest(BaseModel):
+    email: EmailStr
+    code: str = Field(min_length=6, max_length=6, pattern=r"\d{6}")
 
 class ResetPasswordRequest(BaseModel):
     token: str
