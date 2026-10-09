@@ -58,3 +58,14 @@ flutter:
     - assets/images/spots/
     - assets/icons/
     - assets/fonts/
+  fonts:
+    - family: Muli
+      fonts:
+        - asset: assets/fonts/Muli-Regular.ttf
+        - asset: assets/fonts/Muli-Bold.ttf
+          weight: 700
+
+    - family: FontAwesomeSolid
+      fonts:
+        - asset: assets/fonts/FontAwesomeSolid.otf
+          weight: 900

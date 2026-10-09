@@ -9,7 +9,7 @@ class OneUITypography {
   // ═══════════════════════════════════════════════════
   // FONT FAMILY
   // ═══════════════════════════════════════════════════
-  static const String fontFamily = 'Poppins';
+  static const String fontFamily = 'Muli';
 
   /// Get the Poppins TextStyle from Google Fonts
   static TextStyle poppins({

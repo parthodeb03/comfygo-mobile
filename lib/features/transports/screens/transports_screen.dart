@@ -35,7 +35,7 @@ class _TransportsScreenState extends ConsumerState<TransportsScreen> {
   Widget build(BuildContext context) {
     final data = ref.watch(transportsProvider);
     final dark = const Color(0xFF20271A);
-    final lime = const Color(0xFFB6CC35);
+    final lime = Theme.of(context).colorScheme.primary;
     final cream = AppColors.background(context);
     return Scaffold(
       backgroundColor: cream,
@@ -400,7 +400,7 @@ class _TransportsScreenState extends ConsumerState<TransportsScreen> {
                 _load();
               },
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFB6CC35),
+                backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: const Color(0xFF20271A),
                 shape: const StadiumBorder(),
               ),
@@ -601,7 +601,7 @@ class _TicketCard extends StatelessWidget {
               SizedBox(
                 width: 70,
                 child: ColoredBox(
-                  color: const Color(0xFFB6CC35),
+                  color: Theme.of(context).colorScheme.primary,
                   child: Stack(
                     alignment: Alignment.center,
                     children: [

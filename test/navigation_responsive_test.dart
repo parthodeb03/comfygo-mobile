@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:comfygo/core/widgets/navigation_shell.dart';
@@ -38,14 +39,14 @@ void main() {
       );
       addTearDown(router.dispose);
       await tester.pumpWidget(
-        MaterialApp.router(theme: OneUITheme.lightTheme, routerConfig: router),
+        ProviderScope(child: MaterialApp.router(theme: OneUITheme.lightTheme, routerConfig: router)),
       );
       await tester.pumpAndSettle();
       expect(
-        find.byType(width >= 840 ? NavigationRail : NavigationBar),
+        find.byType(width >= 840 ? NavigationRail : BottomNavigationBar),
         findsOneWidget,
       );
-      await tester.tap(find.text('Profile'));
+      await tester.tap((width >= 840 ? find.text('Profile') : find.byType(CircleAvatar)));
       await tester.pumpAndSettle();
       expect(router.routeInformationProvider.value.uri.path, '/profile');
       if (width >= 840) {
@@ -53,14 +54,14 @@ void main() {
           tester
               .widget<NavigationRail>(find.byType(NavigationRail))
               .selectedIndex,
-          3,
+          2,
         );
       } else {
         expect(
           tester
-              .widget<NavigationBar>(find.byType(NavigationBar))
-              .selectedIndex,
-          3,
+              .widget<BottomNavigationBar>(find.byType(BottomNavigationBar))
+              .currentIndex,
+          2,
         );
       }
       expect(tester.takeException(), isNull);

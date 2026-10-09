@@ -8,15 +8,15 @@ class OneUIColors {
   // ═══════════════════════════════════════════════════
   // PRIMARY - Naturistic Emerald Green
   // ═══════════════════════════════════════════════════
-  static const Color primaryLight = Color(0xFFB6CC35);
-  static const Color primaryDark = Color(0xFF9EAF28);
+  static const Color primaryLight = Color(0xFF3EBACE);
+  static const Color primaryDark = Color(0xFF3EBACE);
   static const Color primaryVariantLight = Color(0xFF20271A);
-  static const Color primarySoft = Color(0xFFD9E6D2);
+  static const Color primarySoft = Color(0xFFD8ECF1);
 
   // Button green (works with white text in BOTH light and dark mode)
   static const Color buttonGreenDark = Color(0xFF20271A);
-  static const Color buttonGreen = Color(0xFFB6CC35);
-  static const Color buttonGreenLight = Color(0xFF9EAF28);
+  static const Color buttonGreen = Color(0xFF3EBACE);
+  static const Color buttonGreenLight = Color(0xFF3EBACE);
 
   // ═══════════════════════════════════════════════════
   // SECONDARY - Lighter green accents
@@ -33,7 +33,7 @@ class OneUIColors {
   // ═══════════════════════════════════════════════════
   // BACKGROUNDS - soft, nature-inspired greens
   // ═══════════════════════════════════════════════════
-  static const Color backgroundLight = Color(0xFFEBE7DA);
+  static const Color backgroundLight = Color(0xFFF3F5F7);
   static const Color surfaceLight = Color(0xFFFFFFFF);
   static const Color surfaceVariantLight = Color(0xFFF3F0E6);
   static const Color inputFillLight = Color(0xFFF3F0E6);

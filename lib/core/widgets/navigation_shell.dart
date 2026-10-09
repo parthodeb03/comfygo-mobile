@@ -1,25 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class NavigationShell extends StatelessWidget {
+import '../../state/auth_provider.dart';
+
+class NavigationShell extends ConsumerWidget {
+  static const routes = <String>['/', '/destinations', '/bookings', '/profile'];
   final Widget? child;
   const NavigationShell({super.key, this.child});
 
-  static const routes = ['/', '/destinations', '/bookings', '/profile'];
-  static const labels = ['Home', 'Explore', 'Bookings', 'Profile'];
-  static const icons = [
-    Icons.home_rounded,
-    Icons.explore_rounded,
-    Icons.book_rounded,
-    Icons.person_rounded,
-  ];
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final path = GoRouterState.of(context).uri.path;
-    final index = routes.indexOf(path).clamp(0, 3);
+    final selectedIndex = path == '/bookings'
+        ? 1
+        : path == '/profile'
+            ? 2
+            : 0;
+    final user = ref.watch(currentUserProvider);
 
-    void navigate(int value) => context.go(routes[value]);
+    void navigate(int value) {
+      switch (value) {
+        case 0:
+          context.go('/destinations');
+          return;
+        case 1:
+          context.go('/bookings');
+          return;
+        case 2:
+          context.go('/profile');
+          return;
+      }
+    }
 
     final wide = MediaQuery.sizeOf(context).width >= 840;
     return Scaffold(
@@ -28,15 +40,22 @@ class NavigationShell extends StatelessWidget {
               children: [
                 SafeArea(
                   child: NavigationRail(
-                    selectedIndex: index,
+                    selectedIndex: selectedIndex,
                     onDestinationSelected: navigate,
                     labelType: NavigationRailLabelType.all,
-                    destinations: [
-                      for (var i = 0; i < routes.length; i++)
-                        NavigationRailDestination(
-                          icon: Icon(icons[i]),
-                          label: Text(labels[i]),
-                        ),
+                    destinations: const [
+                      NavigationRailDestination(
+                        icon: Icon(Icons.search, size: 30),
+                        label: Text('Search'),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.bookmark_border, size: 30),
+                        label: Text('Bookings'),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.person, size: 30),
+                        label: Text('Profile'),
+                      ),
                     ],
                   ),
                 ),
@@ -47,14 +66,37 @@ class NavigationShell extends StatelessWidget {
           : child,
       bottomNavigationBar: wide
           ? null
-          : NavigationBar(
-              selectedIndex: index,
-              onDestinationSelected: navigate,
-              destinations: [
-                for (var i = 0; i < routes.length; i++)
-                  NavigationDestination(icon: Icon(icons[i]), label: labels[i]),
+          : BottomNavigationBar(
+              currentIndex: selectedIndex,
+              onTap: navigate,
+              showSelectedLabels: false,
+              showUnselectedLabels: false,
+              type: BottomNavigationBarType.fixed,
+              items: [
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.search, size: 30),
+                  label: '',
+                ),
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.bookmark_border, size: 30),
+                  label: '',
+                ),
+                BottomNavigationBarItem(
+                  icon: CircleAvatar(
+                    radius: 15,
+                    backgroundImage: user?.profileImage?.isNotEmpty == true
+                        ? NetworkImage(user!.profileImage!)
+                        : null,
+                    child: user?.profileImage?.isNotEmpty == true
+                        ? null
+                        : const Icon(Icons.person, size: 18),
+                  ),
+                  label: '',
+                ),
               ],
             ),
     );
   }
 }
+
+

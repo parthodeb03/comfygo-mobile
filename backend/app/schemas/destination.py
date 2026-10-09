@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Optional, List
+from pydantic import BaseModel, Field
+from typing import Optional, List, Any
 from datetime import datetime
 
 class DestinationBase(BaseModel):
@@ -9,7 +9,7 @@ class DestinationBase(BaseModel):
     division: str
     price: float
     best_time_to_visit: Optional[str] = None
-    activities: Optional[List[str]] = None
+    activities: Optional[List[Any]] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     is_featured: bool = False
@@ -25,7 +25,7 @@ class DestinationUpdate(BaseModel):
     price: Optional[float] = None
     images: Optional[List[str]] = None
     best_time_to_visit: Optional[str] = None
-    activities: Optional[List[str]] = None
+    activities: Optional[List[Any]] = None
     is_featured: Optional[bool] = None
 
 class DestinationResponse(DestinationBase):
@@ -37,3 +37,15 @@ class DestinationResponse(DestinationBase):
     
     class Config:
         from_attributes = True
+
+class ActivityResponse(BaseModel):
+    imageUrl: str = Field(validation_alias="image_url")
+    name: str
+    type: str
+    startTimes: List[str] = Field(validation_alias="start_times")
+    rating: int
+    price: float
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True

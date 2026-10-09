@@ -1,5 +1,6 @@
 from .user import User, Admin, UserRole
 from .destination import Destination
+from .activity import Activity
 from .hotel import Hotel
 from .transport import Transport
 from .guide import Guide
@@ -16,6 +17,7 @@ __all__ = [
     "Admin",
     "UserRole",
     "Destination",
+    "Activity",
     "Hotel",
     "Transport",
     "Guide",

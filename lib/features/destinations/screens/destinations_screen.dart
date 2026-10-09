@@ -34,12 +34,13 @@ class _DestinationsScreenState extends ConsumerState<DestinationsScreen> {
 
   Future<void> _refreshFavorites() async {
     try {
-      _favoriteIds = (await ref
-              .read(favoriteServiceProvider)
-              .getFavorites()
-              .catchError((Object _) => <Favorite>[]))
-          .map((f) => f.itemId)
-          .toList();
+      _favoriteIds =
+          (await ref
+                  .read(favoriteServiceProvider)
+                  .getFavorites()
+                  .catchError((Object _) => <Favorite>[]))
+              .map((f) => f.itemId)
+              .toList();
     } catch (_) {
       // Keep the local list as a fallback
     }
@@ -165,7 +166,7 @@ class _DestinationsScreenState extends ConsumerState<DestinationsScreen> {
                   itemBuilder: (context, index) {
                     final value = _categories[index];
                     final selected = _selected == value;
-                    return                    ChoiceChip(
+                    return ChoiceChip(
                       label: Text(value),
                       selected: selected,
                       onSelected: (_) {
@@ -211,7 +212,8 @@ class _DestinationsScreenState extends ConsumerState<DestinationsScreen> {
                     message: 'No destinations in this category yet.',
                   ),
                 ),
-              )              else
+              )
+            else
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
                 sliver: SliverGrid(
@@ -238,16 +240,14 @@ class _DestinationsScreenState extends ConsumerState<DestinationsScreen> {
                       onFavorite: () async {
                         if (_showFavorites) return;
                         if (_favoriteIds.contains(item.id)) {
-                          await ref.read(favoriteServiceProvider).removeFavorite(
-                                'destination',
-                                item.id,
-                              );
+                          await ref
+                              .read(favoriteServiceProvider)
+                              .removeFavorite('destination', item.id);
                           _favoriteIds.remove(item.id);
                         } else {
-                          await ref.read(favoriteServiceProvider).toggleFavorite(
-                                'destination',
-                                item.id,
-                              );
+                          await ref
+                              .read(favoriteServiceProvider)
+                              .toggleFavorite('destination', item.id);
                           _favoriteIds.add(item.id);
                         }
                         setState(() {});
@@ -272,7 +272,7 @@ class _DestinationsScreenState extends ConsumerState<DestinationsScreen> {
                   : () =>
                         context.push('/destinations/${destinations.first.id}'),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFB6CC35),
+                backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: const Color(0xFF20271A),
                 disabledBackgroundColor: const Color(0xFFD9D9C9),
                 shape: const StadiumBorder(),

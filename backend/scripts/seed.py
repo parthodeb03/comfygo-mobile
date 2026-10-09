@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.core.config import settings
 from app.core.database import engine, SessionLocal, Base
 from app.models import (
-    User, Admin, Destination, Hotel, Transport, Guide,
+    User, Admin, Destination, Activity, Hotel, Transport, Guide,
     Booking, Payment, Package, UserPackage,
     Favorite, Review, ContactMessage,
     UserRole, BookingStatus, BookingType,
@@ -242,6 +242,31 @@ def seed_database():
                 images=IMAGES["bandarban"],
             ),
         ]
+        for destination in destinations:
+            activity_records = []
+            activity_records = [
+                {
+                    "imageUrl": destination.images[0] if destination.images else "",
+                    "name": activity_name,
+                    "type": "Sightseeing Tour",
+                    "startTimes": ["9:00 AM", "2:00 PM"],
+                    "rating": 5,
+                    "price": max(500, int(destination.price / 10)),
+                }
+                for activity_name in destination.activities
+            ]
+            destination.activities = activity_records
+            destination.tour_activities = [
+                Activity(
+                    image_url=activity["imageUrl"],
+                    name=activity["name"],
+                    type=activity["type"],
+                    start_times=activity["startTimes"],
+                    rating=activity["rating"],
+                    price=activity["price"],
+                )
+                for activity in activity_records
+            ]
         db.add_all(destinations)
         db.flush()
         print(f"[OK] {len(destinations)} destinations created")

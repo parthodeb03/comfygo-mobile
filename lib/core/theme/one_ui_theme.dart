@@ -14,7 +14,7 @@ class OneUITheme {
   // ═══════════════════════════════════════════════════
   static ThemeData get lightTheme {
     return ThemeData(
-      useMaterial3: true,
+      useMaterial3: false,
       brightness: Brightness.light,
       fontFamily: OneUITypography.fontFamily,
 
@@ -302,7 +302,7 @@ class OneUITheme {
   // ═══════════════════════════════════════════════════
   static ThemeData get darkTheme {
     return ThemeData(
-      useMaterial3: true,
+      useMaterial3: false,
       brightness: Brightness.dark,
       fontFamily: OneUITypography.fontFamily,
 
