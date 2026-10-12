@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/navigation.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../models/models.dart';
@@ -175,7 +176,7 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => goBack(context),
         ),
         title: const Text('Admin Panel'),
         actions: [
@@ -303,7 +304,7 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
       (
         'Transport',
         bookings.where((b) => b.type == BookingType.transport).length,
-        const Color(0xFF2196F3),
+        AppColors.brandGreen,
       ),
       (
         'Guides',

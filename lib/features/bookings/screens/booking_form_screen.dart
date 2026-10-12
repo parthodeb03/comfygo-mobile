@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/navigation.dart';
 import '../../../core/theme/one_ui_colors.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../models/models.dart';
@@ -333,7 +334,7 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
         leading: IconButton(
           key: const Key('booking-form-back'),
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => context.pop(),
+          onPressed: () => goBack(context),
         ),
         title: const Text('Book Now'),
       ),

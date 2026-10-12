@@ -392,7 +392,8 @@ class CGListingCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface(context),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.divider(context), width: 1),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
@@ -407,7 +408,7 @@ class CGListingCard extends StatelessWidget {
             ),
             // Info
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(14, 13, 14, 15),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -422,7 +423,7 @@ class CGListingCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   if (subtitle != null) ...[
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       subtitle!,
                       style: TextStyle(
@@ -434,7 +435,7 @@ class CGListingCard extends StatelessWidget {
                     ),
                   ],
                   if (price != null) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     Text(
                       price!,
                       style: TextStyle(

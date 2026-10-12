@@ -5,6 +5,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
+import '../theme/app_colors.dart';
+import '../utils/navigation.dart';
 import 'nature_background.dart';
 
 /// Unique photography for each section of the app
@@ -23,6 +25,9 @@ abstract final class TravelPhotos {
 
   // Hotels
   static const String hotels = 'assets/images/bg_hotels.jpg';
+
+  // List screens backdrop (photo from the project photos/ folder)
+  static const String listGreen = 'assets/images/bg_list_green.jpg';
 
   // Transport
   static const String transport = journey;
@@ -226,6 +231,9 @@ class TravelScaffold extends StatelessWidget {
   final Color? backgroundColor;
   final Widget? bottomNavigationBar;
   final double maxContentWidth;
+
+  /// When set, a photo + gradient backdrop replaces the plain nature wash.
+  final String? photoBackground;
   const TravelScaffold({
     super.key,
     required this.body,
@@ -233,6 +241,7 @@ class TravelScaffold extends StatelessWidget {
     this.backgroundColor,
     this.bottomNavigationBar,
     this.maxContentWidth = 1200,
+    this.photoBackground,
   });
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -253,7 +262,12 @@ class TravelScaffold extends StatelessWidget {
                 data: MediaQuery.of(context).copyWith(
                   size: Size(width, MediaQuery.sizeOf(context).height),
                 ),
-                child: NatureBackground.wrap(child: body),
+                child: photoBackground == null
+                    ? NatureBackground.wrap(child: body)
+                    : PhotoBackground.wrap(
+                        child: body,
+                        asset: photoBackground!,
+                      ),
               ),
             ),
           );
@@ -313,32 +327,46 @@ class TravelBanner extends StatelessWidget {
   final String subtitle;
   final String asset;
   final String eyebrow;
+
+  /// When false the banner renders as a solid nature-green card with no
+  /// photo behind the copy.
+  final bool showImage;
   const TravelBanner({
     super.key,
     required this.title,
     required this.subtitle,
     this.asset = TravelPhotos.home,
     this.eyebrow = 'COMFYGO / BANGLADESH',
+    this.showImage = true,
   });
   @override
   Widget build(BuildContext context) => SizedBox(
     width: double.infinity,
     child: ClipRRect(
       borderRadius: BorderRadius.circular(24),
-      child: Stack(
-        children: [
-          Positioned.fill(child: TravelPhoto(asset: asset)),
-          const Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xE61B5E43), Color(0x501B5E43)],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF1B5E43), Color(0xFF123F2B)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Stack(
+          children: [
+            if (showImage)
+              Positioned.fill(child: TravelPhoto(asset: asset)),
+            const Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xE61B5E43), Color(0x501B5E43)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
                 ),
               ),
             ),
-          ),
           Padding(
             padding: EdgeInsets.all(
               MediaQuery.sizeOf(context).width < 400 ? 22 : 32,
@@ -386,7 +414,8 @@ class TravelBanner extends StatelessWidget {
               ],
             ),
           ),
-        ],
+          ],
+        ),
       ),
     ),
   );
@@ -415,9 +444,9 @@ class TravelHeader extends StatelessWidget {
           children: [
             Row(
               children: [
-                if (showBack && Navigator.of(context).canPop())
+                if (showBack)
                   IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => goBack(context),
                     icon: const Icon(Icons.arrow_back_rounded),
                     tooltip: 'Back',
                   ),
@@ -642,11 +671,14 @@ class TravelRowCard extends StatelessWidget {
     return Material(
       color: theme.colorScheme.surface,
       clipBehavior: Clip.antiAlias,
-      borderRadius: BorderRadius.circular(18),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: AppColors.divider(context), width: 1),
+      ),
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.fromLTRB(13, 13, 12, 13),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -665,7 +697,7 @@ class TravelRowCard extends StatelessWidget {
                       ),
                     ),
                     if (subtitle != null) ...[
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 4),
                       Text(
                         subtitle!,
                         maxLines: 1,
@@ -676,7 +708,7 @@ class TravelRowCard extends StatelessWidget {
                       ),
                     ],
                     if (meta != null) ...[
-                      const SizedBox(height: 7),
+                      const SizedBox(height: 8),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [

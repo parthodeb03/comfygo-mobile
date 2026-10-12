@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/navigation.dart';
 import '../../../core/widgets/widgets.dart';
 
 /// Help & Support — FAQs plus real contact actions (call / email).
@@ -48,7 +49,7 @@ class HelpSupportScreen extends StatelessWidget {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => context.pop(),
+          onPressed: () => goBack(context),
         ),
         title: const Text('Help & Support'),
       ),
@@ -142,7 +143,7 @@ class HelpSupportScreen extends StatelessWidget {
                   icon: Icons.email_rounded,
                   title: 'Email us',
                   subtitle: 'support@comfygo.com · replies within 24 hours',
-                  color: const Color(0xFF2196F3),
+                  color: AppColors.brandGreen,
                 ),
                 const SizedBox(height: 10),
                 _ContactTile(

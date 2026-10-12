@@ -39,7 +39,7 @@ From the repository root:
     flutter pub get
     flutter run
 
-The Android emulator uses http://10.0.2.2:8000 by default. For a physical phone, pass the computer's LAN address:
+The app defaults to http://localhost:8000, which reaches the host from a USB-connected phone through `adb reverse tcp:8000 tcp:8000`. The Android emulator needs http://10.0.2.2:8000 instead. For a phone on Wi-Fi, pass the computer's LAN address:
 
     flutter run --dart-define=API_BASE_URL=http://YOUR_PC_LAN_IP:8000
 

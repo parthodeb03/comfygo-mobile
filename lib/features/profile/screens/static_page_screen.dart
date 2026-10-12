@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/navigation.dart';
 import '../../../core/theme/theme.dart';
 
 /// Content data for a static info page.
@@ -147,7 +147,7 @@ class StaticPageScreen extends StatelessWidget {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => context.pop(),
+          onPressed: () => goBack(context),
         ),
         title: Text(page.title),
       ),

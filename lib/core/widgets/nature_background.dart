@@ -27,6 +27,73 @@ class NatureBackground extends StatelessWidget {
   }
 }
 
+/// Photo backdrop for list screens: a real travel photo washed with a
+/// green gradient so cards and text stay readable in both themes.
+class PhotoBackground extends StatelessWidget {
+  final String asset;
+  final Widget? child;
+
+  const PhotoBackground({
+    super.key,
+    this.asset = 'assets/images/bg_list_green.jpg',
+    this.child,
+  });
+
+  /// Standard usage: fills the parent and layers [child] on top.
+  static Widget wrap({
+    required Widget child,
+    String asset = 'assets/images/bg_list_green.jpg',
+  }) => Stack(
+    fit: StackFit.expand,
+    children: [
+      Positioned.fill(child: PhotoBackground(asset: asset)),
+      child,
+    ],
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = AppColors.isDark(context);
+    final photo = Positioned.fill(
+      child: Image.asset(
+        asset,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => const SizedBox.shrink(),
+      ),
+    );
+    final wash = Positioned.fill(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: dark
+                ? const [
+                    Color(0xD90B1610),
+                    Color(0x9E0C1710),
+                    Color(0xC408120C),
+                  ]
+                : const [
+                    Color(0xC4EDF6EA),
+                    Color(0xA8DFEDE0),
+                    Color(0xD6D2E6D6),
+                  ],
+          ),
+        ),
+      ),
+    );
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (child == null) const ColoredBox(color: Color(0xFFE3F0E7)),
+        photo,
+        wash,
+        ?child,
+      ],
+    );
+  }
+}
+
 class _NaturePainter extends CustomPainter {
   final bool dark;
   const _NaturePainter({required this.dark});
@@ -56,9 +123,8 @@ class _NaturePainter extends CustomPainter {
         center,
         radius,
         Paint()
-          ..shader = RadialGradient(
-            colors: [color, color.withValues(alpha: 0)],
-          ).createShader(Rect.fromCircle(center: center, radius: radius)),
+          ..shader = RadialGradient(colors: [color, color.withValues(alpha: 0)])
+              .createShader(Rect.fromCircle(center: center, radius: radius)),
       );
     }
 
@@ -71,32 +137,29 @@ class _NaturePainter extends CustomPainter {
     blob(0.80, 0.72, 0.70, green.withValues(alpha: dark ? 0.14 : 0.08));
 
     // Gentle hill silhouette near the bottom
-    final hill =
-        Path()
-          ..moveTo(0, size.height)
-          ..lineTo(0, size.height * 0.88)
-          ..quadraticBezierTo(
-            size.width * 0.28,
-            size.height * 0.80,
-            size.width * 0.55,
-            size.height * 0.89,
-          )
-          ..quadraticBezierTo(
-            size.width * 0.80,
-            size.height * 0.97,
-            size.width,
-            size.height * 0.88,
-          )
-          ..lineTo(size.width, size.height)
-          ..close();
+    final hill = Path()
+      ..moveTo(0, size.height)
+      ..lineTo(0, size.height * 0.88)
+      ..quadraticBezierTo(
+        size.width * 0.28,
+        size.height * 0.80,
+        size.width * 0.55,
+        size.height * 0.89,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.80,
+        size.height * 0.97,
+        size.width,
+        size.height * 0.88,
+      )
+      ..lineTo(size.width, size.height)
+      ..close();
     canvas.drawPath(
       hill,
-      Paint()
-        ..color = green.withValues(alpha: dark ? 0.22 : 0.07),
+      Paint()..color = green.withValues(alpha: dark ? 0.22 : 0.07),
     );
   }
 
   @override
-  bool shouldRepaint(_NaturePainter oldDelegate) =>
-      oldDelegate.dark != dark;
+  bool shouldRepaint(_NaturePainter oldDelegate) => oldDelegate.dark != dark;
 }

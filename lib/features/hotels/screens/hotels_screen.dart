@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/navigation.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../state/service_providers.dart';
 
@@ -34,10 +35,11 @@ class _HotelsScreenState extends ConsumerState<HotelsScreen> {
 
     return TravelScaffold(
       backgroundColor: AppColors.background(context),
+      photoBackground: TravelPhotos.listGreen,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => context.pop(),
+          onPressed: () => goBack(context),
         ),
         title: const Text('Hotels'),
       ),
@@ -52,6 +54,7 @@ class _HotelsScreenState extends ConsumerState<HotelsScreen> {
                   title: 'Stay somewhere special',
                   subtitle: 'Find a comfortable base for your next adventure.',
                   asset: TravelPhotos.hotels,
+                  showImage: false,
                 ),
               ),
             ),

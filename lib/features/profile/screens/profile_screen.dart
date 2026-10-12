@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/navigation.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../state/auth_provider.dart';
@@ -41,7 +42,30 @@ class ProfileScreen extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             children: [
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+
+              // ─── Back to home ──────────────────────────────
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Material(
+                  color: AppColors.greenSoft(context),
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    onTap: () => goBack(context),
+                    customBorder: const CircleBorder(),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Icon(
+                        Icons.arrow_back_rounded,
+                        size: 20,
+                        color: AppColors.accentGreen(context),
+                        semanticLabel: 'Back',
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
 
               // ─── Avatar + Name ─────────────────────────────
               CircleAvatar(
@@ -238,7 +262,7 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   _SettingsTile(
                     icon: Icons.help_outline_rounded,
-                    color: const Color(0xFF2196F3),
+                    color: AppColors.brandGreen,
                     title: 'Help & Support',
                     subtitle: 'FAQs, contact us, feedback',
                     trailing:  Icon(

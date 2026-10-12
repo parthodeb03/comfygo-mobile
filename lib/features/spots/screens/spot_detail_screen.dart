@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/navigation.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../data/tourist_spots.dart';
 
@@ -105,7 +106,7 @@ class SpotDetailScreen extends StatelessWidget {
                     color: Colors.white,
                   ),
                 ),
-                onPressed: () => context.canPop() ? context.pop() : context.go('/'),
+                onPressed: () => goBack(context),
               ),
               flexibleSpace: FlexibleSpaceBar(
                 background: Stack(

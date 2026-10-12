@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/navigation.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../state/service_providers.dart';
 import '../../../models/favorite_model.dart';
@@ -84,180 +85,185 @@ class _DestinationsScreenState extends ConsumerState<DestinationsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background(context),
-      body: SafeArea(
-        child: CustomScrollView(
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-              sliver: SliverToBoxAdapter(
-                child: Row(
-                  children: [
-                    _RoundIcon(
-                      icon: Icons.arrow_back_rounded,
-                      onTap: () => context.go('/'),
-                    ),
-                    const Spacer(),
-                    _RoundIcon(
-                      icon: Icons.tune_rounded,
-                      onTap: () => _showCategoryFilters(context),
-                    ),
-                    const SizedBox(width: 10),
-                    _RoundIcon(
-                      icon: _showFavorites
-                          ? Icons.star_rounded
-                          : Icons.star_border_rounded,
-                      onTap: () {
-                        setState(() => _showFavorites = !_showFavorites);
-                        _refreshFavorites();
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
-              sliver: SliverToBoxAdapter(
-                child: Text(
-                  'Select\ndestination',
-                  style: TextStyle(
-                    color: AppColors.textPrimary(context),
-                    fontSize: 34,
-                    height: 1.05,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -1.1,
-                  ),
-                ),
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-              sliver: SliverToBoxAdapter(
-                child: TextField(
-                  controller: _search,
-                  onChanged: (_) => _load(),
-                  decoration: InputDecoration(
-                    hintText: 'Search destinations',
-                    prefixIcon: const Icon(Icons.search_rounded),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(28),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(28),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 13),
-                  ),
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: 48,
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _categories.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 9),
-                  itemBuilder: (context, index) {
-                    final value = _categories[index];
-                    final selected = _selected == value;
-                    return ChoiceChip(
-                      label: Text(value),
-                      selected: selected,
-                      onSelected: (_) {
-                        setState(() => _selected = value);
-                        _refreshFavorites();
-                      },
-                      showCheckmark: false,
-                      backgroundColor: Colors.white,
-                      selectedColor: const Color(0xFFD9E6D2),
-                      side: BorderSide.none,
-                      shape: const StadiumBorder(),
-                      labelStyle: TextStyle(
-                        color: AppColors.textPrimary(context),
-                        fontSize: 13,
-                        fontWeight: selected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                    );
-                  },
-                ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            if (data.isLoading)
-              const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (data.error != null)
-              SliverFillRemaining(
-                child: Center(
-                  child: TravelEmpty(
-                    message: 'Unable to load destinations. Please try again.',
-                    onRetry: _load,
-                  ),
-                ),
-              )
-            else if (destinations.isEmpty)
-              const SliverFillRemaining(
-                child: Center(
-                  child: TravelEmpty(
-                    message: 'No destinations in this category yet.',
-                  ),
-                ),
-              )
-            else
+      body: PhotoBackground.wrap(
+        child: SafeArea(
+          child: CustomScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            slivers: [
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 0.72,
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                sliver: SliverToBoxAdapter(
+                  child: Row(
+                    children: [
+                      _RoundIcon(
+                        icon: Icons.arrow_back_rounded,
+                        onTap: () => goBack(context),
+                      ),
+                      const Spacer(),
+                      _RoundIcon(
+                        icon: Icons.tune_rounded,
+                        onTap: () => _showCategoryFilters(context),
+                      ),
+                      const SizedBox(width: 10),
+                      _RoundIcon(
+                        icon: _showFavorites
+                            ? Icons.star_rounded
+                            : Icons.star_border_rounded,
+                        onTap: () {
+                          setState(() => _showFavorites = !_showFavorites);
+                          _refreshFavorites();
+                        },
+                      ),
+                    ],
                   ),
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final item = destinations[index];
-                    final asset = TravelPhotos.forDestination(
-                      item.name,
-                      item.division,
-                    );
-                    return _DestinationTile(
-                      name: item.name,
-                      division: item.division,
-                      asset: asset,
-                      imageUrl: item.images.isEmpty ? null : item.images.first,
-                      isFavorite: !_showFavorites
-                          ? _favoriteIds.contains(item.id)
-                          : false,
-                      onFavorite: () async {
-                        if (_showFavorites) return;
-                        if (_favoriteIds.contains(item.id)) {
-                          await ref
-                              .read(favoriteServiceProvider)
-                              .removeFavorite('destination', item.id);
-                          _favoriteIds.remove(item.id);
-                        } else {
-                          await ref
-                              .read(favoriteServiceProvider)
-                              .toggleFavorite('destination', item.id);
-                          _favoriteIds.add(item.id);
-                        }
-                        setState(() {});
-                      },
-                      onTap: () => context.push('/destinations/${item.id}'),
-                    );
-                  }, childCount: destinations.length),
                 ),
               ),
-          ],
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
+                sliver: SliverToBoxAdapter(
+                  child: Text(
+                    'Select\ndestination',
+                    style: TextStyle(
+                      color: AppColors.textPrimary(context),
+                      fontSize: 34,
+                      height: 1.05,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -1.1,
+                    ),
+                  ),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+                sliver: SliverToBoxAdapter(
+                  child: TextField(
+                    controller: _search,
+                    onChanged: (_) => _load(),
+                    decoration: InputDecoration(
+                      hintText: 'Search destinations',
+                      prefixIcon: const Icon(Icons.search_rounded),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(28),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(28),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 13),
+                    ),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 48,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _categories.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 9),
+                    itemBuilder: (context, index) {
+                      final value = _categories[index];
+                      final selected = _selected == value;
+                      return ChoiceChip(
+                        label: Text(value),
+                        selected: selected,
+                        onSelected: (_) {
+                          setState(() => _selected = value);
+                          _refreshFavorites();
+                        },
+                        showCheckmark: false,
+                        backgroundColor: AppColors.surface(context),
+                        selectedColor: AppColors.greenMist(context),
+                        side: BorderSide.none,
+                        shape: const StadiumBorder(),
+                        labelStyle: TextStyle(
+                          color: AppColors.textPrimary(context),
+                          fontSize: 13,
+                          fontWeight: selected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              if (data.isLoading)
+                const SliverFillRemaining(
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (data.error != null)
+                SliverFillRemaining(
+                  child: Center(
+                    child: TravelEmpty(
+                      message: 'Unable to load destinations. Please try again.',
+                      onRetry: _load,
+                    ),
+                  ),
+                )
+              else if (destinations.isEmpty)
+                const SliverFillRemaining(
+                  child: Center(
+                    child: TravelEmpty(
+                      message: 'No destinations in this category yet.',
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                          childAspectRatio: 0.72,
+                        ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final item = destinations[index];
+                      final asset = TravelPhotos.forDestination(
+                        item.name,
+                        item.division,
+                      );
+                      return _DestinationTile(
+                        name: item.name,
+                        division: item.division,
+                        asset: asset,
+                        imageUrl: item.images.isEmpty
+                            ? null
+                            : item.images.first,
+                        isFavorite: !_showFavorites
+                            ? _favoriteIds.contains(item.id)
+                            : false,
+                        onFavorite: () async {
+                          if (_showFavorites) return;
+                          if (_favoriteIds.contains(item.id)) {
+                            await ref
+                                .read(favoriteServiceProvider)
+                                .removeFavorite('destination', item.id);
+                            _favoriteIds.remove(item.id);
+                          } else {
+                            await ref
+                                .read(favoriteServiceProvider)
+                                .toggleFavorite('destination', item.id);
+                            _favoriteIds.add(item.id);
+                          }
+                          setState(() {});
+                        },
+                        onTap: () => context.push('/destinations/${item.id}'),
+                      );
+                    }, childCount: destinations.length),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: SafeArea(
@@ -273,8 +279,7 @@ class _DestinationsScreenState extends ConsumerState<DestinationsScreen> {
                         context.push('/destinations/${destinations.first.id}'),
               style: FilledButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: const Color(0xFF20271A),
-                disabledBackgroundColor: const Color(0xFFD9D9C9),
+                disabledBackgroundColor: AppColors.surfaceVariant(context),
                 shape: const StadiumBorder(),
                 elevation: 0,
               ),
@@ -292,7 +297,7 @@ class _DestinationsScreenState extends ConsumerState<DestinationsScreen> {
   void _showCategoryFilters(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFFF3F0E6),
+      backgroundColor: AppColors.surface(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),

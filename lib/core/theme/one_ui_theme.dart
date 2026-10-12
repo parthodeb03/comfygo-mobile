@@ -21,7 +21,7 @@ class OneUITheme {
       // Color Scheme
       colorScheme: const ColorScheme.light(
         primary: OneUIColors.primaryLight,
-        onPrimary: Color(0xFF20271A),
+        onPrimary: Colors.white,
         primaryContainer: OneUIColors.primarySoft,
         onPrimaryContainer: OneUIColors.primaryVariantLight,
         secondary: OneUIColors.secondaryLight,
@@ -93,7 +93,7 @@ class OneUITheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: OneUIColors.primaryLight,
-          foregroundColor: Color(0xFF20271A),
+          foregroundColor: Colors.white,
           elevation: 0,
           shadowColor: OneUIColors.buttonGreen.withValues(alpha: 0.45),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -114,7 +114,7 @@ class OneUITheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: OneUIColors.primaryLight,
-          foregroundColor: Color(0xFF20271A),
+          foregroundColor: Colors.white,
           elevation: 0,
           shadowColor: OneUIColors.buttonGreen.withValues(alpha: 0.45),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -387,7 +387,7 @@ class OneUITheme {
             fontSize: 16,
             fontWeight: FontWeight.w800,
             letterSpacing: 0.3,
-            color: Colors.white,
+            color: Color(0xFF20271A),
           ),
         ),
       ),
@@ -408,7 +408,7 @@ class OneUITheme {
             fontSize: 16,
             fontWeight: FontWeight.w800,
             letterSpacing: 0.3,
-            color: Colors.white,
+            color: Color(0xFF20271A),
           ),
         ),
       ),

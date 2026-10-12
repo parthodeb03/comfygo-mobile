@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/navigation.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../models/models.dart';
 import '../../../state/service_providers.dart';
@@ -274,7 +275,7 @@ class _HotelDetailScreenState extends ConsumerState<HotelDetailScreen> {
             size: 18,
           ),
         ),
-        onPressed: () => context.pop(),
+        onPressed: () => goBack(context),
       ),
       actions: [
         CGFavoriteButton(isFavorited: _isFavorited, onChanged: _toggleFavorite),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/navigation.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../state/service_providers.dart';
 
@@ -34,10 +35,11 @@ class _GuidesScreenState extends ConsumerState<GuidesScreen> {
 
     return TravelScaffold(
       backgroundColor: AppColors.background(context),
+      photoBackground: TravelPhotos.listGreen,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => goBack(context),
         ),
         title: const Text('Guides'),
       ),
@@ -52,6 +54,7 @@ class _GuidesScreenState extends ConsumerState<GuidesScreen> {
                   title: 'Explore with a local',
                   subtitle: 'Discover local stories and memorable experiences.',
                   asset: TravelPhotos.guides,
+                  showImage: false,
                 ),
               ),
             ),
@@ -98,7 +101,7 @@ class _GuidesScreenState extends ConsumerState<GuidesScreen> {
                     children: [
                       for (final item in data.guides)
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.only(bottom: 14),
                           child: TravelRowCard(
                             title: item.name,
                             subtitle: item.specialization,

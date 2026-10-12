@@ -259,6 +259,7 @@ void main() {
                 TravelPhotos.bandarban,
                 TravelPhotos.forest,
                 TravelPhotos.journey,
+                TravelPhotos.listGreen,
               ]) {
                 await precacheImage(
                   AssetImage(asset),

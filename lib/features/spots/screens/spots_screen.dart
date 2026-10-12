@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/navigation.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../data/tourist_spots.dart';
 
@@ -50,7 +51,7 @@ class _SpotsScreenState extends State<SpotsScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => context.canPop() ? context.pop() : context.go('/'),
+          onPressed: () => goBack(context),
         ),
         title: const Text('Tourist Spots'),
       ),
@@ -102,21 +103,20 @@ class _SpotsScreenState extends State<SpotsScreen> {
 
               // ─── Division chips ──────────────────────────────
               SliverToBoxAdapter(
-                child: SizedBox(
-                  height: 24 + MediaQuery.textScalerOf(context).scale(20),
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    itemCount: divisions.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 8),
-                    itemBuilder: (context, index) {
-                      final value = divisions[index];
-                      return CGChip(
-                        label: value,
-                        isSelected: _selected == value,
-                        onTap: () => setState(() => _selected = value),
-                      );
-                    },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final value in divisions)
+                        CGChip(
+                          label: value,
+                          isSelected: _selected == value,
+                          activeColor: AppColors.brandGreen,
+                          onTap: () => setState(() => _selected = value),
+                        ),
+                    ],
                   ),
                 ),
               ),

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/navigation.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../state/auth_provider.dart';
@@ -91,7 +91,7 @@ class _ContactScreenState extends ConsumerState<ContactScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => context.pop(),
+          onPressed: () => goBack(context),
         ),
         title: const Text('Contact Us'),
       ),
@@ -213,7 +213,7 @@ class _ContactScreenState extends ConsumerState<ContactScreen> {
         ),
         const SizedBox(height: OneUISpacing.md),
         TextButton(
-          onPressed: () => context.pop(),
+          onPressed: () => goBack(context),
           child: Text(
             'Back to Profile',
             style: TextStyle(fontSize: 14, color: AppColors.primary(context)),

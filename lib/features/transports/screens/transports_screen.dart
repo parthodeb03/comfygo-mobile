@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/navigation.dart';
+import '../../../core/widgets/nature_background.dart';
 import '../../../state/service_providers.dart';
 
 class TransportsScreen extends ConsumerStatefulWidget {
@@ -34,315 +36,347 @@ class _TransportsScreenState extends ConsumerState<TransportsScreen> {
   @override
   Widget build(BuildContext context) {
     final data = ref.watch(transportsProvider);
-    final dark = const Color(0xFF20271A);
-    final lime = Theme.of(context).colorScheme.primary;
+    final theme = Theme.of(context);
+    // Theme-aware ink for text and icons (deep green in light, cream in dark).
+    final dark = AppColors.textPrimary(context);
+    // Solid nature-green fill for shapes that carry white content.
+    const solid = AppColors.brandGreen;
+    final fieldFill = AppColors.surfaceVariant(context);
+    final lime = theme.colorScheme.primary;
     final cream = AppColors.background(context);
     return Scaffold(
       backgroundColor: cream,
-      body: SafeArea(
-        child: CustomScrollView(
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
-              sliver: SliverToBoxAdapter(
-                child: Row(
-                  children: [
-                    _CircleButton(
-                      icon: Icons.arrow_back_rounded,
-                      onTap: () => context.pop(),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF0EDDF),
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: _TripPill(
-                                label: 'One way',
-                                selected: !_roundTrip,
-                                onTap: () => setState(() => _roundTrip = false),
-                              ),
-                            ),
-                            Expanded(
-                              child: _TripPill(
-                                label: 'Round trip',
-                                selected: _roundTrip,
-                                onTap: () => setState(() => _roundTrip = true),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              sliver: SliverToBoxAdapter(
-                child: Container(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE5E6CF),
-                    borderRadius: BorderRadius.circular(28),
-                  ),
-                  child: Column(
+      body: PhotoBackground.wrap(
+        child: SafeArea(
+          child: CustomScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
+                sliver: SliverToBoxAdapter(
+                  child: Row(
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _RoutePoint(
-                              city: 'Dhaka',
-                              code: 'DAC',
-                              alignEnd: false,
-                            ),
+                      _CircleButton(
+                        icon: Icons.arrow_back_rounded,
+                        onTap: () => goBack(context),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: fieldFill,
+                            borderRadius: BorderRadius.circular(30),
                           ),
-                          const SizedBox(width: 8),
-                          Column(
+                          child: Row(
                             children: [
-                              Row(
-                                children: List.generate(
-                                  3,
-                                  (_) => Container(
-                                    width: 4,
-                                    height: 4,
-                                    margin: const EdgeInsets.symmetric(
-                                      horizontal: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: dark,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
+                              Expanded(
+                                child: _TripPill(
+                                  label: 'One way',
+                                  selected: !_roundTrip,
+                                  onTap: () =>
+                                      setState(() => _roundTrip = false),
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              Container(
-                                width: 38,
-                                height: 38,
-                                decoration: BoxDecoration(
-                                  color: dark,
-                                  borderRadius: BorderRadius.circular(24),
-                                ),
-                                child: const Icon(
-                                  Icons.flight_rounded,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: List.generate(
-                                  3,
-                                  (_) => Container(
-                                    width: 4,
-                                    height: 4,
-                                    margin: const EdgeInsets.symmetric(
-                                      horizontal: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: dark,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
+                              Expanded(
+                                child: _TripPill(
+                                  label: 'Round trip',
+                                  selected: _roundTrip,
+                                  onTap: () =>
+                                      setState(() => _roundTrip = true),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _RoutePoint(
-                              city: 'Sylhet',
-                              code: 'ZYL',
-                              alignEnd: true,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: FilledButton.icon(
-                              onPressed: _load,
-                              icon: const Icon(Icons.search_rounded, size: 18),
-                              label: const Text('Searching'),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: dark,
-                                foregroundColor: Colors.white,
-                                shape: const StadiumBorder(),
-                                elevation: 0,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () => _showRouteSearch(context),
-                              icon: const Icon(
-                                Icons.swap_horiz_rounded,
-                                size: 18,
-                              ),
-                              label: const Text('Change'),
-                              style: OutlinedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: dark,
-                                side: BorderSide.none,
-                                shape: const StadiumBorder(),
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 14, 20, 12),
-              sliver: SliverToBoxAdapter(
-                child: Row(
-                  children: [
-                    _InfoPill(
-                      icon: Icons.calendar_month_rounded,
-                      label: 'Today',
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                sliver: SliverToBoxAdapter(
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface(context),
+                      borderRadius: BorderRadius.circular(28),
                     ),
-                    const SizedBox(width: 8),
-                    const _InfoPill(
-                      icon: Icons.event_rounded,
-                      label: 'October, 2026',
-                    ),
-                    const SizedBox(width: 8),
-                    const _InfoPill(icon: Icons.people_alt_rounded, label: '2'),
-                  ],
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: 83,
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 7,
-                  separatorBuilder: (_, _) => const SizedBox(width: 8),
-                  itemBuilder: (context, index) {
-                    final day = DateTime.now().add(Duration(days: index));
-                    final selected = index == _selectedDay;
-                    return GestureDetector(
-                      onTap: () => setState(() => _selectedDay = index),
-                      child: Container(
-                        width: 60,
-                        decoration: BoxDecoration(
-                          color: selected ? lime : const Color(0xFFE9E6D8),
-                          borderRadius: BorderRadius.circular(32),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                    child: Column(
+                      children: [
+                        Row(
                           children: [
-                            Text(
-                              ['S', 'M', 'T', 'W', 'T', 'F', 'S'][day.weekday %
-                                  7],
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: dark.withValues(alpha: .65),
+                            Expanded(
+                              child: _RoutePoint(
+                                city: 'Dhaka',
+                                code: 'DAC',
+                                alignEnd: false,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${day.day}',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: dark,
+                            const SizedBox(width: 8),
+                            Column(
+                              children: [
+                                Row(
+                                  children: List.generate(
+                                    3,
+                                    (_) => Container(
+                                      width: 4,
+                                      height: 4,
+                                      margin: const EdgeInsets.symmetric(
+                                        horizontal: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: solid,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Container(
+                                  width: 38,
+                                  height: 38,
+                                  decoration: BoxDecoration(
+                                    color: solid,
+                                    borderRadius: BorderRadius.circular(24),
+                                  ),
+                                  child: const Icon(
+                                    Icons.flight_rounded,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: List.generate(
+                                    3,
+                                    (_) => Container(
+                                      width: 4,
+                                      height: 4,
+                                      margin: const EdgeInsets.symmetric(
+                                        horizontal: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: solid,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _RoutePoint(
+                                city: 'Sylhet',
+                                code: 'ZYL',
+                                alignEnd: true,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    );
-                  },
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed: _load,
+                                icon: const Icon(
+                                  Icons.search_rounded,
+                                  size: 18,
+                                ),
+                                label: const Text('Searching'),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: solid,
+                                  foregroundColor: Colors.white,
+                                  shape: const StadiumBorder(),
+                                  elevation: 0,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () => _showRouteSearch(context),
+                                icon: const Icon(
+                                  Icons.swap_horiz_rounded,
+                                  size: 18,
+                                ),
+                                label: const Text('Change'),
+                                style: OutlinedButton.styleFrom(
+                                  backgroundColor: fieldFill,
+                                  foregroundColor: dark,
+                                  side: BorderSide.none,
+                                  shape: const StadiumBorder(),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-              sliver: SliverToBoxAdapter(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '${data.transports.length} Tickets found',
-                        style: TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -.6,
-                          color: AppColors.textPrimary(context),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 12),
+                sliver: SliverToBoxAdapter(
+                  child: Row(
+                    children: [
+                      _InfoPill(
+                        icon: Icons.calendar_month_rounded,
+                        label: 'Today',
+                      ),
+                      const SizedBox(width: 8),
+                      const _InfoPill(
+                        icon: Icons.event_rounded,
+                        label: 'October, 2026',
+                      ),
+                      const SizedBox(width: 8),
+                      const _InfoPill(
+                        icon: Icons.people_alt_rounded,
+                        label: '2',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 83,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: 7,
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      final day = DateTime.now().add(Duration(days: index));
+                      final selected = index == _selectedDay;
+                      return GestureDetector(
+                        onTap: () => setState(() => _selectedDay = index),
+                        child: Container(
+                          width: 60,
+                          decoration: BoxDecoration(
+                            color: selected ? lime : fieldFill,
+                            borderRadius: BorderRadius.circular(32),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                [
+                                  'S',
+                                  'M',
+                                  'T',
+                                  'W',
+                                  'T',
+                                  'F',
+                                  'S',
+                                ][day.weekday % 7],
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: selected
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  color: selected
+                                      ? theme.colorScheme.onPrimary.withValues(
+                                          alpha: .75,
+                                        )
+                                      : dark.withValues(alpha: .65),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${day.day}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: selected
+                                      ? theme.colorScheme.onPrimary
+                                      : dark,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                sliver: SliverToBoxAdapter(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '${data.transports.length} Tickets found',
+                          style: TextStyle(
+                            fontSize: 25,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -.6,
+                            color: AppColors.textPrimary(context),
+                          ),
                         ),
                       ),
-                    ),
-                    _CircleButton(
-                      icon: Icons.tune_rounded,
-                      onTap: () => _showTypes(context),
-                    ),
-                  ],
+                      _CircleButton(
+                        icon: Icons.tune_rounded,
+                        onTap: () => _showTypes(context),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-              sliver: data.isLoading
-                  ? const SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.all(40),
-                        child: Center(child: CircularProgressIndicator()),
-                      ),
-                    )
-                  : data.error != null || data.transports.isEmpty
-                  ? SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Center(
-                          child: Text(
-                            data.error != null
-                                ? 'Unable to load tickets.'
-                                : 'No tickets found.',
-                            style: TextStyle(
-                              color: AppColors.textSecondary(context),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+                sliver: data.isLoading
+                    ? const SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.all(40),
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                      )
+                    : data.error != null || data.transports.isEmpty
+                    ? SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Center(
+                            child: Text(
+                              data.error != null
+                                  ? 'Unable to load tickets.'
+                                  : 'No tickets found.',
+                              style: TextStyle(
+                                color: AppColors.textSecondary(context),
+                              ),
                             ),
                           ),
                         ),
+                      )
+                    : SliverList(
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final item = data.transports[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 14),
+                            child: _TicketCard(
+                              type: item.type,
+                              operatorName: item.operatorName ?? item.name,
+                              from: item.fromLocation,
+                              to: item.toLocation,
+                              departure: item.departureTime,
+                              arrival: item.arrivalTime ?? '—',
+                              seats: item.availableSeats,
+                              price: item.price,
+                              onTap: () =>
+                                  context.push('/book/transport/${item.id}'),
+                            ),
+                          );
+                        }, childCount: data.transports.length),
                       ),
-                    )
-                  : SliverList(
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        final item = data.transports[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 14),
-                          child: _TicketCard(
-                            operatorName: item.operatorName ?? item.name,
-                            from: item.fromLocation,
-                            to: item.toLocation,
-                            departure: item.departureTime,
-                            arrival: item.arrivalTime ?? '—',
-                            seats: item.availableSeats,
-                            price: item.price,
-                            onTap: () =>
-                                context.push('/book/transport/${item.id}'),
-                          ),
-                        );
-                      }, childCount: data.transports.length),
-                    ),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -351,7 +385,7 @@ class _TransportsScreenState extends ConsumerState<TransportsScreen> {
   void _showRouteSearch(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFFF3F0E6),
+      backgroundColor: AppColors.surface(context),
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -367,12 +401,12 @@ class _TransportsScreenState extends ConsumerState<TransportsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               'Find a route or operator',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF20271A),
+                color: AppColors.textPrimary(context),
               ),
             ),
             const SizedBox(height: 14),
@@ -382,7 +416,7 @@ class _TransportsScreenState extends ConsumerState<TransportsScreen> {
               decoration: InputDecoration(
                 hintText: 'e.g. Dhaka, Sylhet, Green Line',
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: AppColors.inputFill(context),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(28),
                   borderSide: BorderSide.none,
@@ -401,7 +435,6 @@ class _TransportsScreenState extends ConsumerState<TransportsScreen> {
               },
               style: FilledButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: const Color(0xFF20271A),
                 shape: const StadiumBorder(),
               ),
               child: const Text('Search tickets'),
@@ -415,7 +448,7 @@ class _TransportsScreenState extends ConsumerState<TransportsScreen> {
   void _showTypes(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFFF3F0E6),
+      backgroundColor: AppColors.surface(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -452,7 +485,7 @@ class _CircleButton extends StatelessWidget {
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) => Material(
-    color: Colors.white,
+    color: AppColors.surface(context),
     shape: const CircleBorder(),
     child: InkWell(
       customBorder: const CircleBorder(),
@@ -460,7 +493,7 @@ class _CircleButton extends StatelessWidget {
       child: SizedBox(
         width: 46,
         height: 46,
-        child: Icon(icon, color: const Color(0xFF20271A), size: 21),
+        child: Icon(icon, color: AppColors.textPrimary(context), size: 21),
       ),
     ),
   );
@@ -481,13 +514,17 @@ class _TripPill extends StatelessWidget {
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 12),
       decoration: BoxDecoration(
-        color: selected ? const Color(0xFF20271A) : Colors.transparent,
+        color: selected
+            ? Theme.of(context).colorScheme.primary
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(24),
       ),
       child: Text(
         label,
         style: TextStyle(
-          color: selected ? Colors.white : const Color(0xFF20271A),
+          color: selected
+              ? Theme.of(context).colorScheme.onPrimary
+              : AppColors.textPrimary(context),
           fontWeight: FontWeight.w600,
           fontSize: 13,
         ),
@@ -513,17 +550,20 @@ class _RoutePoint extends StatelessWidget {
     children: [
       Text(
         code,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 24,
           height: 1,
           fontWeight: FontWeight.w800,
-          color: Color(0xFF20271A),
+          color: AppColors.textPrimary(context),
         ),
       ),
       const SizedBox(height: 5),
       Text(
         city,
-        style: const TextStyle(fontSize: 12, color: Color(0xFF66695E)),
+        style: TextStyle(
+          fontSize: 12,
+          color: AppColors.textSecondary(context),
+        ),
       ),
     ],
   );
@@ -539,23 +579,23 @@ class _InfoPill extends StatelessWidget {
       height: 46,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context),
         borderRadius: BorderRadius.circular(28),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 16, color: const Color(0xFF20271A)),
+          Icon(icon, size: 16, color: AppColors.textPrimary(context)),
           const SizedBox(width: 6),
           Flexible(
             child: Text(
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF20271A),
+                color: AppColors.textPrimary(context),
               ),
             ),
           ),
@@ -567,6 +607,7 @@ class _InfoPill extends StatelessWidget {
 
 class _TicketCard extends StatelessWidget {
   const _TicketCard({
+    required this.type,
     required this.operatorName,
     required this.from,
     required this.to,
@@ -576,6 +617,7 @@ class _TicketCard extends StatelessWidget {
     required this.price,
     required this.onTap,
   });
+  final String type;
   final String operatorName;
   final String from;
   final String to;
@@ -585,165 +627,238 @@ class _TicketCard extends StatelessWidget {
   final double price;
   final VoidCallback onTap;
 
+  static IconData _iconFor(String type) => switch (type.toLowerCase()) {
+    'train' => Icons.train_rounded,
+    'flight' => Icons.flight_rounded,
+    'car' => Icons.directions_car_rounded,
+    _ => Icons.directions_bus_rounded,
+  };
+
   @override
-  Widget build(BuildContext context) => Material(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(26),
-    clipBehavior: Clip.antiAlias,
-    child: InkWell(
-      onTap: onTap,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 176),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget build(BuildContext context) {
+    final logoBg = AppColors.greenSoft(context);
+    final logoFg = AppColors.accentGreen(context);
+    final hint = AppColors.textSecondary(context);
+    final strong = AppColors.textPrimary(context);
+    return Material(
+      color: AppColors.surface(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(26),
+        side: BorderSide(color: AppColors.divider(context), width: 1),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 15, 16, 15),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                width: 70,
-                child: ColoredBox(
-                  color: Theme.of(context).colorScheme.primary,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      RotatedBox(
-                        quarterTurns: 3,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Text(
-                            operatorName.toUpperCase(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              letterSpacing: 1.3,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF66721B),
-                            ),
+              // ─── Operator: badge on the left, name in its own slot ──
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: logoBg,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(_iconFor(type), color: logoFg, size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'OPERATOR',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.4,
+                            color: hint,
                           ),
                         ),
-                      ),
-                      const Positioned(
-                        bottom: 13,
-                        child: Icon(
-                          Icons.flight_rounded,
-                          size: 27,
-                          color: Color(0xFF20271A),
+                        const SizedBox(height: 2),
+                        Text(
+                          operatorName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 15.5,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.2,
+                            color: strong,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primarySoft(context),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      type.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.6,
+                        color: AppColors.primary(context),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(17, 14, 15, 12),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              from,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 19,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF20271A),
-                              ),
-                            ),
-                          ),
-                          const Icon(
-                            Icons.flight_rounded,
-                            size: 21,
-                            color: Color(0xFF20271A),
-                          ),
-                          Expanded(
-                            child: Text(
-                              to,
-                              maxLines: 1,
-                              textAlign: TextAlign.end,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 19,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF20271A),
-                              ),
-                            ),
-                          ),
-                        ],
+              const SizedBox(height: 14),
+              // ─── Route ──────────────────────────────────────────
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      from,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: strong,
                       ),
-                      const SizedBox(height: 9),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              departure,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF55584E),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              arrival,
-                              maxLines: 2,
-                              textAlign: TextAlign.end,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF55584E),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      Container(height: 1, color: const Color(0xFFEAE8DF)),
-                      const SizedBox(height: 9),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              '$seats seats left',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: Color(0xFF66695E),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              'BDT ${price.toStringAsFixed(0)}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.end,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF20271A),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: logoFg,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        Container(
+                          width: 18,
+                          height: 2,
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.divider(context),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        Icon(_iconFor(type), size: 16, color: logoFg),
+                        Container(
+                          width: 18,
+                          height: 2,
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.divider(context),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: logoFg,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      to,
+                      maxLines: 1,
+                      textAlign: TextAlign.end,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: strong,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      departure,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12.5, color: hint),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      arrival,
+                      maxLines: 1,
+                      textAlign: TextAlign.end,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12.5, color: hint),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 13),
+              Container(height: 1, color: AppColors.divider(context)),
+              const SizedBox(height: 11),
+              // ─── Seats + price ──────────────────────────────────
+              Row(
+                children: [
+                  Icon(Icons.event_seat_rounded, size: 15, color: hint),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      '$seats seats left',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12, color: hint),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      'BDT ${price.toStringAsFixed(0)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.end,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.accentGreen(context),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 13,
+                    color: AppColors.accentGreen(context),
+                  ),
+                ],
               ),
             ],
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }

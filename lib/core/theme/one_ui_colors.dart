@@ -7,16 +7,21 @@ class OneUIColors {
 
   // ═══════════════════════════════════════════════════
   // PRIMARY - Naturistic Emerald Green
+  //
+  // Light mode uses the deep brand green (white text on it, or it used
+  // as text on white — 5.2:1 both ways). Dark mode uses the soft leaf
+  // green so it stays legible on the dark surfaces (7.8:1 as text) and
+  // pairs with the dark-green label when it fills a button.
   // ═══════════════════════════════════════════════════
-  static const Color primaryLight = Color(0xFF3EBACE);
-  static const Color primaryDark = Color(0xFF3EBACE);
+  static const Color primaryLight = Color(0xFF1B7A4F);
+  static const Color primaryDark = Color(0xFF7ED0A2);
   static const Color primaryVariantLight = Color(0xFF20271A);
-  static const Color primarySoft = Color(0xFFD8ECF1);
+  static const Color primarySoft = Color(0xFFDDEFE4);
 
   // Button green (works with white text in BOTH light and dark mode)
   static const Color buttonGreenDark = Color(0xFF20271A);
-  static const Color buttonGreen = Color(0xFF3EBACE);
-  static const Color buttonGreenLight = Color(0xFF3EBACE);
+  static const Color buttonGreen = Color(0xFF7ED0A2);
+  static const Color buttonGreenLight = Color(0xFF1B7A4F);
 
   // ═══════════════════════════════════════════════════
   // SECONDARY - Lighter green accents
