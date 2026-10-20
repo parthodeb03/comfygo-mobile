@@ -5,7 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme/app_colors.dart';
+import 'core/theme/comfy_theme.dart';
 import 'core/theme/theme.dart';
+import 'core/widgets/offline_banner.dart';
 import 'core/router/app_router.dart';
 import 'core/services/network_service.dart';
 import 'state/auth_provider.dart';
@@ -112,8 +114,8 @@ class _ComfyGoAppState extends ConsumerState<ComfyGoApp> {
     return MaterialApp.router(
       title: 'ComfyGo',
       debugShowCheckedModeBanner: false,
-      theme: OneUITheme.lightTheme,
-      darkTheme: OneUITheme.darkTheme,
+      theme: CgTheme.light,
+      darkTheme: CgTheme.dark,
       themeMode: themeState.themeMode,
       routerConfig: router,
       builder: (context, child) {
@@ -140,7 +142,7 @@ class _ComfyGoAppState extends ConsumerState<ComfyGoApp> {
                   top: MediaQuery.of(context).padding.top,
                   left: 0,
                   right: 0,
-                  child: _buildOfflineBanner(context),
+                  child: OfflineBanner(onRetry: _retryBackend),
                 ),
             ],
           ),
@@ -153,106 +155,35 @@ class _ComfyGoAppState extends ConsumerState<ComfyGoApp> {
     return Scaffold(
       backgroundColor: AppColors.background(context),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.primary(context).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(OneUISpacing.radiusXl),
+        child: Semantics(
+          label: 'Loading ComfyGo',
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: OneUISpacing.avatarXl,
+                height: OneUISpacing.avatarXl,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryContainer(context),
+                  borderRadius: BorderRadius.circular(OneUISpacing.radiusXl),
+                ),
+                child: Icon(
+                  Icons.flight_takeoff_rounded,
+                  size: OneUISpacing.iconXl,
+                  color: AppColors.onPrimaryContainer(context),
+                ),
               ),
-              child:  Icon(
-                Icons.flight_takeoff_rounded,
-                size: 40,
-                color: AppColors.primary(context),
+              const SizedBox(height: OneUISpacing.xxl),
+              Text(
+                'ComfyGo',
+                style: Theme.of(context).textTheme.displaySmall
+                    ?.copyWith(color: AppColors.textPrimary(context)),
               ),
-            ),
-            const SizedBox(height: OneUISpacing.xxl),
-             Text(
-              'ComfyGo',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary(context),
-              ),
-            ),
-            const SizedBox(height: OneUISpacing.lg),
-             CircularProgressIndicator(color: AppColors.primary(context)),
-          ],
+              const SizedBox(height: OneUISpacing.lg),
+              CircularProgressIndicator(color: AppColors.primary(context)),
+            ],
+          ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildOfflineBanner(BuildContext context) {
-    final dark = AppColors.isDark(context);
-    final bg = dark ? const Color(0xFF3A2A10) : const Color(0xFFFFF3E0);
-    final titleColor = dark ? const Color(0xFFFFCC80) : const Color(0xFFE65100);
-    final bodyColor = dark ? const Color(0xFFFFE0B2) : const Color(0xFFBF360C);
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFFB74D), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.wifi_off_rounded,
-            color: Color(0xFFFFB74D),
-            size: 20,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Backend offline',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: titleColor,
-                  ),
-                ),
-                Text(
-                  'Start server or run start.bat',
-                  style: TextStyle(fontSize: 11, color: bodyColor),
-                ),
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: _retryBackend,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE65100),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                'Retry',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

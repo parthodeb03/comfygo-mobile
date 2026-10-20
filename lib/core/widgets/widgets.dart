@@ -5,3 +5,5 @@ export 'one_ui_chip.dart';
 export 'glass_card.dart';
 export 'nature_background.dart';
 export 'travel_widgets.dart';
+
+export 'offline_banner.dart';

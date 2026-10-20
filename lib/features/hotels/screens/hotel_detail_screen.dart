@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/comfy_design.dart';
 import '../../../core/utils/navigation.dart';
-import '../../../core/widgets/widgets.dart';
+import '../../../core/widgets/comfy_page.dart';
+import '../../../core/widgets/comfy_ui.dart';
 import '../../../models/models.dart';
 import '../../../state/service_providers.dart';
 
@@ -20,7 +21,6 @@ class HotelDetailScreen extends ConsumerStatefulWidget {
 
 class _HotelDetailScreenState extends ConsumerState<HotelDetailScreen> {
   late Future<Hotel?> _future;
-  Hotel? _hotel;
   bool _isFavorited = false;
 
   String get _favKey => 'fav_hotel_${widget.id}';
@@ -44,422 +44,198 @@ class _HotelDetailScreenState extends ConsumerState<HotelDetailScreen> {
     await prefs.setBool(_favKey, value);
   }
 
-  Future<Hotel?> _fetch() async {
-    final hotel = await ref.read(hotelServiceProvider).getHotelById(widget.id);
-    if (mounted) setState(() => _hotel = hotel);
-    return hotel;
-  }
+  Future<Hotel?> _fetch() =>
+      ref.read(hotelServiceProvider).getHotelById(widget.id);
 
   void _retry() => setState(() => _future = _fetch());
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background(context),
-      bottomNavigationBar: _hotel == null ? null : _buildBookBar(_hotel!),
-      body: NatureBackground.wrap(
-        child: FutureBuilder<Hotel?>(
-          future: _future,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            final hotel = snapshot.data;
-            if (hotel == null) return _buildErrorState();
-            return _buildContent(hotel);
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildErrorState() {
-    return CustomScrollView(
-      slivers: [
-        _appBar(null),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: TravelEmpty(
-              message:
-                  'This hotel could not be loaded. '
-                  'Check your connection and try again.',
-              onRetry: _retry,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildContent(Hotel hotel) {
-    return CustomScrollView(
-      slivers: [
-        _appBar(hotel),
-        SliverToBoxAdapter(
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Color(0xFFD9E6D2),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title + Rating
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          hotel.name,
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary(context),
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF8E1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.star_rounded,
-                              size: 16,
-                              color: Color(0xFFFFB300),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              hotel.rating.toStringAsFixed(1),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFFE6A100),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // Location
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on_rounded,
-                        size: 16,
-                        color: AppColors.primary(context),
-                      ),
-                      const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          '${hotel.address}, ${hotel.division}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.primary(context),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Amenities
-                  if (hotel.amenities.isNotEmpty) ...[
-                    Text(
-                      'Amenities',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary(context),
-                      ),
+    final c = CgColors.of(context);
+    return FutureBuilder<Hotel?>(
+      future: _future,
+      builder: (context, snapshot) {
+        final loading = snapshot.connectionState != ConnectionState.done;
+        final hotel = snapshot.data;
+        return CgPageScaffold(
+          bottom: (loading || hotel == null)
+              ? null
+              : Container(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+                  decoration: BoxDecoration(
+                    color: c.surface,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(CgRadii.nav),
                     ),
-                    const SizedBox(height: 12),
-                    Wrap(
+                    boxShadow: c.navShadow,
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Starting from',
+                                style: CgType.l12.copyWith(color: c.text2),
+                              ),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  '৳${_fmtPrice(hotel.pricePerNight)}/night',
+                                  style: CgType.t20.copyWith(
+                                    color: c.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        CgPillButton(
+                          width: 170,
+                          height: 52,
+                          onTap: hotel.availableRooms > 0
+                              ? () => context.push('/book/hotel/${hotel.id}')
+                              : null,
+                          child: Text(
+                            hotel.availableRooms > 0 ? 'Book Now' : 'Sold Out',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+          child: ListView(
+            padding: const EdgeInsets.only(bottom: 32),
+            children: [
+              CgPageTitle(
+                title: loading ? 'Hotel' : (hotel?.name ?? 'Hotel'),
+                subtitle: hotel == null
+                    ? null
+                    : '${hotel.address}, ${hotel.division}',
+                onBack: () => goBack(context),
+                trailing: CgIconAction(
+                  icon: _isFavorited
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  color: _isFavorited ? c.accent : c.primary,
+                  semanticLabel: _isFavorited
+                      ? 'Remove from favourites'
+                      : 'Save to favourites',
+                  onTap: () => _toggleFavorite(!_isFavorited),
+                ),
+              ),
+              if (loading)
+                const CgLoadingState()
+              else if (hotel == null)
+                CgErrorState(
+                  message:
+                      'This hotel could not be loaded. '
+                      'Check your connection and try again.',
+                  onRetry: _retry,
+                )
+              else ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      CgTextPill(
+                        label: '★ ${hotel.rating.toStringAsFixed(1)}',
+                        icon: Icons.star_rounded,
+                      ),
+                      CgTextPill(
+                        label: hotel.availableRooms > 0
+                            ? '${hotel.availableRooms} rooms left'
+                            : 'Sold out',
+                        icon: Icons.meeting_room_outlined,
+                      ),
+                    ],
+                  ),
+                ),
+                if (hotel.amenities.isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                    child: CgSection(title: 'Amenities'),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                    child: Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: hotel.amenities
-                          .map((a) => CGChip(label: a))
-                          .toList(),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-
-                  // About
-                  Text(
-                    'About',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary(context),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    hotel.description,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary(context),
-                      height: 1.6,
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Stay details — real availability instead of mock room cards
-                  Text(
-                    'Stay Details',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary(context),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildInfoRow(
-                    Icons.payments_rounded,
-                    'Price per night',
-                    '৳${_fmtPrice(hotel.pricePerNight)}',
-                  ),
-                  _buildInfoRow(
-                    Icons.meeting_room_rounded,
-                    'Rooms available',
-                    '${hotel.availableRooms} of ${hotel.totalRooms}',
-                  ),
-                  if (hotel.phone != null && hotel.phone!.isNotEmpty)
-                    _buildInfoRow(Icons.phone_rounded, 'Phone', hotel.phone!),
-                  if (hotel.email != null && hotel.email!.isNotEmpty)
-                    _buildInfoRow(Icons.email_rounded, 'Email', hotel.email!),
-
-                  const SizedBox(height: 100),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _appBar(Hotel? hotel) {
-    final name = hotel?.name ?? '';
-    return SliverAppBar(
-      expandedHeight: 380,
-      floating: false,
-      pinned: true,
-      backgroundColor: AppColors.background(context),
-      surfaceTintColor: Colors.transparent,
-      leading: IconButton(
-        icon: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.9),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: AppColors.textPrimary(context),
-            size: 18,
-          ),
-        ),
-        onPressed: () => goBack(context),
-      ),
-      actions: [
-        CGFavoriteButton(isFavorited: _isFavorited, onChanged: _toggleFavorite),
-        const SizedBox(width: 12),
-      ],
-      flexibleSpace: FlexibleSpaceBar(
-        background: Hero(
-          tag: 'hotel_image_${widget.id}',
-          child: Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: AppColors.surfaceVariant(context),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                TravelPhoto(
-                  url: (hotel?.images.isNotEmpty ?? false)
-                      ? hotel!.images.first
-                      : null,
-                  asset: TravelPhotos.hotels,
-                  label: name.isEmpty ? null : name,
-                ),
-                const DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Color(0x22000000),
-                        Colors.transparent,
-                        Color(0xBB000000),
-                      ],
-                      stops: [0, .42, 1],
-                    ),
-                  ),
-                ),
-                if (name.isNotEmpty)
-                  Positioned(
-                    left: 24,
-                    right: 24,
-                    bottom: 42,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '${hotel?.division ?? ''}  ·  ${hotel?.rating.toStringAsFixed(1) ?? ''} ★',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                        for (final amenity in hotel.amenities)
+                          CgTextPill(
+                            label: amenity,
+                            icon: Icons.check_rounded,
                           ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            height: 1.05,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
                       ],
                     ),
                   ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ─── Sticky Book Now button ──────────────────────────────────
-  Widget _buildBookBar(Hotel hotel) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Starting from',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary(context),
-                  ),
+                ],
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                  child: CgSection(title: 'About'),
                 ),
-              ],
-            ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                  child: CgCard(
+                    padding: const EdgeInsets.all(16),
                     child: Text(
-                      '৳${_fmtPrice(hotel.pricePerNight)}/night',
-                      maxLines: 1,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary(context),
+                      hotel.description,
+                      style: CgType.b14.copyWith(
+                        color: c.text2,
+                        height: 1.6,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: CGButton(
-                    height: 48,
-                    label: hotel.availableRooms > 0 ? 'Book Now' : 'Sold Out',
-                    onPressed: hotel.availableRooms > 0
-                        ? () => context.push('/book/hotel/${hotel.id}')
-                        : null,
-                  ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                  child: CgSection(title: 'Stay Details'),
                 ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Flexible(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 18, color: AppColors.primary(context)),
-                const SizedBox(width: 10),
-                Flexible(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary(context),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                  child: CgCard(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    child: Column(
+                      children: [
+                        CgInfoRow(
+                          label: 'Price per night',
+                          value: '৳${_fmtPrice(hotel.pricePerNight)}',
+                          valueColor: c.primary,
+                        ),
+                        CgInfoRow(
+                          label: 'Rooms available',
+                          value: '${hotel.availableRooms} of ${hotel.totalRooms}',
+                        ),
+                        if (hotel.phone != null && hotel.phone!.isNotEmpty)
+                          CgInfoRow(label: 'Phone', value: hotel.phone!),
+                        if (hotel.email != null && hotel.email!.isNotEmpty)
+                          CgInfoRow(
+                            label: 'Email',
+                            value: hotel.email!,
+                            showDivider: false,
+                          ),
+                      ],
                     ),
                   ),
                 ),
+                if (hotel.phone == null || hotel.phone!.isEmpty) const SizedBox(height: 4),
               ],
-            ),
+            ],
           ),
-          Flexible(
-            child: Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.end,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary(context),
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

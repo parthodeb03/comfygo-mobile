@@ -4,15 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/comfy_design.dart';
 import '../../../core/utils/navigation.dart';
-import '../../../core/theme/one_ui_colors.dart';
-import '../../../core/widgets/widgets.dart';
+import '../../../core/widgets/comfy_page.dart';
+import '../../../core/widgets/comfy_ui.dart';
 import '../../../models/models.dart';
 import '../../../services/api_exception.dart';
 import '../../../state/service_providers.dart';
 
-/// Booking form for hotels, destinations, guides and transport.
+/// Booking form for hotels and transport.
 ///
 /// Reached from the "Book Now" buttons on the detail screens. Creates a real
 /// booking through [BookingService] (server-side pricing) and hands the user
@@ -21,7 +21,11 @@ class BookingFormScreen extends ConsumerStatefulWidget {
   final String type;
   final int itemId;
 
-  const BookingFormScreen({super.key, required this.type, required this.itemId});
+  const BookingFormScreen({
+    super.key,
+    required this.type,
+    required this.itemId,
+  });
 
   @override
   ConsumerState<BookingFormScreen> createState() => _BookingFormScreenState();
@@ -64,13 +68,17 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
       Object? item;
       switch (widget.type) {
         case 'hotel':
-          item = await ref.read(hotelServiceProvider).getHotelById(widget.itemId);
+          item = await ref
+              .read(hotelServiceProvider)
+              .getHotelById(widget.itemId);
         case 'destination':
           item = await ref
               .read(destinationServiceProvider)
               .getDestinationById(widget.itemId);
         case 'guide':
-          item = await ref.read(guideServiceProvider).getGuideById(widget.itemId);
+          item = await ref
+              .read(guideServiceProvider)
+              .getGuideById(widget.itemId);
         case 'transport':
           item = await ref
               .read(transportServiceProvider)
@@ -234,14 +242,16 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
         final seatNote = 'Seats: ${_selectedSeatLabels.join(', ')}';
         notes = notes == null ? seatNote : '$notes. $seatNote';
       }
-      final booking = await ref.read(bookingServiceProvider).createBooking(
-        type: widget.type,
-        itemId: widget.itemId,
-        checkIn: _checkIn!,
-        checkOut: _isTransport ? null : _checkOut,
-        guests: _isTransport ? max(1, _selectedSeats.length) : _guests,
-        notes: notes,
-      );
+      final booking = await ref
+          .read(bookingServiceProvider)
+          .createBooking(
+            type: widget.type,
+            itemId: widget.itemId,
+            checkIn: _checkIn!,
+            checkOut: _isTransport ? null : _checkOut,
+            guests: _isTransport ? max(1, _selectedSeats.length) : _guests,
+            notes: notes,
+          );
 
       if (!mounted) return;
 
@@ -262,202 +272,235 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
   }
 
   void _showSnack(String message) {
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message, style: const TextStyle(fontSize: 13)),
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+    if (mounted) showCgToast(context, message);
   }
 
   // ── UI ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
+    final c = CgColors.of(context);
+
     // Booking is available for hotels and transport only — tourist spots
     // and guides are for exploring, not booking.
     if (widget.type != 'hotel' && widget.type != 'transport') {
-      return Scaffold(
-        backgroundColor: AppColors.background(context),
-        appBar: AppBar(title: const Text('Booking')),
-        body: NatureBackground.wrap(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(28),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.forest_outlined,
-                    size: 64,
-                    color: AppColors.primary(context),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Tourist spots are for exploring, not booking.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary(context),
+      return CgPageScaffold(
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: 32),
+          children: [
+            CgPageTitle(title: 'Booking', onBack: () => goBack(context)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+              child: CgCard(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        gradient: c.gMint,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.forest_outlined,
+                        size: 30,
+                        color: c.primary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Book hotels and transport for your trip instead.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary(context),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Tourist spots are for exploring, not booking.',
+                      textAlign: TextAlign.center,
+                      style: CgType.t16.copyWith(color: c.text),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  CGButton(
-                    label: 'Browse Hotels',
-                    width: 220,
-                    onPressed: () => context.go('/hotels'),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text(
+                      'Book hotels and transport for your trip instead.',
+                      textAlign: TextAlign.center,
+                      style: CgType.b14.copyWith(color: c.text2),
+                    ),
+                    const SizedBox(height: 24),
+                    CgPillButton(
+                      onTap: () => context.go('/hotels'),
+                      child: const Text('Browse Hotels'),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
+          ],
         ),
       );
     }
-    return Scaffold(
-      backgroundColor: AppColors.background(context),
-      appBar: AppBar(
-        leading: IconButton(
-          key: const Key('booking-form-back'),
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => goBack(context),
+
+    final canConfirm = !_loading && _item != null && !_submitting;
+
+    return CgPageScaffold(
+      bottom: Container(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+        decoration: BoxDecoration(
+          color: c.surface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(CgRadii.nav),
+          ),
+          boxShadow: c.navShadow,
         ),
-        title: const Text('Book Now'),
+        child: SafeArea(
+          top: false,
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Estimated total',
+                      style: CgType.l12.copyWith(color: c.text2),
+                    ),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '৳${_fmtPrice(_estimate)}',
+                        key: const Key('booking-estimate'),
+                        style: CgType.t20.copyWith(color: c.primary),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Opacity(
+                opacity: canConfirm ? 1 : .55,
+                child: CgPillButton(
+                  key: const Key('confirm-booking'),
+                  width: 170,
+                  height: 52,
+                  loading: _submitting,
+                  onTap: canConfirm ? _submit : null,
+                  child: const Text(
+                    'Confirm Booking',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
-      body: NatureBackground.wrap(child: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _item == null
-          ? TravelEmpty(
+      child: ListView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: const EdgeInsets.only(bottom: 32),
+        children: [
+          CgPageTitle(
+            title: 'Book Now',
+            subtitle:
+                _loading || _item == null ? null : 'Step 1 of 2 · Details',
+            onBack: () => goBack(context),
+          ),
+          if (_loading)
+            const CgLoadingState()
+          else if (_item == null)
+            CgErrorState(
               message: 'Sorry, this item could not be loaded.',
               onRetry: _loadItem,
             )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildItemSummary(),
-                  const SizedBox(height: 20),
-                  _buildSection(
-                    'When',
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        InkWell(
-                          key: const Key('date-field'),
-                          onTap: _submitting ? null : _pickDates,
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 16,
+          else ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              child: _buildItemSummary(),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+              child: CgSection(title: 'When'),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              child: CgCard(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    InkWell(
+                      key: const Key('date-field'),
+                      onTap: _submitting ? null : _pickDates,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.calendar_today_rounded,
+                              size: 18,
+                              color: c.primary,
                             ),
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceVariant(context),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              children: [
-                                 Icon(
-                                  Icons.calendar_today_rounded,
-                                  size: 18,
-                                  color: AppColors.primary(context),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    _dateButtonText,
-                                    style:  TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.textPrimary(context),
-                                    ),
-                                  ),
-                                ),
-                                 Icon(
-                                  Icons.chevron_right_rounded,
-                                  color: AppColors.textSecondary(context),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        if (_checkIn != null && !_isTransport && _checkOut != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              '$_nights night${_nights == 1 ? '' : 's'}',
-                              style:  TextStyle(
-                                fontSize: 12,
-                                color: AppColors.textSecondary(context),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                _dateButtonText,
+                                style: CgType.body15.copyWith(color: c.text),
                               ),
                             ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  if (_isTransport)
-                    _buildSection(
-                      'Choose your seats  ·  ${_selectedSeats.length} selected',
-                      _buildSeatPicker(),
-                    )
-                  else
-                    _buildSection('Guests', _buildGuestsRow()),
-                  const SizedBox(height: 16),
-                  _buildSection(
-                    'Notes (optional)',
-                    TextField(
-                      key: const Key('booking-notes'),
-                      controller: _notesController,
-                      maxLines: 3,
-                      maxLength: 300,
-                      enabled: !_submitting,
-                      decoration: InputDecoration(
-                        hintText: 'Anything the host should know…',
-                        counterText: '',
-                        filled: true,
-                        fillColor: AppColors.surfaceVariant(context),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              color: c.text2,
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildEstimateBox(),
-                  const SizedBox(height: 24),
-                  CGButton(
-                    key: const Key('confirm-booking'),
-                    label: 'Confirm Booking',
-                    isLoading: _submitting,
-                    onPressed: _submit,
-                  ),
-                  const SizedBox(height: 24),
-                ],
+                    if (_checkIn != null &&
+                        !_isTransport &&
+                        _checkOut != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Text(
+                          '$_nights night${_nights == 1 ? '' : 's'}',
+                          style: CgType.l12.copyWith(color: c.text2),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            )),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+              child: CgSection(
+                title: _isTransport
+                    ? 'Choose your seats  ·  ${_selectedSeats.length} selected'
+                    : 'Guests',
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              child: _isTransport ? _buildSeatPicker() : _buildGuestsRow(),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+              child: CgTextField(
+                key: const Key('booking-notes'),
+                label: 'Notes (optional)',
+                controller: _notesController,
+                icon: Icons.edit_note_rounded,
+                hint: 'Anything the host should know…',
+                maxLines: 3,
+                enabled: !_submitting,
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
   /// Bus-style seat grid: 4 seats per row with a central aisle.
   Widget _buildSeatPicker() {
+    final c = CgColors.of(context);
     final transport = _item! as Transport;
     final total = max(1, transport.totalSeats);
     final freeCount = total - _occupiedSeats.length;
@@ -468,8 +511,7 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
     Widget seatTile(int n) {
       final occupied = _occupiedSeats.contains(n);
       final selected = _selectedSeats.contains(n);
-      final canTap =
-          !occupied && (!selected && full ? false : true);
+      final canTap = !occupied && (!selected && full ? false : true);
       final idx = n - 1;
       final label = '${idx ~/ 4 + 1}${cols[idx % 4]}';
       return GestureDetector(
@@ -481,48 +523,33 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           curve: Curves.easeOut,
-          width: 46,
-          height: 46,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
+            gradient: selected ? c.gMain : null,
             color: occupied
-                ? AppColors.surfaceVariant(context)
+                ? c.line
                 : selected
-                ? OneUIColors.buttonGreen
-                : AppColors.surface(context),
-            borderRadius: BorderRadius.circular(10),
+                ? null
+                : c.surface,
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: selected
-                  ? OneUIColors.buttonGreen
+                  ? c.primary
                   : occupied
-                  ? AppColors.divider(context)
-                  : AppColors.primary(context).withValues(alpha: 0.45),
+                  ? c.line
+                  : c.sage,
               width: selected ? 2 : 1.2,
             ),
-            boxShadow: selected
-                ? [
-                    const BoxShadow(
-                      color: Color(0x551B7A4F),
-                      blurRadius: 8,
-                      offset: Offset(0, 3),
-                    ),
-                  ]
-                : const [],
           ),
           child: Center(
             child: occupied
-                ? Icon(
-                    Icons.close_rounded,
-                    size: 16,
-                    color: AppColors.textHint(context),
-                  )
+                ? Icon(Icons.close_rounded, size: 15, color: c.text2)
                 : Text(
                     label,
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: CgType.l12.copyWith(
                       fontWeight: FontWeight.w800,
-                      color: selected
-                          ? Colors.white
-                          : AppColors.textPrimary(context),
+                      color: selected ? c.onPrimary : c.text,
                     ),
                   ),
           ),
@@ -530,63 +557,62 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
       );
     }
 
-    Widget legendDot(Color color, String label) => Row(
+    Widget legendDot(Widget swatch, String label) => Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        swatch,
+        const SizedBox(width: 5),
+        Text(label, style: CgType.l12.copyWith(color: c.text2)),
+      ],
+    );
+
+    Widget legendSwatch({Gradient? gradient, Color? color, bool muted = false}) =>
         Container(
           width: 12,
           height: 12,
           decoration: BoxDecoration(
-            color: color,
+            gradient: gradient,
+            color: muted ? c.line : color,
             borderRadius: BorderRadius.circular(3),
+            border: Border.all(color: c.line),
           ),
-        ),
-        const SizedBox(width: 5),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: AppColors.textSecondary(context),
-          ),
-        ),
-      ],
-    );
+        );
 
-    return Container(
-      width: double.infinity,
+    return CgCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.divider(context), width: 0.5),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.directions_bus_rounded,
-                size: 18,
-                color: AppColors.primary(context),
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  gradient: c.gMint,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.directions_bus_rounded,
+                  size: 17,
+                  color: c.primary,
+                ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   'Front of vehicle',
-                  style: TextStyle(
-                    fontSize: 12,
+                  style: CgType.l12.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary(context),
+                    color: c.text2,
                   ),
                 ),
               ),
               Text(
                 '$freeCount of $total free',
-                style: TextStyle(
-                  fontSize: 12,
+                style: CgType.l12.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.primary(context),
+                  color: c.primary,
                 ),
               ),
             ],
@@ -599,7 +625,7 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
             children: [
               for (var i = 0; i < total; i++) ...[
                 seatTile(i + 1),
-                if (i % 4 == 1) const SizedBox(width: 24),
+                if (i % 4 == 1) const SizedBox(width: 20),
               ],
             ],
           ),
@@ -608,9 +634,12 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
             spacing: 14,
             runSpacing: 6,
             children: [
-              legendDot(AppColors.surface(context), 'Free'),
-              legendDot(OneUIColors.buttonGreen, 'Selected'),
-              legendDot(AppColors.surfaceVariant(context), 'Taken'),
+              legendDot(
+                legendSwatch(color: c.surface),
+                'Free',
+              ),
+              legendDot(legendSwatch(gradient: c.gMain), 'Selected'),
+              legendDot(legendSwatch(muted: true), 'Taken'),
             ],
           ),
         ],
@@ -619,22 +648,17 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
   }
 
   Widget _buildItemSummary() {
-    return Container(
-      width: double.infinity,
+    final c = CgColors.of(context);
+    return CgCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.divider(context), width: 0.5),
-      ),
       child: Row(
         children: [
           Container(
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: AppColors.primarySoft(context),
-              borderRadius: BorderRadius.circular(12),
+              gradient: c.gMint,
+              shape: BoxShape.circle,
             ),
             child: Icon(
               switch (widget.type) {
@@ -643,8 +667,8 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
                 'transport' => Icons.directions_bus_rounded,
                 _ => Icons.location_on_rounded,
               },
-              color: AppColors.primary(context),
-              size: 22,
+              color: c.primary,
+              size: 20,
             ),
           ),
           const SizedBox(width: 12),
@@ -654,41 +678,29 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
               children: [
                 Text(
                   _itemName,
-                  style:  TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary(context),
-                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: CgType.t16.copyWith(color: c.text),
                 ),
                 if (_itemSubtitle.isNotEmpty)
                   Text(
                     _itemSubtitle,
-                    style:  TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary(context),
-                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: CgType.l12.copyWith(color: c.text2),
                   ),
               ],
             ),
           ),
+          const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
                 '৳${_fmtPrice(_unitPrice)}',
-                style:  TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary(context),
-                ),
+                style: CgType.t16.copyWith(color: c.primary),
               ),
-              Text(
-                _priceLabel,
-                style:  TextStyle(
-                  fontSize: 11,
-                  color: AppColors.textSecondary(context),
-                ),
-              ),
+              Text(_priceLabel, style: CgType.l12.copyWith(color: c.text2)),
             ],
           ),
         ],
@@ -696,47 +708,18 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
     );
   }
 
-  Widget _buildSection(String title, Widget child) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style:  TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary(context),
-          ),
-        ),
-        const SizedBox(height: 8),
-        child,
-      ],
-    );
-  }
-
   Widget _buildGuestsRow() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceVariant(context),
-        borderRadius: BorderRadius.circular(12),
-      ),
+    final c = CgColors.of(context);
+    return CgCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
         children: [
-           Icon(
-            Icons.people_rounded,
-            size: 18,
-            color: AppColors.primary(context),
-          ),
+          Icon(Icons.people_rounded, size: 18, color: c.primary),
           const SizedBox(width: 10),
-           Expanded(
+          Expanded(
             child: Text(
               'Guests',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary(context),
-              ),
+              style: CgType.body15.copyWith(color: c.text),
             ),
           ),
           IconButton(
@@ -745,7 +728,7 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
                 ? null
                 : () => setState(() => _guests--),
             icon: const Icon(Icons.remove_circle_outline_rounded),
-            color: AppColors.primary(context),
+            color: c.primary,
             visualDensity: VisualDensity.compact,
           ),
           SizedBox(
@@ -753,11 +736,7 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
             child: Text(
               '$_guests',
               textAlign: TextAlign.center,
-              style:  TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary(context),
-              ),
+              style: CgType.t16.copyWith(color: c.text),
             ),
           ),
           IconButton(
@@ -766,51 +745,8 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
                 ? null
                 : () => setState(() => _guests++),
             icon: const Icon(Icons.add_circle_outline_rounded),
-            color: AppColors.primary(context),
+            color: c.primary,
             visualDensity: VisualDensity.compact,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEstimateBox() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.primarySoft(context),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Flexible(
-            child: Text(
-              'Estimated total',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style:  TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary(context),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Flexible(
-            child: Text(
-              '৳${_fmtPrice(_estimate)}',
-              key: const Key('booking-estimate'),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.end,
-              style:  TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.primary(context),
-              ),
-            ),
           ),
         ],
       ),

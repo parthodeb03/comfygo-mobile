@@ -1,570 +1,469 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'one_ui_colors.dart';
+import 'design_tokens.dart';
 import 'one_ui_typography.dart';
 
-/// ComfyGo Theme Configuration
-/// Green-and-white light mode matching the reference UI kit
+/// ComfyGo Material 3 theme.
+///
+/// Every colour, radius, duration and type size comes from
+/// `design_tokens.dart`. Screens must read values through the theme.
 class OneUITheme {
   OneUITheme._();
 
-  // ═══════════════════════════════════════════════════
-  // LIGHT THEME
-  // ═══════════════════════════════════════════════════
-  static ThemeData get lightTheme {
-    return ThemeData(
-      useMaterial3: false,
-      brightness: Brightness.light,
-      fontFamily: OneUITypography.fontFamily,
+  static final ThemeData lightTheme = _build(
+    brightness: Brightness.light,
+    primary: ComfyColors.primaryLight,
+    onPrimary: ComfyColors.onPrimaryLight,
+    primaryContainer: ComfyColors.primaryContainerLight,
+    onPrimaryContainer: ComfyColors.onPrimaryContainerLight,
+    secondary: ComfyColors.secondaryLight,
+    onSecondary: ComfyColors.onSecondaryLight,
+    secondaryContainer: ComfyColors.primaryContainerLight,
+    onSecondaryContainer: ComfyColors.onPrimaryContainerLight,
+    tertiary: ComfyColors.tertiaryLight,
+    onTertiary: ComfyColors.onTertiaryLight,
+    tertiaryContainer: ComfyColors.tierPremiumBgLight,
+    onTertiaryContainer: ComfyColors.tertiaryLight,
+    background: ComfyColors.backgroundLight,
+    surface: ComfyColors.surfaceLight,
+    surfaceVariant: ComfyColors.surfaceVariantLight,
+    onSurface: ComfyColors.textPrimaryLight,
+    onSurfaceVariant: ComfyColors.textSecondaryLight,
+    outline: ComfyColors.outlineLight,
+    outlineVariant: ComfyColors.outlineVariantLight,
+    hint: ComfyColors.textHintLight,
+    error: ComfyColors.errorLight,
+    onError: ComfyColors.onErrorLight,
+    errorContainer: ComfyColors.statusCancelledBgLight,
+    onErrorContainer: ComfyColors.statusCancelledLight,
+    shadow: ComfyColors.shadow,
+  );
 
-      // Color Scheme
-      colorScheme: const ColorScheme.light(
-        primary: OneUIColors.primaryLight,
-        onPrimary: Colors.white,
-        primaryContainer: OneUIColors.primarySoft,
-        onPrimaryContainer: OneUIColors.primaryVariantLight,
-        secondary: OneUIColors.secondaryLight,
-        onSecondary: Colors.white,
-        secondaryContainer: Color(0xFFE8F5E9),
-        onSecondaryContainer: Color(0xFF2E7D32),
-        tertiary: OneUIColors.tertiaryLight,
-        onTertiary: Colors.white,
-        surface: OneUIColors.surfaceLight,
-        onSurface: OneUIColors.textPrimaryLight,
-        surfaceContainerHighest: OneUIColors.surfaceVariantLight,
-        error: OneUIColors.error,
-        onError: Colors.white,
-        outline: OneUIColors.dividerLight,
-      ),
+  static final ThemeData darkTheme = _build(
+    brightness: Brightness.dark,
+    primary: ComfyColors.primaryDark,
+    onPrimary: ComfyColors.onPrimaryDark,
+    primaryContainer: ComfyColors.primaryContainerDark,
+    onPrimaryContainer: ComfyColors.onPrimaryContainerDark,
+    secondary: ComfyColors.secondaryDark,
+    onSecondary: ComfyColors.onSecondaryDark,
+    secondaryContainer: ComfyColors.primaryContainerDark,
+    onSecondaryContainer: ComfyColors.onPrimaryContainerDark,
+    tertiary: ComfyColors.tertiaryDark,
+    onTertiary: ComfyColors.onTertiaryDark,
+    tertiaryContainer: ComfyColors.tierPremiumBgDark,
+    onTertiaryContainer: ComfyColors.tertiaryDark,
+    background: ComfyColors.backgroundDark,
+    surface: ComfyColors.surfaceDark,
+    surfaceVariant: ComfyColors.surfaceVariantDark,
+    onSurface: ComfyColors.textPrimaryDark,
+    onSurfaceVariant: ComfyColors.textSecondaryDark,
+    outline: ComfyColors.outlineDark,
+    outlineVariant: ComfyColors.outlineVariantDark,
+    hint: ComfyColors.textHintDark,
+    error: ComfyColors.errorDark,
+    onError: ComfyColors.onErrorDark,
+    errorContainer: ComfyColors.statusCancelledBgDark,
+    onErrorContainer: ComfyColors.statusCancelledDark,
+    shadow: ComfyColors.shadow,
+  );
 
-      // Scaffold Background
-      scaffoldBackgroundColor: OneUIColors.backgroundLight,
+  static ThemeData _build({
+    required Brightness brightness,
+    required Color primary,
+    required Color onPrimary,
+    required Color primaryContainer,
+    required Color onPrimaryContainer,
+    required Color secondary,
+    required Color onSecondary,
+    required Color secondaryContainer,
+    required Color onSecondaryContainer,
+    required Color tertiary,
+    required Color onTertiary,
+    required Color tertiaryContainer,
+    required Color onTertiaryContainer,
+    required Color background,
+    required Color surface,
+    required Color surfaceVariant,
+    required Color onSurface,
+    required Color onSurfaceVariant,
+    required Color outline,
+    required Color outlineVariant,
+    required Color hint,
+    required Color error,
+    required Color onError,
+    required Color errorContainer,
+    required Color onErrorContainer,
+    required Color shadow,
+  }) {
+    final dark = brightness == Brightness.dark;
+    final textTheme = OneUITypography.textTheme(dark: dark);
 
-      // App Bar Theme
-      appBarTheme: const AppBarTheme(
-        backgroundColor: OneUIColors.backgroundLight,
-        foregroundColor: OneUIColors.textPrimaryLight,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        titleTextStyle: TextStyle(
-          fontFamily: OneUITypography.fontFamily,
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: OneUIColors.textPrimaryLight,
-        ),
-        systemOverlayStyle: SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          statusBarBrightness: Brightness.light,
-        ),
-      ),
-
-      // Card Theme - flat with subtle elevation
-      cardTheme: CardThemeData(
-        color: OneUIColors.surfaceLight,
-        elevation: 0,
-        shadowColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      ),
-
-      // Bottom Navigation
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: OneUIColors.surfaceLight,
-        selectedItemColor: OneUIColors.primaryLight,
-        unselectedItemColor: OneUIColors.textSecondaryLight,
-        type: BottomNavigationBarType.fixed,
-        elevation: 8,
-        selectedLabelStyle: TextStyle(
-          fontFamily: OneUITypography.fontFamily,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-        unselectedLabelStyle: TextStyle(
-          fontFamily: OneUITypography.fontFamily,
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-        ),
-      ),
-
-      // Elevated Button - full-width green, highly visible white text
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: OneUIColors.primaryLight,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shadowColor: OneUIColors.buttonGreen.withValues(alpha: 0.45),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
-          ),
-          textStyle: const TextStyle(
-            fontFamily: OneUITypography.fontFamily,
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.3,
-            color: Colors.white,
-          ),
-        ),
-      ),
-
-      // Filled Button - vibrant CTA
-      filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          backgroundColor: OneUIColors.primaryLight,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shadowColor: OneUIColors.buttonGreen.withValues(alpha: 0.45),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
-          ),
-          textStyle: const TextStyle(
-            fontFamily: OneUITypography.fontFamily,
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.3,
-            color: Colors.white,
-          ),
-        ),
-      ),
-
-      // Outlined Button - white with thin gray border
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: OneUIColors.textPrimaryLight,
-          side: const BorderSide(color: Color(0xFFE0E0E0), width: 1),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
-          ),
-          textStyle: const TextStyle(
-            fontFamily: OneUITypography.fontFamily,
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
-
-      // Text Button
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: OneUIColors.primaryLight,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          textStyle: const TextStyle(
-            fontFamily: OneUITypography.fontFamily,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
-
-      // Input Decoration - pill-rounded gray fill
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: OneUIColors.inputFillLight,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 16,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: const BorderSide(
-            color: OneUIColors.primaryLight,
-            width: 1.5,
-          ),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: const BorderSide(color: OneUIColors.error, width: 1),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: const BorderSide(color: OneUIColors.error, width: 1.5),
-        ),
-        hintStyle: const TextStyle(
-          fontFamily: OneUITypography.fontFamily,
-          color: OneUIColors.textHintLight,
-          fontSize: 14,
-        ),
-        labelStyle: const TextStyle(
-          fontFamily: OneUITypography.fontFamily,
-          color: OneUIColors.textSecondaryLight,
-          fontSize: 14,
-        ),
-      ),
-
-      // Chip Theme - pill-shaped
-      chipTheme: ChipThemeData(
-        backgroundColor: OneUIColors.surfaceVariantLight,
-        selectedColor: OneUIColors.primaryLight,
-        labelStyle: const TextStyle(
-          fontFamily: OneUITypography.fontFamily,
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      ),
-
-      // Divider
-      dividerTheme: const DividerThemeData(
-        color: OneUIColors.dividerLight,
-        thickness: 0.5,
-        space: 1,
-      ),
-
-      // Switch Theme
-      switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return Colors.white;
-          }
-          return Colors.grey;
-        }),
-        trackColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return OneUIColors.primaryLight;
-          }
-          return Colors.grey.shade300;
-        }),
-      ),
-
-      // Tab Bar Theme
-      tabBarTheme: const TabBarThemeData(
-        labelColor: OneUIColors.primaryLight,
-        unselectedLabelColor: OneUIColors.textSecondaryLight,
-        indicatorColor: OneUIColors.primaryLight,
-        labelStyle: TextStyle(
-          fontFamily: OneUITypography.fontFamily,
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-        ),
-        unselectedLabelStyle: TextStyle(
-          fontFamily: OneUITypography.fontFamily,
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-        ),
-      ),
-
-      // Bottom Sheet Theme
-      bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: OneUIColors.surfaceLight,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-      ),
-
-      // Dialog Theme
-      dialogTheme: DialogThemeData(
-        backgroundColor: OneUIColors.surfaceLight,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        titleTextStyle: const TextStyle(
-          fontFamily: OneUITypography.fontFamily,
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: OneUIColors.textPrimaryLight,
-        ),
-      ),
-
-      // SnackBar Theme
-      snackBarTheme: SnackBarThemeData(
-        backgroundColor: OneUIColors.textPrimaryLight,
-        contentTextStyle: const TextStyle(
-          fontFamily: OneUITypography.fontFamily,
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        behavior: SnackBarBehavior.floating,
-      ),
-
-      // Progress Indicator
-      progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: OneUIColors.primaryLight,
-        linearTrackColor: OneUIColors.surfaceVariantLight,
-      ),
+    final colorScheme = ColorScheme(
+      brightness: brightness,
+      primary: primary,
+      onPrimary: onPrimary,
+      primaryContainer: primaryContainer,
+      onPrimaryContainer: onPrimaryContainer,
+      secondary: secondary,
+      onSecondary: onSecondary,
+      secondaryContainer: secondaryContainer,
+      onSecondaryContainer: onSecondaryContainer,
+      tertiary: tertiary,
+      onTertiary: onTertiary,
+      tertiaryContainer: tertiaryContainer,
+      onTertiaryContainer: onTertiaryContainer,
+      error: error,
+      onError: onError,
+      errorContainer: errorContainer,
+      onErrorContainer: onErrorContainer,
+      surface: surface,
+      onSurface: onSurface,
+      onSurfaceVariant: onSurfaceVariant,
+      surfaceContainerHighest: surfaceVariant,
+      surfaceContainerHigh: surfaceVariant,
+      surfaceContainer: surface,
+      surfaceContainerLow: surface,
+      outline: outline,
+      outlineVariant: outlineVariant,
+      shadow: shadow,
+      scrim: ComfyColors.scrim,
+      surfaceTint: primary,
+      inverseSurface: onSurface,
+      onInverseSurface: surface,
+      inversePrimary: primaryContainer,
     );
-  }
 
-  // ═══════════════════════════════════════════════════
-  // DARK THEME
-  // ═══════════════════════════════════════════════════
-  static ThemeData get darkTheme {
+    final disabledBackground = onSurface.withValues(
+      alpha: ComfyOpacity.disabled,
+    );
+    final disabledContent = onSurface.withValues(
+      alpha: ComfyOpacity.disabledContent,
+    );
+
     return ThemeData(
-      useMaterial3: false,
-      brightness: Brightness.dark,
-      fontFamily: OneUITypography.fontFamily,
+      useMaterial3: true,
+      brightness: brightness,
+      colorScheme: colorScheme,
+      fontFamily: ComfyType.bodyFamily,
+      textTheme: textTheme,
+      scaffoldBackgroundColor: background,
+      canvasColor: surface,
+      dividerColor: outlineVariant,
+      disabledColor: disabledContent,
+      visualDensity: VisualDensity.standard,
+      materialTapTargetSize: MaterialTapTargetSize.padded,
+      splashFactory: InkSparkle.splashFactory,
 
-      colorScheme: const ColorScheme.dark(
-        primary: OneUIColors.primaryDark,
-        onPrimary: Color(0xFF20271A),
-        primaryContainer: OneUIColors.primaryVariantLight,
-        onPrimaryContainer: OneUIColors.primarySoft,
-        secondary: OneUIColors.secondaryDark,
-        onSecondary: Colors.white,
-        secondaryContainer: Color(0xFF1B5E20),
-        onSecondaryContainer: Color(0xFFA5D6A7),
-        tertiary: OneUIColors.tertiaryDark,
-        onTertiary: Colors.white,
-        surface: OneUIColors.surfaceDark,
-        onSurface: OneUIColors.textPrimaryDark,
-        surfaceContainerHighest: OneUIColors.surfaceVariantDark,
-        error: OneUIColors.error,
-        onError: Colors.white,
-        outline: OneUIColors.dividerDark,
-      ),
+      iconTheme: IconThemeData(color: onSurface, size: OneUISpacingIcon.md),
 
-      scaffoldBackgroundColor: OneUIColors.backgroundDark,
-
-      appBarTheme: const AppBarTheme(
-        backgroundColor: OneUIColors.backgroundDark,
-        foregroundColor: OneUIColors.textPrimaryDark,
+      appBarTheme: AppBarTheme(
+        backgroundColor: background,
+        foregroundColor: onSurface,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: TextStyle(
-          fontFamily: OneUITypography.fontFamily,
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: OneUIColors.textPrimaryDark,
+        titleTextStyle: ComfyType.cardTitle.copyWith(color: onSurface),
+        iconTheme: IconThemeData(color: onSurface, size: OneUISpacingIcon.md),
+        actionsIconTheme: IconThemeData(
+          color: onSurface,
+          size: OneUISpacingIcon.md,
         ),
-        systemOverlayStyle: SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.light,
-          statusBarBrightness: Brightness.dark,
-        ),
+        systemOverlayStyle: dark
+            ? SystemUiOverlayStyle.light.copyWith(
+                statusBarColor: Colors.transparent,
+                statusBarBrightness: Brightness.dark,
+              )
+            : SystemUiOverlayStyle.dark.copyWith(
+                statusBarColor: Colors.transparent,
+                statusBarBrightness: Brightness.light,
+              ),
       ),
 
       cardTheme: CardThemeData(
-        color: OneUIColors.surfaceDark,
+        color: surface,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        shadowColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      ),
-
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: OneUIColors.surfaceDark,
-        selectedItemColor: OneUIColors.primaryDark,
-        unselectedItemColor: OneUIColors.textSecondaryDark,
-        type: BottomNavigationBarType.fixed,
-        elevation: 8,
-        selectedLabelStyle: TextStyle(
-          fontFamily: OneUITypography.fontFamily,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-        unselectedLabelStyle: TextStyle(
-          fontFamily: OneUITypography.fontFamily,
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
+        shadowColor: shadow.withValues(alpha: 0.08),
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ComfyRadii.card),
         ),
       ),
 
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: OneUIColors.buttonGreen,
-          foregroundColor: Color(0xFF20271A),
+          backgroundColor: primary,
+          foregroundColor: onPrimary,
+          disabledBackgroundColor: disabledBackground,
+          disabledForegroundColor: disabledContent,
           elevation: 0,
-          shadowColor: OneUIColors.buttonGreen.withValues(alpha: 0.5),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
+          minimumSize: const Size(OneUISpacingTouch.min, OneUISpacingTouch.min),
+          padding: const EdgeInsets.symmetric(
+            horizontal: ComfySpacing.xxl,
+            vertical: ComfySpacing.md,
           ),
-          textStyle: const TextStyle(
-            fontFamily: OneUITypography.fontFamily,
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.3,
-            color: Color(0xFF20271A),
-          ),
+          shape: const StadiumBorder(),
+          textStyle: ComfyType.button.copyWith(color: onPrimary),
         ),
       ),
 
-      // Filled Button - vibrant CTA
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: OneUIColors.buttonGreen,
-          foregroundColor: Color(0xFF20271A),
+          backgroundColor: primary,
+          foregroundColor: onPrimary,
+          disabledBackgroundColor: disabledBackground,
+          disabledForegroundColor: disabledContent,
           elevation: 0,
-          shadowColor: OneUIColors.buttonGreen.withValues(alpha: 0.5),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
+          minimumSize: const Size(OneUISpacingTouch.min, OneUISpacingTouch.min),
+          padding: const EdgeInsets.symmetric(
+            horizontal: ComfySpacing.xxl,
+            vertical: ComfySpacing.md,
           ),
-          textStyle: const TextStyle(
-            fontFamily: OneUITypography.fontFamily,
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.3,
-            color: Color(0xFF20271A),
-          ),
+          shape: const StadiumBorder(),
+          textStyle: ComfyType.button.copyWith(color: onPrimary),
         ),
       ),
 
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: OneUIColors.textPrimaryDark,
-          side: const BorderSide(color: Color(0xFF424242), width: 1),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
+          foregroundColor: primary,
+          disabledForegroundColor: disabledContent,
+          minimumSize: const Size(OneUISpacingTouch.min, OneUISpacingTouch.min),
+          padding: const EdgeInsets.symmetric(
+            horizontal: ComfySpacing.xxl,
+            vertical: ComfySpacing.md,
           ),
-          textStyle: const TextStyle(
-            fontFamily: OneUITypography.fontFamily,
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
+          side: BorderSide(color: outline),
+          shape: const StadiumBorder(),
+          textStyle: ComfyType.button.copyWith(color: primary),
         ),
       ),
 
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: OneUIColors.primaryDark,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          textStyle: const TextStyle(
-            fontFamily: OneUITypography.fontFamily,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
+          foregroundColor: primary,
+          disabledForegroundColor: disabledContent,
+          minimumSize: const Size(OneUISpacingTouch.min, OneUISpacingTouch.min),
+          padding: const EdgeInsets.symmetric(
+            horizontal: ComfySpacing.md,
+            vertical: ComfySpacing.sm,
           ),
+          textStyle: ComfyType.label.copyWith(color: primary),
         ),
       ),
 
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: OneUIColors.surfaceVariantDark,
+        fillColor: surfaceVariant,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 16,
+          horizontal: ComfySpacing.lg,
+          vertical: ComfySpacing.md,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(ComfyRadii.input),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(ComfyRadii.input),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: const BorderSide(
-            color: OneUIColors.primaryDark,
-            width: 1.5,
-          ),
+          borderRadius: BorderRadius.circular(ComfyRadii.input),
+          borderSide: BorderSide(color: primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: const BorderSide(color: OneUIColors.error, width: 1),
+          borderRadius: BorderRadius.circular(ComfyRadii.input),
+          borderSide: BorderSide(color: error),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: const BorderSide(color: OneUIColors.error, width: 1.5),
+          borderRadius: BorderRadius.circular(ComfyRadii.input),
+          borderSide: BorderSide(color: error, width: 1.5),
         ),
-        hintStyle: const TextStyle(
-          fontFamily: OneUITypography.fontFamily,
-          color: OneUIColors.textHintDark,
-          fontSize: 14,
-        ),
-        labelStyle: const TextStyle(
-          fontFamily: OneUITypography.fontFamily,
-          color: OneUIColors.textSecondaryDark,
-          fontSize: 14,
-        ),
+        hintStyle: ComfyType.bodyM.copyWith(color: hint),
+        labelStyle: ComfyType.bodyM.copyWith(color: onSurfaceVariant),
+        errorStyle: ComfyType.bodyS.copyWith(color: error),
       ),
 
       chipTheme: ChipThemeData(
-        backgroundColor: OneUIColors.surfaceVariantDark,
-        selectedColor: OneUIColors.primaryDark,
-        labelStyle: const TextStyle(
-          fontFamily: OneUITypography.fontFamily,
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
+        backgroundColor: surfaceVariant,
+        selectedColor: primaryContainer,
+        disabledColor: disabledBackground,
+        labelStyle: ComfyType.label.copyWith(color: onSurface),
+        secondaryLabelStyle: ComfyType.label.copyWith(
+          color: onPrimaryContainer,
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        shape: const StadiumBorder(),
+        side: BorderSide.none,
+        padding: const EdgeInsets.symmetric(
+          horizontal: ComfySpacing.md,
+          vertical: ComfySpacing.sm,
+        ),
       ),
 
-      dividerTheme: const DividerThemeData(
-        color: OneUIColors.dividerDark,
-        thickness: 0.5,
+      dividerTheme: DividerThemeData(
+        color: outlineVariant,
+        thickness: 1,
         space: 1,
       ),
 
-      switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return Colors.white;
-          }
-          return Colors.grey;
+      navigationBarTheme: NavigationBarThemeData(
+        height: 72,
+        elevation: 0,
+        backgroundColor: surface,
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: primaryContainer,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            color: selected ? primary : onSurfaceVariant,
+            size: OneUISpacingIcon.md,
+          );
         }),
-        trackColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return OneUIColors.primaryDark;
-          }
-          return Colors.grey.shade700;
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return ComfyType.nav.copyWith(
+            color: selected ? primary : onSurfaceVariant,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+          );
         }),
       ),
 
-      tabBarTheme: const TabBarThemeData(
-        labelColor: OneUIColors.primaryDark,
-        unselectedLabelColor: OneUIColors.textSecondaryDark,
-        indicatorColor: OneUIColors.primaryDark,
-        labelStyle: TextStyle(
-          fontFamily: OneUITypography.fontFamily,
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: surface,
+        elevation: 0,
+        indicatorColor: primaryContainer,
+        selectedIconTheme: IconThemeData(
+          color: primary,
+          size: OneUISpacingIcon.md,
         ),
-        unselectedLabelStyle: TextStyle(
-          fontFamily: OneUITypography.fontFamily,
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
+        unselectedIconTheme: IconThemeData(
+          color: onSurfaceVariant,
+          size: OneUISpacingIcon.md,
+        ),
+        selectedLabelTextStyle: ComfyType.nav.copyWith(
+          color: primary,
+          fontWeight: FontWeight.w700,
+        ),
+        unselectedLabelTextStyle: ComfyType.nav.copyWith(
+          color: onSurfaceVariant,
         ),
       ),
 
-      bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: OneUIColors.surfaceDark,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: surface,
+        selectedItemColor: primary,
+        unselectedItemColor: onSurfaceVariant,
+        elevation: 0,
+        type: BottomNavigationBarType.fixed,
+        selectedLabelStyle: ComfyType.nav.copyWith(color: primary),
+        unselectedLabelStyle: ComfyType.nav.copyWith(color: onSurfaceVariant),
+      ),
+
+      tabBarTheme: TabBarThemeData(
+        labelColor: primary,
+        unselectedLabelColor: onSurfaceVariant,
+        indicatorColor: primary,
+        dividerColor: outlineVariant,
+        labelStyle: ComfyType.label.copyWith(
+          color: primary,
+          fontWeight: FontWeight.w700,
         ),
+        unselectedLabelStyle: ComfyType.label.copyWith(color: onSurfaceVariant),
       ),
 
       dialogTheme: DialogThemeData(
-        backgroundColor: OneUIColors.surfaceDark,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        titleTextStyle: const TextStyle(
-          fontFamily: OneUITypography.fontFamily,
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: OneUIColors.textPrimaryDark,
+        backgroundColor: surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ComfyRadii.sheet),
+        ),
+        titleTextStyle: ComfyType.h2.copyWith(color: onSurface),
+        contentTextStyle: ComfyType.bodyM.copyWith(color: onSurfaceVariant),
+      ),
+
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        modalBackgroundColor: surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(ComfyRadii.sheet),
+          ),
         ),
       ),
 
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: OneUIColors.textPrimaryDark,
-        contentTextStyle: const TextStyle(
-          fontFamily: OneUITypography.fontFamily,
-          fontSize: 14,
-          color: Colors.black,
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: onSurface,
+        contentTextStyle: ComfyType.bodyM.copyWith(color: background),
+        actionTextColor: primary,
         behavior: SnackBarBehavior.floating,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ComfyRadii.md),
+        ),
       ),
 
-      progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: OneUIColors.primaryDark,
-        linearTrackColor: OneUIColors.surfaceVariantDark,
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: primary,
+        linearTrackColor: surfaceVariant,
+        circularTrackColor: surfaceVariant,
+      ),
+
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return onPrimary;
+          return onSurfaceVariant;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return primary;
+          return surfaceVariant;
+        }),
+        trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return primary;
+          return outline;
+        }),
+      ),
+
+      listTileTheme: ListTileThemeData(
+        iconColor: primary,
+        textColor: onSurface,
+        titleTextStyle: ComfyType.bodyL.copyWith(color: onSurface),
+        subtitleTextStyle: ComfyType.bodyS.copyWith(color: onSurfaceVariant),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: ComfySpacing.lg,
+          vertical: ComfySpacing.xs,
+        ),
+        minVerticalPadding: ComfySpacing.sm,
+      ),
+
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: onSurface,
+          borderRadius: BorderRadius.circular(ComfyRadii.sm),
+        ),
+        textStyle: ComfyType.caption.copyWith(color: background),
+      ),
+
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: primary,
+        selectionColor: primaryContainer,
+        selectionHandleColor: primary,
       ),
     );
   }
+}
+
+/// Local aliases keep icon/touch sizes readable inside this file.
+abstract final class OneUISpacingIcon {
+  static const double md = 24;
+}
+
+abstract final class OneUISpacingTouch {
+  static const double min = 48;
 }

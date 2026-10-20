@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/comfy_design.dart';
 import '../../../core/utils/navigation.dart';
-import '../../../core/widgets/widgets.dart';
+import '../../../core/widgets/comfy_page.dart';
+import '../../../core/widgets/comfy_ui.dart';
 import '../../../state/service_providers.dart';
 
+/// Browse local guides and their specialities.
 class GuidesScreen extends ConsumerStatefulWidget {
   const GuidesScreen({super.key});
 
@@ -33,120 +35,109 @@ class _GuidesScreenState extends ConsumerState<GuidesScreen> {
   Widget build(BuildContext context) {
     final data = ref.watch(guidesProvider);
 
-    return TravelScaffold(
-      backgroundColor: AppColors.background(context),
-      photoBackground: TravelPhotos.listGreen,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => goBack(context),
-        ),
-        title: const Text('Guides'),
-      ),
-      body: SafeArea(
-        child: CustomScrollView(
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          slivers: [
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(20, 8, 20, 20),
-                child: TravelBanner(
-                  title: 'Explore with a local',
-                  subtitle: 'Discover local stories and memorable experiences.',
-                  asset: TravelPhotos.guides,
-                  showImage: false,
-                ),
-              ),
+    return CgPageScaffold(
+      child: ListView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: const EdgeInsets.only(bottom: 32),
+        children: [
+          CgPageTitle(
+            title: 'Guides',
+            subtitle: 'Explore with a local',
+            onBack: () => goBack(context),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: CgTextField(
+              label: 'Search guides',
+              controller: _search,
+              icon: Icons.search_rounded,
+              hint: 'Name, city or speciality…',
+              onChanged: (_) => _load(),
             ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-                child: TextField(
-                  controller: _search,
-                  onChanged: (_) => _load(),
-                  decoration: InputDecoration(
-                    hintText: 'Search guides...',
-                    prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.close_rounded, size: 20),
-                      onPressed: () {
-                        _search.clear();
-                        _load();
-                      },
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: CgSection(
+              title: 'Local experts',
+              actionLabel: data.isLoading ? null : '${data.guides.length} found',
+            ),
+          ),
+          if (data.isLoading)
+            const CgLoadingState()
+          else if (data.error != null)
+            CgErrorState(
+              message: 'Unable to load guides. Please try again.',
+              onRetry: _load,
+            )
+          else if (data.guides.isEmpty)
+            const CgEmptyState(
+              icon: Icons.hiking_rounded,
+              message: 'No guides found. Try another search.',
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+              child: Column(
+                children: [
+                  for (var i = 0; i < data.guides.length; i++)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        bottom: i == data.guides.length - 1 ? 0 : 12,
+                      ),
+                      child: _GuideTile(
+                        name: data.guides[i].name,
+                        specialization: data.guides[i].specialization,
+                        rating: data.guides[i].rating,
+                        dailyRate: data.guides[i].dailyRate,
+                        onTap: () =>
+                            context.push('/guides/${data.guides[i].id}'),
+                      ),
                     ),
-                  ),
-                ),
+                ],
               ),
             ),
-            if (data.isLoading)
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.all(40),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              )
-            else if (data.error != null || data.guides.isEmpty)
-              SliverToBoxAdapter(
-                child: _buildEmpty(
-                  data.error != null
-                      ? 'Unable to load guides.'
-                      : 'No guides found.',
-                ),
-              )
-            else
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                sliver: SliverToBoxAdapter(
-                  child: Column(
-                    children: [
-                      for (final item in data.guides)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 14),
-                          child: TravelRowCard(
-                            title: item.name,
-                            subtitle: item.specialization,
-                            meta:
-                                '৳${item.dailyRate.toStringAsFixed(0)} per day',
-                            leadingIcon: Icons.badge_outlined,
-                            imageUrl: item.profileImage,
-                            asset: TravelPhotos.guides,
-                            heroTag: 'guide_image_${item.id}',
-                            onTap: () => context.push('/guides/${item.id}'),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
-          ],
-        ),
+        ],
       ),
     );
   }
+}
 
-  Widget _buildEmpty(String message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-             Icon(
-              Icons.hiking_rounded,
-              size: 48,
-              color: AppColors.textHint(context),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              style:  TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary(context),
-              ),
-            ),
-          ],
-        ),
+class _GuideTile extends StatelessWidget {
+  const _GuideTile({
+    required this.name,
+    required this.specialization,
+    required this.rating,
+    required this.dailyRate,
+    required this.onTap,
+  });
+
+  final String name;
+  final String specialization;
+  final double rating;
+  final double dailyRate;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = CgColors.of(context);
+    return CgTile(
+      title: name,
+      subtitle: '$specialization · ★ ${rating.toStringAsFixed(1)}',
+      onTap: onTap,
+      leading: Text(
+        name.isEmpty ? '?' : name[0].toUpperCase(),
+        style: CgType.t16.copyWith(color: c.primary),
+      ),
+      trailing: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            '৳${dailyRate.round()}',
+            style: CgType.t16.copyWith(color: c.primary),
+          ),
+          Text('/day', style: CgType.l12.copyWith(color: c.text2)),
+        ],
       ),
     );
   }

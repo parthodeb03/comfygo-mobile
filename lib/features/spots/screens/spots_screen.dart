@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/comfy_design.dart';
 import '../../../core/utils/navigation.dart';
-import '../../../core/widgets/widgets.dart';
+import '../../../core/widgets/comfy_page.dart';
+import '../../../core/widgets/comfy_ui.dart';
 import '../../../data/tourist_spots.dart';
 
 /// Division-wise tourist spots — browse inspiration, then book a hotel.
@@ -43,149 +44,85 @@ class _SpotsScreenState extends State<SpotsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = CgColors.of(context);
     final spots = _results;
     const divisions = ['All', ...spotDivisions];
 
-    return Scaffold(
-      backgroundColor: AppColors.background(context),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => goBack(context),
-        ),
-        title: const Text('Tourist Spots'),
-      ),
-      body: NatureBackground.wrap(
-        child: SafeArea(
-          child: CustomScrollView(
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            slivers: [
-              const SliverToBoxAdapter(child: SizedBox(height: 8)),
-
-              // ─── Intro + search ───────────────────────────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Explore Bangladesh, division by division',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary(context),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _searchController,
-                        onChanged: (v) => setState(() => _search = v.trim()),
-                        decoration: InputDecoration(
-                          hintText: 'Search spots, districts…',
-                          prefixIcon: const Icon(Icons.search_rounded),
-                          suffixIcon: _search.isEmpty
-                              ? null
-                              : IconButton(
-                                  icon: const Icon(Icons.close_rounded),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    setState(() => _search = '');
-                                  },
-                                ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 14)),
-
-              // ─── Division chips ──────────────────────────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final value in divisions)
-                        CGChip(
-                          label: value,
-                          isSelected: _selected == value,
-                          activeColor: AppColors.brandGreen,
-                          onTap: () => setState(() => _selected = value),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
-                    '${spots.length} spot${spots.length == 1 ? '' : 's'} found',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary(context),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 10)),
-
-              // ─── Spot list (row-directional cards) ───────────
-              if (spots.isEmpty)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(40),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.explore_off_rounded,
-                          size: 48,
-                          color: AppColors.textHint(context),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'No spots match your search.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary(context),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-                  sliver: SliverList.list(
-                    children: [
-                      for (final spot in spots) ...[
-                        TravelRowCard(
-                          title: spot.name,
-                          subtitle: '${spot.tagline} · ${spot.district}',
-                          meta: spot.division,
-                          leadingIcon: Icons.place_rounded,
-                          asset: spot.photo,
-                          heroTag: 'spot_${spot.id}',
-                          onTap: () => context.push('/spots/${spot.id}'),
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                    ],
-                  ),
-                ),
-            ],
+    return CgPageScaffold(
+      child: ListView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: const EdgeInsets.only(bottom: 32),
+        children: [
+          CgPageTitle(
+            title: 'Tourist Spots',
+            subtitle: 'Explore Bangladesh, division by division',
+            onBack: () => goBack(context),
           ),
-        ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: CgTextField(
+              label: 'Search spots',
+              controller: _searchController,
+              icon: Icons.search_rounded,
+              hint: 'Search spots, districts…',
+              onChanged: (v) => setState(() => _search = v.trim()),
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 60,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+              itemCount: divisions.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                final value = divisions[index];
+                return CgChip(
+                  label: value,
+                  icon: Icons.place_outlined,
+                  selected: _selected == value,
+                  onTap: () => setState(() => _selected = value),
+                );
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+            child: Text(
+              '${spots.length} spot${spots.length == 1 ? '' : 's'} found',
+              style: CgType.l12.copyWith(color: c.text2),
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (spots.isEmpty)
+            const CgEmptyState(
+              icon: Icons.explore_off_rounded,
+              message: 'No spots match your search.',
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  for (var i = 0; i < spots.length; i++)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        bottom: i == spots.length - 1 ? 0 : 12,
+                      ),
+                      child: CgTile(
+                        icon: Icons.place_outlined,
+                        title: spots[i].name,
+                        subtitle:
+                            '${spots[i].tagline} · ${spots[i].district}',
+                        trailingText: spots[i].division,
+                        onTap: () => context.push('/spots/${spots[i].id}'),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

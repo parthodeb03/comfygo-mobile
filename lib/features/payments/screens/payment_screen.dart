@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/comfy_design.dart';
 import '../../../core/utils/navigation.dart';
-import '../../../core/theme/theme.dart';
-import '../../../core/widgets/widgets.dart';
+import '../../../core/widgets/comfy_page.dart';
+import '../../../core/widgets/comfy_ui.dart';
 import '../../../models/models.dart';
 import '../../../services/api_exception.dart';
 import '../../../services/invoice_pdf.dart';
@@ -118,27 +118,33 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     setState(() => _isLoading = true);
     try {
       final payment = _selectedMethod == 'card'
-          ? await ref.read(paymentServiceProvider).createCardPayment(
-                bookingId: widget.bookingId,
-                amount: _amount,
-                cardNumber: _cardNumberController.text
-                    .replaceAll(' ', '')
-                    .trim(),
-                expiryDate: _expiryController.text.trim(),
-                cvv: _cvvController.text.trim(),
-                cardholderName: _cardholderController.text.trim(),
-              )
+          ? await ref
+                .read(paymentServiceProvider)
+                .createCardPayment(
+                  bookingId: widget.bookingId,
+                  amount: _amount,
+                  cardNumber: _cardNumberController.text
+                      .replaceAll(' ', '')
+                      .trim(),
+                  expiryDate: _expiryController.text.trim(),
+                  cvv: _cvvController.text.trim(),
+                  cardholderName: _cardholderController.text.trim(),
+                )
           : _isWalletMethod
-              ? await ref.read(paymentServiceProvider).createWalletPayment(
-                    bookingId: widget.bookingId,
-                    amount: _amount,
-                    method: _selectedMethod,
-                    walletNumber: _walletController.text.trim(),
-                  )
-              : await ref.read(paymentServiceProvider).createCashPayment(
-                    bookingId: widget.bookingId,
-                    amount: _amount,
-                  );
+          ? await ref
+                .read(paymentServiceProvider)
+                .createWalletPayment(
+                  bookingId: widget.bookingId,
+                  amount: _amount,
+                  method: _selectedMethod,
+                  walletNumber: _walletController.text.trim(),
+                )
+          : await ref
+                .read(paymentServiceProvider)
+                .createCashPayment(
+                  bookingId: widget.bookingId,
+                  amount: _amount,
+                );
 
       if (!mounted) return;
 
@@ -159,16 +165,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   }
 
   void _showSnack(String message) {
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message, style: const TextStyle(fontSize: 13)),
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+    if (mounted) showCgToast(context, message);
   }
 
   void _showSuccessDialog() {
@@ -177,39 +174,57 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     final booking = _booking;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(isCard || isWallet ? 'Payment Successful' : 'Payment Recorded'),
-        content: Text(
-          isCard
-              ? 'Sandbox payment simulated successfully. No card was charged.'
-              : isWallet
-                  ? 'Sandbox ${_selectedMethod == 'bkash' ? 'bKash' : 'Nagad'} payment simulated successfully. No money moved.'
-                  : 'Your cash payment has been recorded and will be '
-                        'confirmed by our team.',
-        ),
-        actions: [
-          if (booking != null)
-            TextButton(
-              key: const Key('dialog-download-invoice'),
-              onPressed: () async {
-                try {
-                  await InvoicePdf.share(booking);
-                } catch (_) {
-                  // The dialog stays open; user can retry or close.
-                }
-              },
-              child: const Text('Download Invoice'),
-            ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              context.go('/bookings');
-            },
-            child: const Text('View Bookings'),
+      builder: (dialogContext) {
+        final c = CgColors.of(dialogContext);
+        return AlertDialog(
+          backgroundColor: c.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(CgRadii.card),
           ),
-        ],
-      ),
+          icon: Icon(Icons.check_circle_rounded, color: c.primary, size: 36),
+          title: Text(
+            isCard || isWallet ? 'Payment Successful' : 'Payment Recorded',
+            textAlign: TextAlign.center,
+            style: CgType.t20.copyWith(color: c.text),
+          ),
+          content: Text(
+            isCard
+                ? 'Sandbox payment simulated successfully. '
+                      'No card was charged.'
+                : isWallet
+                ? 'Sandbox '
+                      '${_selectedMethod == 'bkash' ? 'bKash' : 'Nagad'} '
+                      'payment simulated successfully. No money moved.'
+                : 'Your cash payment has been recorded and will be '
+                      'confirmed by our team.',
+            textAlign: TextAlign.center,
+            style: CgType.b14.copyWith(color: c.text2),
+          ),
+          actions: [
+            if (booking != null)
+              TextButton(
+                key: const Key('dialog-download-invoice'),
+                onPressed: () async {
+                  try {
+                    await InvoicePdf.share(booking);
+                  } catch (_) {
+                    // The dialog stays open; user can retry or close.
+                  }
+                },
+                style: TextButton.styleFrom(foregroundColor: c.primary),
+                child: const Text('Download Invoice'),
+              ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                context.go('/bookings');
+              },
+              style: TextButton.styleFrom(foregroundColor: c.text2),
+              child: const Text('View Bookings'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -217,377 +232,393 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background(context),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => goBack(context),
-        ),
-        title: const Text('Payment'),
-      ),
-      body: NatureBackground.wrap(child: _loadingBooking
-          ? const Center(child: CircularProgressIndicator())
-          : _booking == null
-          ? TravelEmpty(
-              message: 'The booking for this payment could not be loaded.',
-              onRetry: _loadBooking,
-            )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Order summary — real booking data
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.primarySoft(context),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                         Text(
-                          'Order Summary',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary(context),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildSummaryRow(
-                          _booking!.itemName.isEmpty
-                              ? 'Booking #${_booking!.id}'
-                              : _booking!.itemName,
-                          '',
-                        ),
-                        _buildSummaryRow('Booking ID', '#${_booking!.id}'),
-                        _buildSummaryRow(
-                          'Guests',
-                          '${_booking!.guests}',
-                        ),
-                        const Divider(height: 20),
-                        _buildSummaryRow(
-                          'Total',
-                          '৳${_fmtPrice(_amount)}',
-                          isBold: true,
-                        ),
-                      ],
-                    ),
-                  ),
+    final c = CgColors.of(context);
+    final payable = !_loadingBooking && _booking != null;
 
-                  const SizedBox(height: 24),
-
-                  // Payment method
-                   Text(
-                    'Payment Method',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary(context),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildMethodCard(
-                          'card',
-                          'Card',
-                          Icons.credit_card_rounded,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildMethodCard(
-                          'bkash',
-                          'bKash',
-                          Icons.account_balance_wallet_rounded,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildMethodCard(
-                          'nagad',
-                          'Nagad',
-                          Icons.account_balance_wallet_outlined,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildMethodCard(
-                          'cash',
-                          'Cash',
-                          Icons.payments_rounded,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Card details
-                  if (_selectedMethod == 'card') ...[
-                     Text(
-                      'Card Details',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary(context),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    GlassInput(
-                      key: const Key('card-number'),
-                      controller: _cardNumberController,
-                      hintText: '4242 4242 4242 4242 (sandbox)',
-                      prefixIcon: Icons.credit_card_rounded,
-                      keyboardType: TextInputType.number,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: GlassInput(
-                            key: const Key('card-expiry'),
-                            controller: _expiryController,
-                            hintText: 'MM/YY',
-                            keyboardType: TextInputType.datetime,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: GlassInput(
-                            key: const Key('card-cvv'),
-                            controller: _cvvController,
-                            hintText: 'CVV',
-                            obscureText: true,
-                            keyboardType: TextInputType.number,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    GlassInput(
-                      key: const Key('card-holder'),
-                      controller: _cardholderController,
-                      hintText: 'Cardholder Name',
-                      prefixIcon: Icons.person_outline_rounded,
-                    ),
-                  ],
-
-                  if (_isWalletMethod) ...[
-                     Text(
-                      '${_selectedMethod == 'bkash' ? 'bKash' : 'Nagad'} Wallet',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary(context),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    GlassInput(
-                      key: const Key('wallet-number'),
-                      controller: _walletController,
-                      hintText: '01XXXXXXXXX (11 digits)',
-                      prefixIcon: Icons.phone_android_rounded,
-                      keyboardType: TextInputType.phone,
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: OneUIColors.primarySoft.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline_rounded,
-                            color: OneUIColors.primaryDark,
-                            size: 20,
-                          ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Sandbox simulation — you will get a transaction ID instantly and no money moves.',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppColors.textSecondary(context),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-
-                  if (_selectedMethod == 'cash') ...[
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: OneUIColors.statusPending.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child:  Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline_rounded,
-                            color: OneUIColors.statusPending,
-                            size: 20,
-                          ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Pay with cash upon arrival. Please have the exact amount ready.',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppColors.textSecondary(context),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-
-                  const SizedBox(height: 24),
-
-                  CGButton(
-                    key: const Key('pay-button'),
-                    label: _selectedMethod == 'card'
-                        ? 'Pay ৳${_fmtPrice(_amount)}'
-                        : _isWalletMethod
-                            ? 'Pay with ${_selectedMethod == 'bkash' ? 'bKash' : 'Nagad'}'
+    return CgPageScaffold(
+      bottom: !payable
+          ? null
+          : Container(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+              decoration: BoxDecoration(
+                color: c.surface,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(CgRadii.nav),
+                ),
+                boxShadow: c.navShadow,
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CgPillButton(
+                      key: const Key('pay-button'),
+                      loading: _isLoading,
+                      onTap: _handlePayment,
+                      child: Text(
+                        _selectedMethod == 'card'
+                            ? 'Pay ৳${_fmtPrice(_amount)}'
+                            : _isWalletMethod
+                            ? 'Pay with '
+                                  '${_selectedMethod == 'bkash' ? 'bKash' : 'Nagad'}'
                             : 'Confirm Cash Payment',
-                    isLoading: _isLoading,
-                    onPressed: _handlePayment,
-                  ),
-
-                  const SizedBox(height: 12),
-
-                   Center(
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
                           Icons.lock_outline_rounded,
-                          size: 14,
-                          color: AppColors.textHint(context),
+                          size: 13,
+                          color: c.text2,
                         ),
-                        SizedBox(width: 4),
-                        Text(
-                          'Sandbox only ? no real card is charged',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textHint(context),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            'Sandbox only — no real card is charged',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: CgType.l12.copyWith(
+                              fontSize: 11,
+                              color: c.text2,
+                            ),
                           ),
                         ),
                       ],
                     ),
+                  ],
+                ),
+              ),
+            ),
+      child: ListView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: const EdgeInsets.only(bottom: 32),
+        children: [
+          CgPageTitle(
+            title: 'Payment',
+            subtitle: payable
+                ? 'Booking #${_booking!.id} · '
+                      '${_booking!.itemName.isEmpty ? 'Your trip' : _booking!.itemName}'
+                : null,
+            onBack: () => goBack(context),
+          ),
+          if (_loadingBooking)
+            const CgLoadingState()
+          else if (_booking == null)
+            CgErrorState(
+              message: 'The booking for this payment could not be loaded.',
+              onRetry: _loadBooking,
+            )
+          else ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              child: CgCard(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Order Summary',
+                      style: CgType.t16.copyWith(color: c.text),
+                    ),
+                    const SizedBox(height: 6),
+                    CgInfoRow(
+                      label: _booking!.itemName.isEmpty
+                          ? 'Booking #${_booking!.id}'
+                          : _booking!.itemName,
+                      value: '#${_booking!.id}',
+                    ),
+                    CgInfoRow(label: 'Guests', value: '${_booking!.guests}'),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Total',
+                            style: CgType.b14.copyWith(color: c.text2),
+                          ),
+                        ),
+                        Flexible(
+                          child: Text(
+                            '৳${_fmtPrice(_amount)}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: CgType.t20.copyWith(color: c.primary),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+              child: CgSection(title: 'Payment Method'),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _MethodCard(
+                          key: const Key('method-card'),
+                          label: 'Card',
+                          icon: Icons.credit_card_rounded,
+                          selected: _selectedMethod == 'card',
+                          onTap: () =>
+                              setState(() => _selectedMethod = 'card'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _MethodCard(
+                          key: const Key('method-bkash'),
+                          label: 'bKash',
+                          icon: Icons.account_balance_wallet_rounded,
+                          selected: _selectedMethod == 'bkash',
+                          onTap: () =>
+                              setState(() => _selectedMethod = 'bkash'),
+                        ),
+                      ),
+                    ],
                   ),
-
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _MethodCard(
+                          key: const Key('method-nagad'),
+                          label: 'Nagad',
+                          icon: Icons.account_balance_wallet_outlined,
+                          selected: _selectedMethod == 'nagad',
+                          onTap: () =>
+                              setState(() => _selectedMethod = 'nagad'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _MethodCard(
+                          key: const Key('method-cash'),
+                          label: 'Cash',
+                          icon: Icons.payments_rounded,
+                          selected: _selectedMethod == 'cash',
+                          onTap: () => setState(() => _selectedMethod = 'cash'),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
-            )),
-    );
-  }
+            ),
 
-  Widget _buildSummaryRow(String label, String value, {bool isBold = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Wrap(
-        alignment: WrapAlignment.spaceBetween,
-        spacing: 12,
-        runSpacing: 6,
-        children: [
-          Text(
-            label,
-            style:  TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary(context),
-            ),
-          ),
-          if (value.isNotEmpty)
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
-                color: isBold
-                    ? AppColors.primary(context)
-                    : AppColors.textPrimary(context),
+            // ─── Card details ─────────────────────────────────────
+            if (_selectedMethod == 'card') ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                child: CgSection(title: 'Card Details'),
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                child: CgTextField(
+                  key: const Key('card-number'),
+                  label: 'Card number',
+                  controller: _cardNumberController,
+                  icon: Icons.credit_card_rounded,
+                  hint: '4242 4242 4242 4242 (sandbox)',
+                  keyboardType: TextInputType.number,
+                  enabled: !_isLoading,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: CgTextField(
+                        key: const Key('card-expiry'),
+                        label: 'Expiry',
+                        controller: _expiryController,
+                        icon: Icons.event_rounded,
+                        hint: 'MM/YY',
+                        keyboardType: TextInputType.datetime,
+                        enabled: !_isLoading,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: CgTextField(
+                        key: const Key('card-cvv'),
+                        label: 'CVV',
+                        controller: _cvvController,
+                        icon: Icons.lock_outline_rounded,
+                        hint: '123',
+                        obscure: true,
+                        keyboardType: TextInputType.number,
+                        enabled: !_isLoading,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: CgTextField(
+                  key: const Key('card-holder'),
+                  label: 'Cardholder Name',
+                  controller: _cardholderController,
+                  icon: Icons.person_outline_rounded,
+                  hint: 'Name on the card',
+                  enabled: !_isLoading,
+                ),
+              ),
+            ],
+
+            // ─── Wallet details ───────────────────────────────────
+            if (_isWalletMethod) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                child: CgSection(
+                  title:
+                      '${_selectedMethod == 'bkash' ? 'bKash' : 'Nagad'} Wallet',
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                child: CgTextField(
+                  key: const Key('wallet-number'),
+                  label: 'Wallet number',
+                  controller: _walletController,
+                  icon: Icons.phone_android_rounded,
+                  hint: '01XXXXXXXXX (11 digits)',
+                  keyboardType: TextInputType.phone,
+                  enabled: !_isLoading,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: _InfoNote(
+                  icon: Icons.info_outline_rounded,
+                  text:
+                      'Sandbox simulation — you will get a transaction ID '
+                      'instantly and no money moves.',
+                ),
+              ),
+            ],
+
+            // ─── Cash note ────────────────────────────────────────
+            if (_selectedMethod == 'cash')
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                child: _InfoNote(
+                  icon: Icons.payments_outlined,
+                  text:
+                      'Pay with cash upon arrival. Please have the exact '
+                      'amount ready.',
+                ),
+              ),
+          ],
         ],
       ),
     );
   }
+}
 
-  Widget _buildMethodCard(String method, String label, IconData icon) {
-    final isSelected = _selectedMethod == method;
-    return GestureDetector(
-      key: Key('method-$method'),
-      onTap: () => setState(() => _selectedMethod = method),
+class _MethodCard extends StatelessWidget {
+  const _MethodCard({
+    super.key,
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = CgColors.of(context);
+    return CgPressable(
+      onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primarySoft(context)
-              : AppColors.surface(context),
-          borderRadius: BorderRadius.circular(14),
+          gradient: selected ? c.gMint : c.gCard,
+          borderRadius: BorderRadius.circular(CgRadii.input),
           border: Border.all(
-            color: isSelected
-                ? AppColors.primary(context)
-                : AppColors.divider(context),
-            width: isSelected ? 2 : 1,
+            color: selected ? c.accent : c.line,
+            width: selected ? 2 : 1,
           ),
         ),
-        child: Column(
+        child: Row(
           children: [
             Icon(
               icon,
-              size: 28,
-              color: isSelected
-                  ? AppColors.primary(context)
-                  : AppColors.textSecondary(context),
+              size: 20,
+              color: selected ? c.primary : c.text2,
             ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected
-                    ? AppColors.primary(context)
-                    : AppColors.textSecondary(context),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: CgType.b14.copyWith(
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: selected ? c.text : c.text2,
+                ),
               ),
             ),
+            if (selected)
+              Icon(Icons.check_circle_rounded, size: 16, color: c.primary),
           ],
         ),
       ),
     );
   }
+}
 
-  static String _fmtPrice(double value) {
-    final s = value.round().toString();
-    final b = StringBuffer();
-    for (var i = 0; i < s.length; i++) {
-      if (i > 0 && (s.length - i) % 3 == 0) b.write(',');
-      b.write(s[i]);
-    }
-    return b.toString();
+class _InfoNote extends StatelessWidget {
+  const _InfoNote({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = CgColors.of(context);
+    return CgCard(
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: c.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(text, style: CgType.b14.copyWith(color: c.text2)),
+          ),
+        ],
+      ),
+    );
   }
+}
+
+String _fmtPrice(double value) {
+  final s = value.round().toString();
+  final b = StringBuffer();
+  for (var i = 0; i < s.length; i++) {
+    if (i > 0 && (s.length - i) % 3 == 0) b.write(',');
+    b.write(s[i]);
+  }
+  return b.toString();
 }

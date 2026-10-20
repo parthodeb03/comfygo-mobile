@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/theme.dart';
+import '../theme/design_tokens.dart';
 
 class OneUIButton extends StatelessWidget {
   final String text;
@@ -11,6 +11,7 @@ class OneUIButton extends StatelessWidget {
   final bool isExpanded;
   final double? width;
   final double? height;
+
   const OneUIButton({
     super.key,
     required this.text,
@@ -22,52 +23,104 @@ class OneUIButton extends StatelessWidget {
     this.width,
     this.height,
   });
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primary =
-        type == OneUIButtonType.primary || type == OneUIButtonType.danger;
-    final color = type == OneUIButtonType.danger
-        ? OneUIColors.error
-        : theme.colorScheme.primary;
+    final scheme = Theme.of(context).colorScheme;
+    final isDanger = type == OneUIButtonType.danger;
+    final isPrimary = type == OneUIButtonType.primary || isDanger;
+    final background = isDanger ? scheme.error : scheme.primary;
+    final foreground = isDanger ? scheme.onError : scheme.onPrimary;
+    final accent = isDanger ? scheme.error : scheme.primary;
+
+    final isText = type == OneUIButtonType.text;
+    final isSecondary = type == OneUIButtonType.secondary;
+
+    final buttonStyle = isText
+        ? TextButton.styleFrom(
+            foregroundColor: accent,
+            minimumSize: const Size(
+              OneUISpacingTokens.touchMin,
+              OneUISpacingTokens.buttonHeight,
+            ),
+            textStyle: ComfyType.button,
+            shape: const StadiumBorder(),
+          )
+        : isSecondary
+        ? OutlinedButton.styleFrom(
+            foregroundColor: accent,
+            minimumSize: const Size(
+              OneUISpacingTokens.touchMin,
+              OneUISpacingTokens.buttonHeight,
+            ),
+            side: BorderSide(color: scheme.outline),
+            textStyle: ComfyType.button,
+            shape: const StadiumBorder(),
+          )
+        : FilledButton.styleFrom(
+            backgroundColor: background,
+            foregroundColor: foreground,
+            minimumSize: const Size(
+              OneUISpacingTokens.touchMin,
+              OneUISpacingTokens.buttonHeight,
+            ),
+            textStyle: ComfyType.button.copyWith(color: foreground),
+            shape: const StadiumBorder(),
+            elevation: 0,
+          );
+
+    final child = isLoading
+        ? SizedBox(
+            width: ComfySpacing.xl,
+            height: ComfySpacing.xl,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: isPrimary ? foreground : accent,
+            ),
+          )
+        : Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: ComfySpacing.xl),
+                const SizedBox(width: ComfySpacing.sm),
+              ],
+              Flexible(child: Text(text, textAlign: TextAlign.center)),
+            ],
+          );
+
+    final effectiveOnPressed = isLoading ? null : onPressed;
+    final button = isText
+        ? TextButton(
+            onPressed: effectiveOnPressed,
+            style: buttonStyle,
+            child: child,
+          )
+        : isSecondary
+        ? OutlinedButton(
+            onPressed: effectiveOnPressed,
+            style: buttonStyle,
+            child: child,
+          )
+        : FilledButton(
+            onPressed: effectiveOnPressed,
+            style: buttonStyle,
+            child: child,
+          );
+
     return SizedBox(
       width: isExpanded ? double.infinity : width,
       height: height,
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          minimumSize: const Size(48, 52),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          backgroundColor: primary ? color : Colors.transparent,
-          foregroundColor: primary ? Colors.white : color,
-          shadowColor: Colors.transparent,
-          side: type == OneUIButtonType.secondary
-              ? BorderSide(color: color)
-              : null,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        child: isLoading
-            ? const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (icon != null) ...[
-                    Icon(icon, size: 20),
-                    const SizedBox(width: 8),
-                  ],
-                  Flexible(child: Text(text, textAlign: TextAlign.center)),
-                ],
-              ),
-      ),
+      child: button,
     );
   }
 }
 
 enum OneUIButtonType { primary, secondary, text, danger }
+
+/// Local sizing aliases for this file only.
+abstract final class OneUISpacingTokens {
+  static const double touchMin = 48;
+  static const double buttonHeight = 52;
+}

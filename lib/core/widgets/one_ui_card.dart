@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/design_tokens.dart';
 import '../theme/theme.dart';
 
 /// One UI styled card with elevation and rounded corners
@@ -20,7 +21,7 @@ class OneUICard extends StatelessWidget {
     this.backgroundColor,
     this.elevation,
     this.onTap,
-    this.borderRadius = OneUISpacing.radiusLg,
+    this.borderRadius = ComfyRadii.card,
   });
 
   @override
@@ -36,9 +37,13 @@ class OneUICard extends StatelessWidget {
             vertical: OneUISpacing.sm,
           ),
       child: Material(
-        color: backgroundColor ?? theme.cardTheme.color,
-        elevation: elevation ?? 1,
-        shadowColor: theme.cardTheme.shadowColor,
+        color: backgroundColor ?? theme.colorScheme.surface,
+        elevation:
+            elevation ??
+            (theme.brightness == Brightness.dark
+                ? ComfyElevation.dark
+                : ComfyElevation.card),
+        shadowColor: theme.colorScheme.shadow.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(borderRadius),
         child: InkWell(
           onTap: onTap,
@@ -70,7 +75,7 @@ class OneUIImageCard extends StatelessWidget {
     this.subtitle,
     this.trailing,
     this.onTap,
-    this.height = 200,
+    this.height = OneUISpacing.cardImageHeight,
     this.isNetworkImage = true,
   });
 
@@ -85,9 +90,9 @@ class OneUIImageCard extends StatelessWidget {
         vertical: OneUISpacing.sm,
       ),
       child: Material(
-        elevation: 2,
-        shadowColor: Colors.black.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(OneUISpacing.radiusLg),
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        borderRadius: BorderRadius.circular(ComfyRadii.card),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(OneUISpacing.radiusLg),
@@ -97,7 +102,7 @@ class OneUIImageCard extends StatelessWidget {
               // Image
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(OneUISpacing.radiusLg),
+                  top: Radius.circular(ComfyRadii.card),
                 ),
                 child: Container(
                   height: height,
@@ -108,6 +113,7 @@ class OneUIImageCard extends StatelessWidget {
                             ? Image.network(
                                 imageUrl!,
                                 fit: BoxFit.cover,
+                                cacheWidth: _decodeWidth(context),
                                 errorBuilder: (context, error, stackTrace) {
                                   return _buildPlaceholder(context);
                                 },
@@ -160,11 +166,17 @@ class OneUIImageCard extends StatelessWidget {
     );
   }
 
+  int _decodeWidth(BuildContext context) {
+    final media = MediaQuery.maybeOf(context);
+    final dpr = media?.devicePixelRatio ?? 1;
+    return ((media?.size.width ?? 400) * dpr).round().clamp(320, 1600);
+  }
+
   Widget _buildPlaceholder(BuildContext context) {
     return Center(
       child: Icon(
         Icons.image_outlined,
-        size: 48,
+        size: OneUISpacing.xxxl,
         color: Theme.of(context).colorScheme.outline,
       ),
     );

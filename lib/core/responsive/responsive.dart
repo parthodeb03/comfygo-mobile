@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/design_tokens.dart';
+
 /// ─────────────────────────────────────────────────────────────
 /// Responsive breakpoints (Material 3 window size classes)
 /// ─────────────────────────────────────────────────────────────
@@ -7,13 +9,13 @@ class Breakpoints {
   Breakpoints._();
 
   /// Phones (portrait) — single column layouts
-  static const double compact = 600;
+  static const double compact = ComfyBreakpoints.compact;
 
-  /// Small tablets / landscape phones — 2 column layouts
-  static const double medium = 840;
+  /// Tablets / landscape phones — NavigationRail and multi-column layouts
+  static const double medium = ComfyBreakpoints.medium;
 
-  /// Tablets / small desktops — 3 column layouts
-  static const double expanded = 1200;
+  /// Large tablets / desktops
+  static const double expanded = ComfyBreakpoints.expanded;
 }
 
 /// ─────────────────────────────────────────────────────────────
@@ -37,19 +39,23 @@ extension ResponsiveContext on BuildContext {
   bool get isPhone => mediaWidth < Breakpoints.medium;
 
   /// Content max width for centered layouts on wide screens
-  double get contentMaxWidth => mediaWidth > 1200 ? 1100 : double.infinity;
+  double get contentMaxWidth => mediaWidth > ComfySpacing.contentMaxWidth
+      ? ComfySpacing.contentMaxWidth
+      : double.infinity;
 
   /// Adaptive page horizontal padding — wider on large screens
   double get pagePadding {
     final w = mediaWidth;
-    if (w >= Breakpoints.medium) return 32;
-    if (w >= Breakpoints.compact) return 24;
-    return 16;
+    if (w >= Breakpoints.medium) return ComfySpacing.pageExpanded;
+    if (w >= Breakpoints.compact) return ComfySpacing.pageMedium;
+    return ComfySpacing.pageCompact;
   }
 
   /// Horizontal centered content padding constrained to max width
   EdgeInsets get contentPadding => EdgeInsets.symmetric(
-    horizontal: mediaWidth > 1200 ? (mediaWidth - 1100) / 2 : pagePadding,
+    horizontal: mediaWidth > ComfySpacing.contentMaxWidth
+        ? (mediaWidth - ComfySpacing.contentMaxWidth) / 2
+        : pagePadding,
   );
 
   /// Number of columns for card grids based on available width
@@ -66,7 +72,7 @@ extension ResponsiveContext on BuildContext {
 SliverGridDelegateWithFixedCrossAxisCount adaptiveGridDelegate(
   BuildContext context, {
   double minTileWidth = 320,
-  double mainAxisExtent = 300,
+  double? mainAxisExtent,
   double childAspectRatio = 0.72,
   double crossAxisSpacing = 16,
   double mainAxisSpacing = 16,
@@ -75,6 +81,7 @@ SliverGridDelegateWithFixedCrossAxisCount adaptiveGridDelegate(
   return SliverGridDelegateWithFixedCrossAxisCount(
     crossAxisCount: cols,
     mainAxisExtent: mainAxisExtent,
+    childAspectRatio: childAspectRatio,
     crossAxisSpacing: crossAxisSpacing,
     mainAxisSpacing: mainAxisSpacing,
   );

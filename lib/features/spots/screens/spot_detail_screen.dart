@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/comfy_design.dart';
 import '../../../core/utils/navigation.dart';
-import '../../../core/widgets/widgets.dart';
+import '../../../core/widgets/comfy_page.dart';
+import '../../../core/widgets/comfy_ui.dart';
 import '../../../data/tourist_spots.dart';
 
 /// Rich spot detail: description, how to get there, best time and tips.
@@ -15,37 +16,31 @@ class SpotDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = CgColors.of(context);
     final spot = spotById(id);
     if (spot == null) {
-      return Scaffold(
-        backgroundColor: AppColors.background(context),
-        appBar: AppBar(title: const Text('Tourist Spot')),
-        body: NatureBackground.wrap(
-          child: Center(
-            child: Text(
-              'Sorry, this spot could not be found.',
-              style: TextStyle(color: AppColors.textSecondary(context)),
+      return CgPageScaffold(
+        child: Column(
+          children: [
+            CgPageTitle(
+              title: 'Tourist Spot',
+              onBack: () => goBack(context),
             ),
-          ),
+            const CgEmptyState(message: 'Sorry, this spot could not be found.'),
+          ],
         ),
       );
     }
 
-    final theme = Theme.of(context);
-
-    return Scaffold(
-      backgroundColor: AppColors.background(context),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+    return CgPageScaffold(
+      bottom: Container(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
         decoration: BoxDecoration(
-          color: AppColors.surface(context),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
+          color: c.surface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(CgRadii.nav),
+          ),
+          boxShadow: c.navShadow,
         ),
         child: SafeArea(
           top: false,
@@ -58,314 +53,191 @@ class SpotDetailScreen extends StatelessWidget {
                   children: [
                     Text(
                       'Enjoy the day, sleep nearby',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary(context),
-                      ),
+                      style: CgType.l12.copyWith(color: c.text2),
                     ),
                     Text(
                       'Hotels in ${spot.district}',
-                      style: TextStyle(
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: CgType.t16.copyWith(
                         fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.primary(context),
+                        color: c.primary,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 16),
-              CGButton(
-                label: 'Find Places to Stay',
+              const SizedBox(width: 12),
+              CgPillButton(
                 width: 190,
-                height: 48,
-                onPressed: () => context.push('/hotels'),
+                height: 52,
+                semanticLabel: 'Find places to stay',
+                onTap: () => context.push('/hotels'),
+                child: const Text('Find Places to Stay'),
               ),
             ],
           ),
         ),
       ),
-      body: NatureBackground.wrap(
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              expandedHeight: 280,
-              pinned: true,
-              backgroundColor: AppColors.background(context),
-              foregroundColor: Colors.white,
-              leading: IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(7),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.35),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    size: 16,
-                    color: Colors.white,
-                  ),
-                ),
-                onPressed: () => goBack(context),
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 32),
+        children: [
+          CgPageTitle(
+            title: spot.name,
+            subtitle: '${spot.district} · ${spot.division} Division',
+            onBack: () => goBack(context),
+            trailing: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: c.gMint,
+                shape: BoxShape.circle,
               ),
-              flexibleSpace: FlexibleSpaceBar(
-                background: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Hero(
-                      tag: 'spot_${spot.id}',
-                      child: TravelPhoto(asset: spot.photo, label: spot.name),
-                    ),
-                    const DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Color(0x00000000), Color(0xB3000000)],
-                          stops: [0.4, 1.0],
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      left: 20,
-                      right: 20,
-                      bottom: 18,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            spot.name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 26,
-                              fontWeight: FontWeight.w800,
-                              shadows: [
-                                Shadow(blurRadius: 8, color: Color(0xFF000000)),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.place_rounded,
-                                size: 15,
-                                color: Color(0xFFD7F5E3),
-                              ),
-                              const SizedBox(width: 4),
-                              Flexible(
-                                child: Text(
-                                  '${spot.district} · ${spot.division} Division',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Color(0xFFD7F5E3),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              child: Icon(Icons.place_outlined, size: 22, color: c.primary),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: CgTextPill(label: spot.tagline),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: CgCard(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'About this place',
+                    style: CgType.t16.copyWith(color: c.text),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    spot.description,
+                    style: CgType.b14.copyWith(color: c.text2, height: 1.55),
+                  ),
+                ],
               ),
             ),
-
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Tagline
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primarySoft(context),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        spot.tagline,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary(context),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-
-                    _sectionTitle(context, 'About this place'),
-                    const SizedBox(height: 8),
-                    Text(
-                      spot.description,
-                      style: theme.textTheme.bodyMedium?.copyWith(height: 1.55),
-                    ),
-                    const SizedBox(height: 20),
-
-                    _infoCard(
-                      context,
-                      icon: Icons.directions_rounded,
-                      title: 'How to get there',
-                      body: spot.howToReach,
-                    ),
-                    const SizedBox(height: 14),
-                    _infoCard(
-                      context,
-                      icon: Icons.wb_sunny_rounded,
-                      title: 'Best time to visit',
-                      body: spot.bestTime,
-                    ),
-                    const SizedBox(height: 20),
-
-                    _sectionTitle(context, 'Highlights'),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: _InfoCard(
+              icon: Icons.directions_rounded,
+              title: 'How to get there',
+              body: spot.howToReach,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: _InfoCard(
+              icon: Icons.wb_sunny_outlined,
+              title: 'Best time to visit',
+              body: spot.bestTime,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+            child: CgSection(title: 'Highlights'),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final highlight in spot.highlights)
+                  CgTextPill(label: highlight, icon: Icons.check_rounded),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+            child: CgSection(title: 'Travel tips'),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+            child: CgCard(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  for (var i = 0; i < spot.tips.length; i++) ...[
+                    if (i > 0) const SizedBox(height: 12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        for (final highlight in spot.highlights)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface(context),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: AppColors.divider(context),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.check_circle_rounded,
-                                  size: 15,
-                                  color: AppColors.primary(context),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  highlight,
-                                  style: TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textPrimary(context),
-                                  ),
-                                ),
-                              ],
+                        Container(
+                          width: 22,
+                          height: 22,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            gradient: c.gMain,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            '${i + 1}',
+                            style: CgType.l12.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: c.onPrimary,
                             ),
                           ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            spot.tips[i],
+                            style: CgType.b14.copyWith(
+                              fontSize: 13.5,
+                              height: 1.45,
+                              color: c.text,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 24),
-
-                    _sectionTitle(context, 'Travel tips'),
-                    const SizedBox(height: 10),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface(context),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: AppColors.divider(context),
-                          width: 0.5,
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          for (var i = 0; i < spot.tips.length; i++) ...[
-                            if (i > 0) const SizedBox(height: 12),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  width: 22,
-                                  height: 22,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary(context),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Text(
-                                    '${i + 1}',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w800,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    spot.tips[i],
-                                    style: TextStyle(
-                                      fontSize: 13.5,
-                                      height: 1.45,
-                                      color: AppColors.textPrimary(context),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
                   ],
-                ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
+}
 
-  Widget _sectionTitle(BuildContext context, String title) => Text(
-    title,
-    style: TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.w800,
-      color: AppColors.textPrimary(context),
-    ),
-  );
+class _InfoCard extends StatelessWidget {
+  const _InfoCard({
+    required this.icon,
+    required this.title,
+    required this.body,
+  });
 
-  Widget _infoCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String body,
-  }) {
-    return Container(
-      width: double.infinity,
+  final IconData icon;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = CgColors.of(context);
+    return CgCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.divider(context), width: 0.5),
-      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 38,
-            height: 38,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
-              color: AppColors.primarySoft(context),
-              borderRadius: BorderRadius.circular(11),
+              gradient: c.gMint,
+              shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 20, color: AppColors.primary(context)),
+            child: Icon(icon, size: 20, color: c.primary),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -374,19 +246,15 @@ class SpotDetailScreen extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary(context),
-                  ),
+                  style: CgType.t16.copyWith(color: c.text),
                 ),
                 const SizedBox(height: 5),
                 Text(
                   body,
-                  style: TextStyle(
+                  style: CgType.b14.copyWith(
                     fontSize: 13,
                     height: 1.5,
-                    color: AppColors.textSecondary(context),
+                    color: c.text2,
                   ),
                 ),
               ],

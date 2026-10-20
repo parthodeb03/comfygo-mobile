@@ -1,60 +1,15 @@
 import 'dart:io';
 
+import 'package:comfygo/core/theme/comfy_design.dart';
 import 'package:comfygo/core/theme/theme.dart';
 import 'package:comfygo/core/widgets/travel_widgets.dart';
-import 'package:comfygo/features/destinations/screens/destinations_screen.dart';
+import 'package:comfygo/features/home/screens/home_screen.dart';
 import 'package:comfygo/features/profile/screens/profile_screen.dart';
-import 'package:comfygo/models/models.dart';
-import 'package:comfygo/services/services.dart';
-import 'package:comfygo/state/service_providers.dart';
 import 'package:comfygo/state/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-class _RecordingDestinationService implements DestinationService {
-  String? lastDivision;
-
-  @override
-  Future<List<Destination>> getDestinations({
-    int page = 1,
-    int limit = 20,
-    String? search,
-    String? division,
-  }) async {
-    lastDivision = division;
-    return [
-      Destination(
-        id: 1,
-        name: 'Sundarbans',
-        description: "The world's largest mangrove forest.",
-        location: 'Khulna Division',
-        division: 'Khulna',
-        images: [],
-        rating: 4.8,
-        reviewCount: 245,
-        price: 15000,
-        createdAt: DateTime(2026),
-      ),
-      Destination(
-        id: 2,
-        name: 'Bandarban',
-        description: 'Home to the highest peaks of Bangladesh.',
-        location: 'Chittagong Hill Tracts',
-        division: 'Chittagong',
-        images: [],
-        rating: 4.5,
-        reviewCount: 134,
-        price: 12000,
-        createdAt: DateTime(2026),
-      ),
-    ];
-  }
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -150,39 +105,36 @@ void main() {
     Scaffold lightScaffold = tester.widget<Scaffold>(
       find.byType(Scaffold).first,
     );
-    expect(lightScaffold.backgroundColor, OneUIColors.backgroundLight);
+    expect(lightScaffold.backgroundColor, CgColors.light.bg);
 
-    await tester.ensureVisible(find.byType(Switch).first);
+    await tester.ensureVisible(find.text('Dark mode'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(Switch).first);
+    await tester.tap(find.text('Dark mode'));
     await tester.pumpAndSettle();
 
     expect(container.read(themeProvider).isDarkMode, isTrue);
     Scaffold darkScaffold = tester.widget<Scaffold>(
       find.byType(Scaffold).first,
     );
-    expect(darkScaffold.backgroundColor, OneUIColors.backgroundDark);
+    expect(darkScaffold.backgroundColor, CgColors.dark.bg);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Destination category pills filter cards', (tester) async {
-    final service = _RecordingDestinationService();
+  testWidgets('Category chips filter the Home trip cards', (tester) async {
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [destinationServiceProvider.overrideWithValue(service)],
-        child: MaterialApp(
-          theme: OneUITheme.lightTheme,
-          home: const DestinationsScreen(),
-        ),
-      ),
+      const ProviderScope(child: MaterialApp(home: HomeScreen())),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Select\ndestination'), findsOneWidget);
-    expect(find.text('Hills'), findsOneWidget);
-    await tester.tap(find.text('Hills'));
+    expect(find.text('Category'), findsOneWidget);
+    expect(find.text('All'), findsOneWidget);
+    expect(find.text('Mountain'), findsOneWidget);
+    expect(find.text('Bandarban'), findsNWidgets(2));
+    expect(find.text('Sundarbans'), findsNWidgets(2));
+
+    await tester.tap(find.text('Mountain'));
     await tester.pumpAndSettle();
-    expect(find.text('Bandarban'), findsOneWidget);
+    expect(find.text('Bandarban'), findsNWidgets(2));
     expect(find.text('Sundarbans'), findsNothing);
     expect(tester.takeException(), isNull);
   });

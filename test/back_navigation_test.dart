@@ -99,7 +99,7 @@ void main() {
     await _pumpRouter(tester, router);
     expect(find.text('Home stub'), findsNothing);
 
-    await tester.tap(find.byIcon(Icons.arrow_back_rounded).first);
+    await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded).first);
     await tester.pumpAndSettle();
 
     expect(find.text('Home stub'), findsOneWidget);
@@ -137,7 +137,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Home stub'), findsNothing);
 
-    await tester.tap(find.byIcon(Icons.arrow_back_rounded).first);
+    await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded).first);
     await tester.pumpAndSettle();
 
     expect(find.text('Home stub'), findsOneWidget);

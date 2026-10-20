@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/comfy_design.dart';
 import '../../../core/utils/navigation.dart';
-import '../../../core/theme/theme.dart';
-import '../../../core/widgets/widgets.dart';
+import '../../../core/widgets/comfy_page.dart';
+import '../../../core/widgets/comfy_ui.dart';
 import '../../../state/auth_provider.dart';
 
 /// Contact form — messages are saved to the database and shown in the
@@ -17,19 +17,14 @@ class ContactScreen extends ConsumerStatefulWidget {
 }
 
 class _ContactScreenState extends ConsumerState<ContactScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _messageController = TextEditingController();
   bool _isLoading = false;
   bool _sent = false;
-
-  @override
-  void initState() {
-    super.initState();
-    // Pre-fill with the signed-in user's name/email when available
-    _nameController.text = '';
-  }
+  String? _nameError;
+  String? _emailError;
+  String? _messageError;
 
   @override
   void dispose() {
@@ -40,18 +35,30 @@ class _ContactScreenState extends ConsumerState<ContactScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final message = _messageController.text.trim();
+
+    setState(() {
+      _nameError = name.isEmpty ? 'Enter your name' : null;
+      _emailError = !RegExp(r'^\S+@\S+\.\S+$').hasMatch(email)
+          ? 'Enter a valid email'
+          : null;
+      _messageError = message.length < 10
+          ? 'Tell us a bit more (at least 10 characters)'
+          : null;
+    });
+    if (_nameError != null || _emailError != null || _messageError != null) {
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
       final dio = ref.read(apiClientProvider).dio;
       final response = await dio.post(
         '/api/v1/contact',
-        data: {
-          'name': _nameController.text.trim(),
-          'email': _emailController.text.trim(),
-          'message': _messageController.text.trim(),
-        },
+        data: {'name': name, 'email': email, 'message': message},
       );
 
       if (!mounted) return;
@@ -62,164 +69,145 @@ class _ContactScreenState extends ConsumerState<ContactScreen> {
         });
       } else {
         setState(() => _isLoading = false);
-        _showSnack('Could not send your message. Please try again.');
+        showCgToast(context, 'Could not send your message. Please try again.');
       }
     } catch (_) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      _showSnack('Connection error. Please check your network and retry.');
-    }
-  }
-
-  void _showSnack(String message) {
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message, style: const TextStyle(fontSize: 13)),
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
+      showCgToast(
+        context,
+        'Connection error. Please check your network and retry.',
       );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background(context),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => goBack(context),
-        ),
-        title: const Text('Contact Us'),
-      ),
-      body: NatureBackground.wrap(
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(OneUISpacing.lg),
-            child: _sent ? _buildSentView() : _buildForm(),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final c = CgColors.of(context);
+    return CgPageScaffold(
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 32),
         children: [
-          Text(
-            'How can we help?',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary(context),
+          CgPageTitle(
+            title: 'Contact Us',
+            subtitle:
+                'Send us a message and our team will get back to you '
+                'within 24 hours.',
+            onBack: () => goBack(context),
+          ),
+          const SizedBox(height: 20),
+          if (_sent)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: CgCard(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        gradient: c.gMint,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.check_circle_outline_rounded,
+                        size: 40,
+                        color: c.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Message Sent',
+                      style: CgType.t20.copyWith(color: c.text),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Thanks for reaching out. We\'ll reply to\n'
+                      '${_emailController.text.trim()} soon.',
+                      textAlign: TextAlign.center,
+                      style: CgType.b14.copyWith(color: c.text2),
+                    ),
+                    const SizedBox(height: 20),
+                    CgPillButton(
+                      width: double.infinity,
+                      onTap: () => setState(() {
+                        _sent = false;
+                        _messageController.clear();
+                      }),
+                      child: const Text('Send Another'),
+                    ),
+                    const SizedBox(height: 12),
+                    CgOutlineButton(
+                      width: double.infinity,
+                      onTap: () => goBack(context),
+                      child: const Text('Back to Profile'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  CgTextField(
+                    label: 'Your name',
+                    controller: _nameController,
+                    icon: Icons.person_outline_rounded,
+                    hint: 'Full name',
+                    enabled: !_isLoading,
+                    errorText: _nameError,
+                    onChanged: (_) {
+                      if (_nameError != null) {
+                        setState(() => _nameError = null);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  CgTextField(
+                    label: 'Your email',
+                    controller: _emailController,
+                    icon: Icons.mail_outline_rounded,
+                    hint: 'you@example.com',
+                    keyboardType: TextInputType.emailAddress,
+                    enabled: !_isLoading,
+                    errorText: _emailError,
+                    onChanged: (_) {
+                      if (_emailError != null) {
+                        setState(() => _emailError = null);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  CgTextField(
+                    label: 'Your message',
+                    controller: _messageController,
+                    icon: Icons.mode_comment_outlined,
+                    hint: 'How can we help?',
+                    maxLines: 5,
+                    enabled: !_isLoading,
+                    errorText: _messageError,
+                    onChanged: (_) {
+                      if (_messageError != null) {
+                        setState(() => _messageError = null);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  CgPillButton(
+                    width: double.infinity,
+                    loading: _isLoading,
+                    onTap: _submit,
+                    child: const Text('Send Message'),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: OneUISpacing.sm),
-          Text(
-            'Send us a message and our team will get back to you within 24 hours.',
-            style: TextStyle(fontSize: 14, color: AppColors.textSecondary(context)),
-          ),
-          const SizedBox(height: OneUISpacing.xxl),
-          GlassInput(
-            controller: _nameController,
-            hintText: 'Your name',
-            prefixIcon: Icons.person_outline_rounded,
-            enabled: !_isLoading,
-            validator: (v) =>
-                (v ?? '').trim().isEmpty ? 'Enter your name' : null,
-          ),
-          const SizedBox(height: OneUISpacing.md),
-          GlassInput(
-            controller: _emailController,
-            hintText: 'Your email',
-            prefixIcon: Icons.email_outlined,
-            keyboardType: TextInputType.emailAddress,
-            enabled: !_isLoading,
-            validator: (v) {
-              final value = (v ?? '').trim();
-              if (value.isEmpty) return 'Enter your email';
-              if (!value.contains('@')) return 'Enter a valid email';
-              return null;
-            },
-          ),
-          const SizedBox(height: OneUISpacing.md),
-          GlassInput(
-            controller: _messageController,
-            hintText: 'Your message',
-            prefixIcon: Icons.message_outlined,
-            maxLines: 5,
-            enabled: !_isLoading,
-            validator: (v) => (v ?? '').trim().length < 10
-                ? 'Tell us a bit more (at least 10 characters)'
-                : null,
-          ),
-          const SizedBox(height: OneUISpacing.xxl),
-          CGButton(
-            label: 'Send Message',
-            isLoading: _isLoading,
-            onPressed: _submit,
-          ),
-          const SizedBox(height: OneUISpacing.lg),
         ],
       ),
-    );
-  }
-
-  Widget _buildSentView() {
-    return Column(
-      children: [
-        const SizedBox(height: OneUISpacing.massive),
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            color: AppColors.primarySoft(context),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.check_circle_outline_rounded,
-            size: 40,
-            color: AppColors.primary(context),
-          ),
-        ),
-        const SizedBox(height: OneUISpacing.xxl),
-        Text(
-          'Message Sent',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary(context),
-          ),
-        ),
-        const SizedBox(height: OneUISpacing.sm),
-        Text(
-          'Thanks for reaching out. We\'ll reply to\n${_emailController.text.trim()} soon.',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 14, color: AppColors.textSecondary(context)),
-        ),
-        const SizedBox(height: OneUISpacing.xxl),
-        CGButton(
-          label: 'Send Another',
-          onPressed: () => setState(() {
-            _sent = false;
-            _messageController.clear();
-          }),
-        ),
-        const SizedBox(height: OneUISpacing.md),
-        TextButton(
-          onPressed: () => goBack(context),
-          child: Text(
-            'Back to Profile',
-            style: TextStyle(fontSize: 14, color: AppColors.primary(context)),
-          ),
-        ),
-      ],
     );
   }
 }

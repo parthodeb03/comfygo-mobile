@@ -9,6 +9,17 @@ from datetime import datetime
 
 DB = "comfygo.db"
 
+# Canonical guide portraits. Kept in the seed so both fresh and existing
+# databases end up with the same media the app expects from the API.
+GUIDE_IMAGES = {
+    "Karim Ahmed": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80",
+    "Rahim Uddin": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=800&q=80",
+    "Fatema Akter": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&q=80",
+    "Tanvir Hossain": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&q=80",
+    "Nabila Rahman": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80",
+    "Shahriar Kabir": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=800&q=80",
+}
+
 GUIDES = [
     # name, specialization, location, rate, experience, rating, reviews, bio, languages
     (
@@ -215,10 +226,11 @@ def main():
             "insert into guides (user_id, name, profile_image, bio, languages, "
             "specialization, rating, review_count, experience, daily_rate, phone, "
             "email, location, is_approved, created_at, updated_at) "
-            "values (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)",
+            "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)",
             (
                 user_id,
                 name,
+                GUIDE_IMAGES[name],
                 bio,
                 json.dumps(langs),
                 spec,
@@ -234,6 +246,14 @@ def main():
             ),
         )
         added_guides += 1
+
+    # Backfill rows seeded before portraits were part of the canonical seed.
+    for name, image in GUIDE_IMAGES.items():
+        cur.execute(
+            "update guides set profile_image = ? "
+            "where name = ? and (profile_image is null or profile_image = '')",
+            (image, name),
+        )
 
     added_transports = 0
     for (

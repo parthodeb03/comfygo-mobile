@@ -10,6 +10,8 @@ import '../../features/onboarding/screens/intro_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/destinations/screens/destinations_screen.dart';
 import '../../features/destinations/screens/destination_detail_screen.dart';
+import '../../features/destinations/screens/trip_detail_screen.dart';
+import '../../features/saved/screens/saved_screen.dart';
 import '../../features/hotels/screens/hotels_screen.dart';
 import '../../features/hotels/screens/hotel_detail_screen.dart';
 import '../../features/transports/screens/transports_screen.dart';
@@ -116,6 +118,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 const NoTransitionPage(child: BookingsScreen()),
           ),
           GoRoute(
+            path: '/saved',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: SavedScreen()),
+          ),
+          GoRoute(
             path: '/profile',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: ProfileScreen()),
@@ -125,6 +132,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // Detail Routes
       GoRoute(
+        path: '/trip/:id',
+        pageBuilder: (context, state) => _fadeSlide(
+          state,
+          TripDetailScreen(id: int.parse(state.pathParameters['id']!)),
+        ),
+      ),
+      GoRoute(
         path: '/destinations/:id',
         pageBuilder: (context, state) => _fadeSlide(
           state,
@@ -133,7 +147,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/hotels',
-        pageBuilder: (context, state) => _fadeSlide(state, const HotelsScreen()),
+        pageBuilder: (context, state) =>
+            _fadeSlide(state, const HotelsScreen()),
       ),
       GoRoute(
         path: '/hotels/:id',
@@ -149,7 +164,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/guides',
-        pageBuilder: (context, state) => _fadeSlide(state, const GuidesScreen()),
+        pageBuilder: (context, state) =>
+            _fadeSlide(state, const GuidesScreen()),
       ),
       GoRoute(
         path: '/guides/:id',
@@ -186,7 +202,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/packages',
-        pageBuilder: (context, state) => _fadeSlide(state, const PackagesScreen()),
+        pageBuilder: (context, state) =>
+            _fadeSlide(state, const PackagesScreen()),
       ),
 
       // Tourist spots (view-only inspiration)
@@ -232,8 +249,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/spots/:id',
-        pageBuilder: (context, state) =>
-            _fadeSlide(state, SpotDetailScreen(id: state.pathParameters['id']!)),
+        pageBuilder: (context, state) => _fadeSlide(
+          state,
+          SpotDetailScreen(id: state.pathParameters['id']!),
+        ),
       ),
 
       // Admin Routes
@@ -275,8 +294,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           isIntroRoute;
       // /admin-login is deliberately NOT covered by the /admin guard below —
       // it must stay reachable before authentication.
-      final isAdminRoute =
-          location.startsWith('/admin') && !isAdminLoginRoute;
+      final isAdminRoute = location.startsWith('/admin') && !isAdminLoginRoute;
 
       // Not authenticated and not on auth page → go to login
       if (!isAuth && !isAuthRoute) {

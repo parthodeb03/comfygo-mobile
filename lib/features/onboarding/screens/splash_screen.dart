@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/theme.dart';
+import '../../../core/theme/comfy_design.dart';
+import '../../../core/widgets/comfy_ui.dart';
 import '../../../state/auth_provider.dart';
 
 /// Launch screen: waits for the auth check, then routes to
@@ -53,7 +54,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final prefs = SharedPreferences.getInstance();
     final minSplash = Future<void>.delayed(const Duration(milliseconds: 1600));
 
-    // Wait until the auth check finished (router redirect needs it too)
     while (!ref.read(authProvider).isInitialized) {
       await Future<void>.delayed(const Duration(milliseconds: 50));
     }
@@ -76,65 +76,54 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final c = CgColors.of(context);
     return Scaffold(
-      backgroundColor: AppColors.background(context),
-      body: Center(
-        child: FadeTransition(
-          opacity: _fade,
-          child: ScaleTransition(
-            scale: _scale,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 96,
-                  height: 96,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary(context),
-                    borderRadius: BorderRadius.circular(28),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary(context)
-                            .withValues(alpha: 0.35),
-                        blurRadius: 24,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
+      backgroundColor: c.bg,
+      body: CgBackground(
+        child: Center(
+          child: FadeTransition(
+            opacity: _fade,
+            child: ScaleTransition(
+              scale: _scale,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 96,
+                    height: 96,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      gradient: c.gMint,
+                      shape: BoxShape.circle,
+                      boxShadow: c.cardShadow,
+                    ),
+                    child: SizedBox(
+                      width: 56,
+                      height: 64,
+                      child: SvgPicture.asset('assets/illustrations/mango.svg'),
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.flight_takeoff_rounded,
-                    size: 48,
-                    color: Colors.white,
+                  const SizedBox(height: 16),
+                  Text(
+                    'ComfyGo',
+                    style: CgType.t20.copyWith(fontSize: 30, color: c.text),
                   ),
-                ),
-                const SizedBox(height: OneUISpacing.lg),
-                Text(
-                  'ComfyGo',
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
-                    color: AppColors.textPrimary(context),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Travel Bangladesh, comfortably',
+                    style: CgType.b14.copyWith(color: c.text2),
                   ),
-                ),
-                const SizedBox(height: OneUISpacing.xs),
-                Text(
-                  'Travel Bangladesh, comfortably',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary(context),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.4,
+                      color: c.primary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: OneUISpacing.xxl),
-                SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.4,
-                    color: AppColors.primary(context),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

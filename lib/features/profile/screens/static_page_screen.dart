@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/comfy_design.dart';
 import '../../../core/utils/navigation.dart';
-import '../../../core/theme/theme.dart';
+import '../../../core/widgets/comfy_page.dart';
+import '../../../core/widgets/comfy_ui.dart';
 
 /// Content data for a static info page.
 class StaticPageData {
@@ -25,7 +26,7 @@ class StaticSection {
 }
 
 /// Shared renderer for the app's static pages: About ComfyGo,
-/// Privacy Policy and Terms of Service — in the kit's cream/dark language.
+/// Privacy Policy and Terms of Service.
 class StaticPageScreen extends StatelessWidget {
   final StaticPageData page;
 
@@ -142,84 +143,56 @@ class StaticPageScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background(context),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => goBack(context),
-        ),
-        title: Text(page.title),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(OneUISpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: AppColors.primarySoft(context),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    page.icon,
-                    size: 24,
-                    color: AppColors.primary(context),
-                  ),
-                ),
-                const SizedBox(width: OneUISpacing.md),
-                Expanded(
-                  child: Text(
-                    page.title,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.4,
-                      color: AppColors.textPrimary(context),
+    final c = CgColors.of(context);
+    return CgPageScaffold(
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 32),
+        children: [
+          CgPageTitle(title: page.title, onBack: () => goBack(context)),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: CgCard(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  for (var i = 0; i < page.sections.length; i++) ...[
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        page.sections[i].heading,
+                        style: CgType.t16.copyWith(color: c.text),
+                      ),
                     ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: OneUISpacing.xl),
-            for (final section in page.sections) ...[
-              Text(
-                section.heading,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary(context),
-                ),
-              ),
-              const SizedBox(height: OneUISpacing.sm),
-              for (final paragraph in section.paragraphs)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: OneUISpacing.md),
-                  child: Text(
-                    paragraph,
-                    style: TextStyle(
-                      fontSize: 14,
-                      height: 1.6,
-                      color: AppColors.textSecondary(context),
-                    ),
-                  ),
-                ),
-              const SizedBox(height: OneUISpacing.sm),
-            ],
-            const SizedBox(height: OneUISpacing.xl),
-            Center(
-              child: Text(
-                'ComfyGo — Dhaka, Bangladesh',
-                style: TextStyle(fontSize: 12, color: AppColors.textHint(context)),
+                    const SizedBox(height: 8),
+                    for (final paragraph in page.sections[i].paragraphs)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(
+                          paragraph,
+                          style: CgType.b14.copyWith(
+                            color: c.text2,
+                            height: 1.6,
+                          ),
+                        ),
+                      ),
+                    if (i != page.sections.length - 1) ...[
+                      Divider(color: c.line, height: 24),
+                      const SizedBox(height: 8),
+                    ],
+                  ],
+                ],
               ),
             ),
-            const SizedBox(height: OneUISpacing.xl),
-          ],
-        ),
+          ),
+          const SizedBox(height: 24),
+          Center(
+            child: Text(
+              'ComfyGo — Dhaka, Bangladesh',
+              style: CgType.l12.copyWith(color: c.text2),
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
       ),
     );
   }

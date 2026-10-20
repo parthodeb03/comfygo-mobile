@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/comfy_design.dart';
 import '../../../core/utils/navigation.dart';
-import '../../../core/widgets/widgets.dart';
+import '../../../core/widgets/comfy_page.dart';
+import '../../../core/widgets/comfy_ui.dart';
 
 /// Help & Support — FAQs plus real contact actions (call / email).
 class HelpSupportScreen extends StatelessWidget {
@@ -42,206 +43,122 @@ class HelpSupportScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Scaffold(
-      backgroundColor: AppColors.background(context),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => goBack(context),
-        ),
-        title: const Text('Help & Support'),
-      ),
-      body: NatureBackground.wrap(
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Frequently asked questions',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Material(
-                  color: AppColors.surface(context),
-                  clipBehavior: Clip.antiAlias,
-                  shape: RoundedRectangleBorder(
-                    side: BorderSide(
-                      color: AppColors.divider(context),
-                      width: 0.5,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    children: [
-                      for (var i = 0; i < _faqs.length; i++) ...[
-                        if (i > 0)
-                          Divider(
-                            height: 1,
-                            indent: 16,
-                            color: AppColors.divider(context),
-                          ),
-                        ExpansionTile(
-                          tilePadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 4,
-                          ),
-                          childrenPadding: const EdgeInsets.fromLTRB(
-                            16,
-                            0,
-                            16,
-                            16,
-                          ),
-                          iconColor: AppColors.primary(context),
-                          collapsedIconColor: AppColors.textSecondary(context),
-                          title: Text(
-                            _faqs[i].$1,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          children: [
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                _faqs[i].$2,
-                                style: TextStyle(
-                                  fontSize: 13.5,
-                                  height: 1.5,
-                                  color: AppColors.textSecondary(context),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Contact us',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _ContactTile(
-                  icon: Icons.phone_rounded,
-                  title: 'Call support',
-                  subtitle: '+880 1700-000000 · 9:00 AM – 10:00 PM',
-                  color: const Color(0xFF1B7A4F),
-                ),
-                const SizedBox(height: 10),
-                _ContactTile(
-                  icon: Icons.email_rounded,
-                  title: 'Email us',
-                  subtitle: 'support@comfygo.com · replies within 24 hours',
-                  color: AppColors.brandGreen,
-                ),
-                const SizedBox(height: 10),
-                _ContactTile(
-                  icon: Icons.location_on_rounded,
-                  title: 'Head office',
-                  subtitle: 'Gulshan Avenue, Dhaka 1212, Bangladesh',
-                  color: const Color(0xFFFF8F50),
-                ),
-                const SizedBox(height: 10),
-                _ContactTile(
-                  icon: Icons.chat_bubble_outline_rounded,
-                  title: 'Send a message',
-                  subtitle: 'Open the contact form — we reply within 24 hours',
-                  color: AppColors.primary(context),
-                  onTap: () => context.push('/contact'),
-                ),
-                const SizedBox(height: 24),
-              ],
+    final c = CgColors.of(context);
+    return CgPageScaffold(
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 32),
+        children: [
+          CgPageTitle(
+            title: 'Help & Support',
+            subtitle: 'Answers and ways to reach us',
+            onBack: () => goBack(context),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: Text(
+              'Frequently asked questions',
+              style: CgType.t16.copyWith(fontSize: 18, color: c.text),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ContactTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final VoidCallback? onTap;
-
-  const _ContactTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColors.surface(context),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.divider(context), width: 0.5),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, size: 20, color: color),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: CgCard(
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                children: [
+                  for (var i = 0; i < _faqs.length; i++) ...[
+                    if (i > 0) Divider(height: 1, color: c.line),
+                    Theme(
+                      data: Theme.of(context).copyWith(
+                        dividerColor: Colors.transparent,
+                        splashColor: Colors.transparent,
+                        highlightColor: Colors.transparent,
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: AppColors.textSecondary(context),
+                      child: ExpansionTile(
+                        tilePadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        childrenPadding: const EdgeInsets.fromLTRB(
+                          16,
+                          0,
+                          16,
+                          16,
+                        ),
+                        iconColor: c.primary,
+                        collapsedIconColor: c.text2,
+                        shape: const Border(),
+                        collapsedShape: const Border(),
+                        title: Text(
+                          _faqs[i].$1,
+                          style: CgType.b14.copyWith(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: c.text,
+                          ),
+                        ),
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              _faqs[i].$2,
+                              style: CgType.b14.copyWith(
+                                fontSize: 13.5,
+                                height: 1.5,
+                                color: c.text2,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
-                ),
+                ],
               ),
-              if (onTap != null)
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 20,
-                  color: AppColors.textHint(context),
-                ),
-            ],
+            ),
           ),
-        ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+            child: Text(
+              'Contact us',
+              style: CgType.t16.copyWith(fontSize: 18, color: c.text),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: Column(
+              children: [
+                const CgTile(
+                  icon: Icons.phone_rounded,
+                  title: 'Call support',
+                  subtitle: '+880 1700-000000 · 9:00 AM – 10:00 PM',
+                  trailing: SizedBox.shrink(),
+                ),
+                const SizedBox(height: 12),
+                const CgTile(
+                  icon: Icons.mail_outline_rounded,
+                  title: 'Email us',
+                  subtitle: 'support@comfygo.com · replies within 24 hours',
+                  trailing: SizedBox.shrink(),
+                ),
+                const SizedBox(height: 12),
+                const CgTile(
+                  icon: Icons.place_outlined,
+                  title: 'Head office',
+                  subtitle: 'Gulshan Avenue, Dhaka 1212, Bangladesh',
+                  trailing: SizedBox.shrink(),
+                ),
+                const SizedBox(height: 12),
+                CgTile(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  title: 'Send a message',
+                  subtitle: 'Open the contact form — we reply within 24 hours',
+                  onTap: () => context.push('/contact'),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

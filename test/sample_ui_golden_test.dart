@@ -1,19 +1,20 @@
 import 'dart:io';
 
 import 'package:comfygo/core/theme/theme.dart';
+import 'package:comfygo/core/widgets/comfy_ui.dart';
 import 'package:comfygo/core/widgets/travel_widgets.dart';
+import 'package:comfygo/data/comfy_destinations.dart';
 import 'package:comfygo/features/destinations/screens/destination_detail_screen.dart';
 import 'package:comfygo/features/home/screens/home_screen.dart';
 import 'package:comfygo/models/destination_model.dart';
-import 'package:comfygo/models/hotel_model.dart';
 import 'package:comfygo/services/destination_service.dart';
-import 'package:comfygo/services/hotel_service.dart';
 import 'package:comfygo/state/service_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final _destination = Destination(
   id: 7,
@@ -46,24 +47,6 @@ final _destination = Destination(
   createdAt: DateTime(2026),
 );
 
-final _hotel = Hotel(
-  id: 9,
-  name: 'Tea Resort',
-  description: 'A quiet stay in the hills.',
-  location: 'Sreemangal',
-  division: 'Sylhet',
-  address: 'Sreemangal, Sylhet',
-  images: const [],
-  rating: 4.7,
-  reviewCount: 20,
-  pricePerNight: 4200,
-  managerId: 1,
-  amenities: const [],
-  totalRooms: 20,
-  availableRooms: 8,
-  createdAt: DateTime(2026),
-);
-
 class _DestinationApi implements DestinationService {
   _DestinationApi(this.destination);
   final Destination destination;
@@ -81,19 +64,6 @@ class _DestinationApi implements DestinationService {
   }
 }
 
-class _HotelApi implements HotelService {
-  _HotelApi(this.hotel);
-  final Hotel hotel;
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) {
-    if (invocation.memberName == #getHotels) {
-      return Future<List<Hotel>>.value([hotel]);
-    }
-    return super.noSuchMethod(invocation);
-  }
-}
-
 Future<void> _precacheSampleAssets(WidgetTester tester) async {
   final context = tester.element(find.byType(MaterialApp));
   await tester.runAsync(() async {
@@ -105,12 +75,41 @@ Future<void> _precacheSampleAssets(WidgetTester tester) async {
   });
 }
 
+Future<void> _precacheComfyAssets(WidgetTester tester) async {
+  final context = tester.element(find.byType(MaterialApp));
+  await tester.runAsync(() async {
+    await precacheImage(AssetImage(kCgBackdropAsset), context);
+    for (final item in comfyDestinations) {
+      await precacheImage(AssetImage(item.cover), context);
+      await precacheImage(AssetImage(item.thumb), context);
+    }
+  });
+}
+
 void main() {
   setUpAll(() async {
-    final muli = FontLoader('Muli')
-      ..addFont(rootBundle.load('assets/fonts/Muli-Regular.ttf'))
-      ..addFont(rootBundle.load('assets/fonts/Muli-Bold.ttf'));
-    await muli.load();
+    final body = FontLoader('DMSans')
+      ..addFont(rootBundle.load('assets/fonts/DMSans-Regular.ttf'))
+      ..addFont(rootBundle.load('assets/fonts/DMSans-Medium.ttf'))
+      ..addFont(rootBundle.load('assets/fonts/DMSans-Bold.ttf'));
+    await body.load();
+    final display = FontLoader('PlayfairDisplay')
+      ..addFont(rootBundle.load('assets/fonts/PlayfairDisplay-Regular.ttf'))
+      ..addFont(rootBundle.load('assets/fonts/PlayfairDisplay-SemiBold.ttf'))
+      ..addFont(rootBundle.load('assets/fonts/PlayfairDisplay-Bold.ttf'));
+    await display.load();
+    final hind = FontLoader('HindSiliguri')
+      ..addFont(rootBundle.load('assets/fonts/HindSiliguri-Regular.ttf'))
+      ..addFont(rootBundle.load('assets/fonts/HindSiliguri-SemiBold.ttf'))
+      ..addFont(rootBundle.load('assets/fonts/HindSiliguri-Bold.ttf'));
+    await hind.load();
+    final jakarta = FontLoader('PlusJakartaSans')
+      ..addFont(rootBundle.load('assets/fonts/PlusJakartaSans-400.ttf'))
+      ..addFont(rootBundle.load('assets/fonts/PlusJakartaSans-500.ttf'))
+      ..addFont(rootBundle.load('assets/fonts/PlusJakartaSans-600.ttf'))
+      ..addFont(rootBundle.load('assets/fonts/PlusJakartaSans-700.ttf'))
+      ..addFont(rootBundle.load('assets/fonts/PlusJakartaSans-800.ttf'));
+    await jakarta.load();
     final icons = FontLoader('FontAwesomeSolid')
       ..addFont(rootBundle.load('assets/fonts/FontAwesomeSolid.otf'));
     await icons.load();
@@ -137,62 +136,28 @@ void main() {
     await emoji.load();
   });
 
-  testWidgets('Home matches the sample carousel layout', (tester) async {
+  testWidgets('Home matches the ComfyGo Mobile UI reference', (tester) async {
+    SharedPreferences.setMockInitialValues({});
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          destinationServiceProvider.overrideWithValue(
-            _DestinationApi(_destination),
-          ),
-          hotelServiceProvider.overrideWithValue(_HotelApi(_hotel)),
-        ],
         child: MaterialApp(
-          theme: OneUITheme.lightTheme.copyWith(
-            textTheme: OneUITheme.lightTheme.textTheme.apply(
-              fontFamilyFallback: const ['Nirmala UI', 'Segoe UI Emoji'],
-            ),
-          ),
-          home: Scaffold(
-            backgroundColor: const Color(0xFFF3F5F7),
-            body: const HomeScreen(),
-            bottomNavigationBar: BottomNavigationBar(
-              currentIndex: 0,
-              showSelectedLabels: false,
-              showUnselectedLabels: false,
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.search, size: 30),
-                  label: '',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.bookmark_border, size: 30),
-                  label: '',
-                ),
-                BottomNavigationBarItem(
-                  icon: CircleAvatar(
-                    radius: 15,
-                    child: Icon(Icons.person, size: 18),
-                  ),
-                  label: '',
-                ),
-              ],
-            ),
-          ),
+          theme: OneUITheme.lightTheme,
+          home: const HomeScreen(),
         ),
       ),
     );
-    await _precacheSampleAssets(tester);
+    await _precacheComfyAssets(tester);
     await tester.pumpAndSettle();
-    expect(find.text('What would you like to find?'), findsOneWidget);
-    expect(find.text('Top Destinations'), findsOneWidget);
-    expect(find.text('Exclusive Hotels'), findsOneWidget);
+    expect(find.textContaining('Want To Go?'), findsOneWidget);
+    expect(find.text('Category'), findsOneWidget);
+    expect(find.text('Sreemangal'), findsNWidgets(2));
     expect(tester.takeException(), isNull);
     await expectLater(
-      find.byType(Scaffold),
+      find.byType(HomeScreen),
       matchesGoldenFile('goldens/comfygo_home.png'),
     );
   });
@@ -212,11 +177,7 @@ void main() {
           ),
         ],
         child: MaterialApp(
-          theme: OneUITheme.lightTheme.copyWith(
-            textTheme: OneUITheme.lightTheme.textTheme.apply(
-              fontFamilyFallback: const ['Nirmala UI', 'Segoe UI Emoji'],
-            ),
-          ),
+          theme: OneUITheme.lightTheme,
           home: const DestinationDetailScreen(id: 7),
         ),
       ),
@@ -224,7 +185,10 @@ void main() {
     await _precacheSampleAssets(tester);
     await tester.pumpAndSettle();
     expect(find.text('Sylhet'), findsOneWidget);
-    expect(find.text('Sylhet, Bangladesh'), findsOneWidget);
+    expect(
+      find.text('Sylhet Division · Sylhet, Bangladesh'),
+      findsOneWidget,
+    );
     expect(find.text('Tea Garden Tour'), findsOneWidget);
     expect(find.text('per pax'), findsNWidgets(2));
     expect(tester.takeException(), isNull);
@@ -251,18 +215,18 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Search activities'));
+    await tester.tap(find.bySemanticsLabel('Search activities'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).last, 'Jaflong');
-    await tester.tap(find.widgetWithText(FilledButton, 'Search'));
+    await tester.tap(find.widgetWithText(TextButton, 'Search'));
     await tester.pumpAndSettle();
     expect(find.text('Jaflong River Visit'), findsOneWidget);
     expect(find.text('Tea Garden Tour'), findsNothing);
 
-    await tester.tap(find.byTooltip('Sort activities'));
+    await tester.tap(find.bySemanticsLabel('Sort activities'));
     await tester.pumpAndSettle();
     expect(find.text('Price: low to high'), findsOneWidget);
-    await tester.tap(find.byTooltip('Show location'));
+    await tester.tap(find.bySemanticsLabel('Show location'));
     await tester.pumpAndSettle();
     expect(find.text('Sylhet'), findsNWidgets(2));
     expect(find.text('Sylhet Division\nSylhet, Bangladesh'), findsOneWidget);
@@ -302,7 +266,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Back to destinations'));
+    await tester.tap(find.bySemanticsLabel('Back'));
     await tester.pumpAndSettle();
     expect(find.text('Destination list'), findsOneWidget);
     expect(tester.takeException(), isNull);

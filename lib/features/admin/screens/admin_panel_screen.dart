@@ -3,10 +3,10 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/comfy_design.dart';
 import '../../../core/utils/navigation.dart';
-import '../../../core/theme/theme.dart';
-import '../../../core/widgets/widgets.dart';
+import '../../../core/widgets/comfy_page.dart';
+import '../../../core/widgets/comfy_ui.dart';
 import '../../../models/models.dart';
 import '../../../state/service_providers.dart';
 
@@ -85,26 +85,10 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
 
   Future<void> _removeListing(Hotel hotel) async {
     if (_acting) return;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Remove listing?'),
-        content: Text('"${hotel.name}" will be permanently removed.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Keep'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text(
-              'Remove',
-              style: TextStyle(color: OneUIColors.error),
-            ),
-          ),
-        ],
-      ),
+    final confirmed = await _confirm(
+      title: 'Remove listing?',
+      message: '"${hotel.name}" will be permanently removed.',
+      actionLabel: 'Remove',
     );
     if (confirmed != true || !mounted) return;
 
@@ -118,29 +102,12 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
 
   Future<void> _voidPayment(Payment payment) async {
     if (_acting) return;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Void payment?'),
-        content: Text(
+    final confirmed = await _confirm(
+      title: 'Void payment?',
+      message:
           'Payment #${payment.id} of ৳${payment.amount.toStringAsFixed(0)} '
           'will be voided and retained in the audit history.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Keep'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text(
-              'Void',
-              style: TextStyle(color: OneUIColors.error),
-            ),
-          ),
-        ],
-      ),
+      actionLabel: 'Void',
     );
     if (confirmed != true || !mounted) return;
 
@@ -150,127 +117,195 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
         .voidPayment(payment.id, reason: 'Voided by admin');
     if (!mounted) return;
     setState(() => _acting = false);
-    _showSnack(result != null ? 'Payment voided' : 'Could not void the payment');
+    _showSnack(
+      result != null ? 'Payment voided' : 'Could not void the payment',
+    );
     if (result != null) await _loadAll();
   }
 
+  Future<bool?> _confirm({
+    required String title,
+    required String message,
+    required String actionLabel,
+  }) {
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        final c = CgColors.of(dialogContext);
+        return AlertDialog(
+          backgroundColor: c.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(CgRadii.card),
+          ),
+          title: Text(title, style: CgType.t20.copyWith(color: c.text)),
+          content: Text(message, style: CgType.b14.copyWith(color: c.text2)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              style: TextButton.styleFrom(foregroundColor: c.text2),
+              child: const Text('Keep'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: TextButton.styleFrom(
+                foregroundColor: CgColorConstants.danger,
+              ),
+              child: Text(actionLabel),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showSnack(String message) {
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message, style: const TextStyle(fontSize: 13)),
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+    if (mounted) showCgToast(context, message);
   }
 
   // ── Build ───────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background(context),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => goBack(context),
-        ),
-        title: const Text('Admin Panel'),
-        actions: [
-          IconButton(
-            key: const Key('admin-refresh'),
-            tooltip: 'Refresh',
-            onPressed: _loading ? null : _loadAll,
-            icon: const Icon(Icons.refresh_rounded, size: 22),
+    final c = CgColors.of(context);
+    return CgPageScaffold(
+      child: Column(
+        children: [
+          CgPageTitle(
+            title: 'Admin Panel',
+            subtitle: 'Users, bookings, payments and listings',
+            onBack: () => goBack(context),
+            trailing: CgIconAction(
+              key: const Key('admin-refresh'),
+              icon: Icons.refresh_rounded,
+              semanticLabel: 'Refresh',
+              onTap: _loading ? null : _loadAll,
+            ),
           ),
+          if (_loading)
+            const Expanded(child: CgLoadingState())
+          else
+            Expanded(
+              child: Column(
+                children: [
+                  // ─── Stats ────────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _StatCard(
+                                icon: Icons.people_rounded,
+                                value: '${_stats?['users'] ?? 0}',
+                                label: 'Users',
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _StatCard(
+                                icon: Icons.book_rounded,
+                                value: '${_stats?['bookings'] ?? 0}',
+                                label: 'Bookings',
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _StatCard(
+                                icon: Icons.payments_rounded,
+                                value: '৳${_fmtRevenue(_stats?['revenue'])}',
+                                label: 'Revenue',
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _StatCard(
+                                icon: Icons.card_membership_rounded,
+                                value: '${_stats?['active_packages'] ?? 0}',
+                                label: 'Plans',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // ─── Tabs ─────────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: c.mint,
+                        borderRadius: BorderRadius.circular(CgRadii.pill),
+                      ),
+                      child: TabBar(
+                        controller: _tabController,
+                        isScrollable: true,
+                        tabAlignment: TabAlignment.start,
+                        dividerColor: Colors.transparent,
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        indicator: BoxDecoration(
+                          gradient: c.gMain,
+                          borderRadius: BorderRadius.circular(CgRadii.pill),
+                        ),
+                        labelColor: c.onPrimary,
+                        unselectedLabelColor: c.text2,
+                        labelStyle: CgType.l12.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                        unselectedLabelStyle: CgType.l12.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        padding: EdgeInsets.zero,
+                        labelPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                        ),
+                        tabs: const [
+                          Tab(height: 38, text: 'Dashboard'),
+                          Tab(height: 38, text: 'Users'),
+                          Tab(height: 38, text: 'Bookings'),
+                          Tab(height: 38, text: 'Payments'),
+                          Tab(height: 38, text: 'Listings'),
+                          Tab(height: 38, text: 'Packages'),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // ─── Tab content ──────────────────────────────
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildDashboardTab(),
+                        _buildUsersTab(),
+                        _buildBookingsTab(),
+                        _buildPaymentsTab(),
+                        _buildListingsTab(),
+                        _buildPackagesTab(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
-      body: NatureBackground.wrap(child: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // Stats summary — real numbers
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  color: AppColors.surface(context),
-                  child: Wrap(
-                    spacing: 20,
-                    runSpacing: 12,
-                    alignment: WrapAlignment.spaceAround,
-                    children: [
-                      _StatItem(
-                        icon: Icons.people_rounded,
-                        value: '${_stats?['users'] ?? 0}',
-                        label: 'Users',
-                        color: AppColors.primary(context),
-                      ),
-                      _StatItem(
-                        icon: Icons.book_rounded,
-                        value: '${_stats?['bookings'] ?? 0}',
-                        label: 'Bookings',
-                        color: const Color(0xFF4CAF50),
-                      ),
-                      _StatItem(
-                        icon: Icons.attach_money_rounded,
-                        value: '৳${_fmtRevenue(_stats?['revenue'])}',
-                        label: 'Revenue',
-                        color: const Color(0xFFFFB300),
-                      ),
-                      _StatItem(
-                        icon: Icons.card_membership_rounded,
-                        value: '${_stats?['active_packages'] ?? 0}',
-                        label: 'Plans',
-                        color: const Color(0xFF7E57C2),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Tab bar
-                Container(
-                  color: AppColors.surface(context),
-                  child: TabBar(
-                    controller: _tabController,
-                    isScrollable: true,
-                    tabs: const [
-                      Tab(text: 'Dashboard'),
-                      Tab(text: 'Users'),
-                      Tab(text: 'Bookings'),
-                      Tab(text: 'Payments'),
-                      Tab(text: 'Listings'),
-                      Tab(text: 'Packages'),
-                    ],
-                  ),
-                ),
-
-                // Tab content
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildDashboardTab(),
-                      _buildUsersTab(),
-                      _buildBookingsTab(),
-                      _buildPaymentsTab(),
-                      _buildListingsTab(),
-                      _buildPackagesTab(),
-                    ],
-                  ),
-                ),
-              ],
-            )),
     );
   }
 
   // ── Dashboard (statistical view) ──────────────────────────────────
 
   Widget _buildDashboardTab() {
+    final c = CgColors.of(context);
     final bookings = _bookings ?? <Booking>[];
     final payments = _payments ?? <Payment>[];
-    final revenue = ((_stats?['revenue'] as num?) ?? 0).toDouble();
 
     final statusData = [
       (
@@ -286,7 +321,7 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
       (
         'Completed',
         bookings.where((b) => b.status == BookingStatus.completed).length,
-        const Color(0xFF1B7A4F),
+        const Color(0xFF2F8F72),
       ),
       (
         'Cancelled',
@@ -299,27 +334,29 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
       (
         'Hotels',
         bookings.where((b) => b.type == BookingType.hotel).length,
-        const Color(0xFF1B7A4F),
+        const Color(0xFF2F8F72),
       ),
       (
         'Transport',
         bookings.where((b) => b.type == BookingType.transport).length,
-        AppColors.brandGreen,
+        const Color(0xFF4A90C2),
       ),
       (
         'Guides',
         bookings.where((b) => b.type == BookingType.guide).length,
-        const Color(0xFFFF8F50),
+        const Color(0xFFF2A93B),
       ),
       (
         'Tours',
         bookings.where((b) => b.type == BookingType.destination).length,
-        const Color(0xFF7E57C2),
+        const Color(0xFF8E7CC3),
       ),
     ];
 
-    final completedPayments =
-        payments.where((p) => p.status == PaymentStatus.completed).toList();
+    final revenue = ((_stats?['revenue'] as num?) ?? 0).toDouble();
+    final completedPayments = payments
+        .where((p) => p.status == PaymentStatus.completed)
+        .toList();
     final completedTotal = completedPayments.fold<double>(
       0,
       (sum, p) => sum + p.amount,
@@ -332,7 +369,7 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
         : completedPayments.length / payments.length;
 
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       children: [
         _dashboardCard(
           title: 'Bookings by service',
@@ -352,6 +389,7 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
                             entry.$2.toDouble(),
                         ],
                         colors: [for (final entry in typeData) entry.$3],
+                        emptyColor: c.line,
                       ),
                     ),
                     Column(
@@ -359,18 +397,14 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
                       children: [
                         Text(
                           '${bookings.length}',
-                          style: TextStyle(
+                          style: CgType.h1Bold.copyWith(
                             fontSize: 26,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary(context),
+                            color: c.text,
                           ),
                         ),
                         Text(
                           'bookings',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary(context),
-                          ),
+                          style: CgType.l12.copyWith(color: c.text2),
                         ),
                       ],
                     ),
@@ -395,18 +429,18 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
                       Expanded(
                         child: Text(
                           entry.$1,
-                          style: TextStyle(
+                          style: CgType.l12.copyWith(
                             fontSize: 13,
-                            color: AppColors.textPrimary(context),
+                            color: c.text,
                           ),
                         ),
                       ),
                       Text(
                         '${entry.$2}',
-                        style: TextStyle(
+                        style: CgType.l12.copyWith(
                           fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary(context),
+                          fontWeight: FontWeight.w800,
+                          color: c.text,
                         ),
                       ),
                     ],
@@ -415,7 +449,7 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         _dashboardCard(
           title: 'Bookings by status',
           subtitle: 'Live funnel from pending to completed',
@@ -430,9 +464,9 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
                         width: 78,
                         child: Text(
                           entry.$1,
-                          style: TextStyle(
+                          style: CgType.l12.copyWith(
                             fontSize: 12.5,
-                            color: AppColors.textSecondary(context),
+                            color: c.text2,
                           ),
                         ),
                       ),
@@ -441,15 +475,14 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
                           borderRadius: BorderRadius.circular(6),
                           child: Stack(
                             children: [
-                              Container(
-                                height: 16,
-                                color: AppColors.surfaceVariant(context),
-                              ),
+                              Container(height: 16, color: c.mint),
                               FractionallySizedBox(
                                 widthFactor: bookings.isEmpty
                                     ? 0
-                                    : (entry.$2 / bookings.length)
-                                          .clamp(0.0, 1.0),
+                                    : (entry.$2 / bookings.length).clamp(
+                                        0.0,
+                                        1.0,
+                                      ),
                                 child: Container(
                                   height: 16,
                                   decoration: BoxDecoration(
@@ -467,10 +500,10 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
                         child: Text(
                           '${entry.$2}',
                           textAlign: TextAlign.end,
-                          style: TextStyle(
+                          style: CgType.l12.copyWith(
                             fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary(context),
+                            fontWeight: FontWeight.w800,
+                            color: c.text,
                           ),
                         ),
                       ),
@@ -480,7 +513,7 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         _dashboardCard(
           title: 'Revenue summary',
           subtitle: 'From completed payments',
@@ -489,30 +522,29 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
             children: [
               Text(
                 '৳${_fmtRevenue(revenue)}',
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.primary(context),
-                ),
+                style: CgType.h1Bold.copyWith(fontSize: 28, color: c.primary),
               ),
-              const SizedBox(height: 14),
-              _dashboardStatRow(
-                'Payments received',
-                '${completedPayments.length} of ${payments.length}',
+              const SizedBox(height: 10),
+              CgInfoRow(
+                label: 'Payments received',
+                value: '${completedPayments.length} of ${payments.length}',
               ),
-              _dashboardStatRow(
-                'Average payment',
-                '৳${_fmtRevenue(averagePayment)}',
+              CgInfoRow(
+                label: 'Average payment',
+                value: '৳${_fmtRevenue(averagePayment)}',
               ),
-              _dashboardStatRow('Success rate', '${(successRate * 100).round()}%'),
-              _dashboardStatRow(
-                'Active subscriptions',
-                '${_stats?['active_packages'] ?? 0}',
+              CgInfoRow(
+                label: 'Success rate',
+                value: '${(successRate * 100).round()}%',
+              ),
+              CgInfoRow(
+                label: 'Active subscriptions',
+                value: '${_stats?['active_packages'] ?? 0}',
+                showDivider: false,
               ),
             ],
           ),
         ),
-        const SizedBox(height: 24),
       ],
     );
   }
@@ -522,62 +554,17 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
     required String subtitle,
     required Widget child,
   }) {
-    return Container(
-      width: double.infinity,
+    final c = CgColors.of(context);
+    return CgCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.divider(context), width: 0.5),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary(context),
-            ),
-          ),
+          Text(title, style: CgType.t16.copyWith(color: c.text)),
           const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary(context),
-            ),
-          ),
+          Text(subtitle, style: CgType.l12.copyWith(color: c.text2)),
           const SizedBox(height: 14),
           child,
-        ],
-      ),
-    );
-  }
-
-  Widget _dashboardStatRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary(context),
-              ),
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary(context),
-            ),
-          ),
         ],
       ),
     );
@@ -586,33 +573,25 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
   Widget _buildUsersTab() {
     final users = _users;
     if (users == null || users.isEmpty) {
-      return const TravelEmpty(message: 'No users found.');
+      return const CgEmptyState(
+        icon: Icons.people_outline_rounded,
+        message: 'No users found.',
+      );
     }
     return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       itemCount: users.length,
-      separatorBuilder: (_, _) => const Divider(height: 1, indent: 64),
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
         final user = users[index];
-        return ListTile(
-          leading: CircleAvatar(
-            backgroundColor: AppColors.primarySoft(context),
-            child: Text(
-              user.fullName.isEmpty ? '?' : user.fullName[0].toUpperCase(),
-              style:  TextStyle(
-                color: AppColors.primary(context),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+        return CgTile(
+          title: user.fullName,
+          subtitle: '${_roleLabel(user.role)} · ${user.email}',
+          leading: Text(
+            user.fullName.isEmpty ? '?' : user.fullName[0].toUpperCase(),
+            style: CgType.t16.copyWith(color: CgColors.of(context).primary),
           ),
-          title: Text(
-            user.fullName,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          ),
-          subtitle: Text(
-            '${_roleLabel(user.role)} • ${user.email}',
-            style: const TextStyle(fontSize: 12),
-          ),
-          trailing: const Icon(Icons.more_vert_rounded, size: 20),
+          trailingText: _roleLabel(user.role),
         );
       },
     );
@@ -621,45 +600,27 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
   Widget _buildBookingsTab() {
     final bookings = _bookings;
     if (bookings == null || bookings.isEmpty) {
-      return const TravelEmpty(message: 'No bookings found.');
+      return const CgEmptyState(
+        icon: Icons.receipt_long_outlined,
+        message: 'No bookings found.',
+      );
     }
     return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       itemCount: bookings.length,
-      separatorBuilder: (_, _) => const Divider(height: 1, indent: 64),
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
         final b = bookings[index];
-        final statusLabel = b.status.name;
-        return ListTile(
-          leading: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.primarySoft(context),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              switch (b.type) {
-                BookingType.hotel => Icons.hotel_rounded,
-                BookingType.transport => Icons.directions_bus_rounded,
-                BookingType.guide => Icons.person_rounded,
-                BookingType.destination => Icons.location_on_rounded,
-              },
-              color: AppColors.primary(context),
-              size: 20,
-            ),
-          ),
-          title: Text(
-            b.itemName.isEmpty ? 'Booking #${b.id}' : b.itemName,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          ),
-          subtitle: Text(
-            '${b.touristName} • ৳${_fmtRevenue(b.totalPrice)}',
-            style: const TextStyle(fontSize: 12),
-          ),
-          trailing: CGStatusBadge(
-            label: statusLabel[0].toUpperCase() + statusLabel.substring(1),
-            color: _getStatusColor(statusLabel),
-          ),
+        return CgTile(
+          icon: switch (b.type) {
+            BookingType.hotel => Icons.hotel_rounded,
+            BookingType.transport => Icons.directions_bus_rounded,
+            BookingType.guide => Icons.person_rounded,
+            BookingType.destination => Icons.place_rounded,
+          },
+          title: b.itemName.isEmpty ? 'Booking #${b.id}' : b.itemName,
+          subtitle: '${b.touristName} · ৳${_fmtRevenue(b.totalPrice)}',
+          trailingText: _statusLabel(b.status),
         );
       },
     );
@@ -668,53 +629,35 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
   Widget _buildPaymentsTab() {
     final payments = _payments;
     if (payments == null || payments.isEmpty) {
-      return const TravelEmpty(message: 'No payments found.');
+      return const CgEmptyState(
+        icon: Icons.payments_outlined,
+        message: 'No payments found.',
+      );
     }
     return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       itemCount: payments.length,
-      separatorBuilder: (_, _) => const Divider(height: 1, indent: 64),
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
         final p = payments[index];
-        final isCompleted = p.status == PaymentStatus.completed;
-        return ListTile(
-          leading: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: (isCompleted ? OneUIColors.success : OneUIColors.statusPending)
-                  .withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              Icons.payment_rounded,
-              color: isCompleted
-                  ? OneUIColors.success
-                  : OneUIColors.statusPending,
-              size: 20,
-            ),
-          ),
-          title: Text(
-            '৳${_fmtRevenue(p.amount)}',
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          ),
-          subtitle: Text(
-            '${_paymentMethodLabel(p.method)}'
-            ' • ${_paymentStatusLabel(p.status)}'
-            '${p.cardLastFour != null ? ' • *${p.cardLastFour}' : ''}',
-            style: const TextStyle(fontSize: 12),
-          ),
-          trailing: p.status == PaymentStatus.voided ||
-                  p.status == PaymentStatus.refunded
-              ? null
-              : TextButton.icon(
-                  onPressed: () => _voidPayment(p),
-                  icon: const Icon(Icons.block_rounded, size: 17),
-                  label: const Text('Void'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: OneUIColors.error,
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ),
+        final canVoid =
+            p.status != PaymentStatus.voided &&
+            p.status != PaymentStatus.refunded;
+        return CgTile(
+          icon: Icons.payments_rounded,
+          title: '৳${_fmtRevenue(p.amount)}',
+          subtitle:
+              '${_paymentMethodLabel(p.method)} · '
+              '${_paymentStatusLabel(p.status)}'
+              '${p.cardLastFour != null ? ' · *${p.cardLastFour}' : ''}',
+          trailing: canVoid
+              ? CgIconAction(
+                  icon: Icons.block_rounded,
+                  semanticLabel: 'Void payment',
+                  color: CgColorConstants.danger,
+                  onTap: () => _voidPayment(p),
+                )
+              : null,
         );
       },
     );
@@ -723,57 +666,39 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
   Widget _buildListingsTab() {
     final listings = _listings;
     if (listings == null || listings.isEmpty) {
-      return const TravelEmpty(message: 'No listings found.');
+      return const CgEmptyState(
+        icon: Icons.business_outlined,
+        message: 'No listings found.',
+      );
     }
     return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       itemCount: listings.length,
-      separatorBuilder: (_, _) => const Divider(height: 1, indent: 64),
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
         final l = listings[index];
-        return ListTile(
-          leading: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.primarySoft(context),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child:  Icon(
-              Icons.business_rounded,
-              color: AppColors.primary(context),
-              size: 20,
-            ),
-          ),
-          title: Text(
-            l.name,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          ),
-          subtitle: Text(
-            'Hotel • ${l.location}'
-            '${l.isApproved ? '' : ' • awaiting approval'}',
-            style: const TextStyle(fontSize: 12),
-          ),
+        return CgTile(
+          icon: Icons.business_rounded,
+          title: l.name,
+          subtitle:
+              'Hotel · ${l.location}${l.isApproved ? '' : ' · awaiting approval'}',
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (!l.isApproved)
-                IconButton(
+                CgIconAction(
                   key: Key('approve-listing-${l.id}'),
-                  tooltip: 'Approve',
-                  onPressed: _acting ? null : () => _approveListing(l),
-                  icon: const Icon(
-                    Icons.check_circle_outline_rounded,
-                    color: OneUIColors.success,
-                  ),
+                  icon: Icons.check_rounded,
+                  semanticLabel: 'Approve listing',
+                  onTap: _acting ? null : () => _approveListing(l),
                 ),
-              IconButton(
+              const SizedBox(width: 6),
+              CgIconAction(
                 key: Key('remove-listing-${l.id}'),
-                tooltip: 'Remove',
-                onPressed: _acting ? null : () => _removeListing(l),
-                icon: const Icon(
-                  Icons.delete_outline_rounded,
-                  color: OneUIColors.error,
-                ),
+                icon: Icons.delete_outline_rounded,
+                semanticLabel: 'Remove listing',
+                color: CgColorConstants.danger,
+                onTap: _acting ? null : () => _removeListing(l),
               ),
             ],
           ),
@@ -783,109 +708,68 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
   }
 
   Widget _buildPackagesTab() {
+    final c = CgColors.of(context);
     final packagesState = ref.watch(packagesProvider);
     final packages = packagesState.packages.isNotEmpty
         ? packagesState.packages
         : Package.predefinedPackages;
 
     return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Text(
-            '${_stats?['active_packages'] ?? 0} active subscriptions',
-            style:  TextStyle(
-              fontSize: 13,
-              color: AppColors.textSecondary(context),
-            ),
-          ),
+        Text(
+          '${_stats?['active_packages'] ?? 0} active subscriptions',
+          style: CgType.b14.copyWith(color: c.text2),
         ),
         if ((_userPackages ?? []).isNotEmpty) ...[
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Text('Recent subscriptions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-          ),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _userPackages!.length,
-            separatorBuilder: (_, _) => const Divider(height: 1, indent: 64),
-            itemBuilder: (context, index) {
-              final subscription = _userPackages![index];
-              final color = _getTierColor(subscription.package.tier);
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: color.withValues(alpha: 0.12),
-                  child: Icon(Icons.person_outline_rounded, color: color, size: 20),
-                ),
-                title: Text('${subscription.package.name} ? User #${subscription.userId}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                subtitle: Text('${subscription.status.name} ? ends ${subscription.endDate.toLocal().toString().split(' ').first}', style: const TextStyle(fontSize: 12)),
-              );
-            },
-          ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 18, 16, 4),
-            child: Text('Available tiers', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-          ),
+          const SizedBox(height: 16),
+          CgSection(title: 'Recent subscriptions'),
+          const SizedBox(height: 8),
+          for (var i = 0; i < _userPackages!.length; i++)
+            Padding(
+              padding: EdgeInsets.only(
+                bottom: i == _userPackages!.length - 1 ? 0 : 10,
+              ),
+              child: CgTile(
+                icon: Icons.person_outline_rounded,
+                title:
+                    '${_userPackages![i].package.name} · '
+                    'User #${_userPackages![i].userId}',
+                subtitle:
+                    '${_statusLabel(_userPackages![i].status)} · ends '
+                    '${_userPackages![i].endDate.toLocal().toString().split(' ').first}',
+              ),
+            ),
         ],
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: packages.length,
-          separatorBuilder: (_, _) => const Divider(height: 1, indent: 64),
-          itemBuilder: (context, index) {
-            final p = packages[index];
-            final color = _getTierColor(p.tier);
-            return ListTile(
-              leading: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.card_membership_rounded,
-                  color: color,
-                  size: 20,
-                ),
-              ),
-              title: Text(
-                '${p.name} - ${p.price == 0 ? 'Free' : '৳${p.price.toStringAsFixed(2)}'}/mo',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              subtitle: Text(
-                p.bookingLimit == -1
-                    ? 'Unlimited bookings • ${p.discountPercentage.toStringAsFixed(0)}% off'
-                    : '${p.bookingLimit} bookings/mo • ${p.discountPercentage.toStringAsFixed(0)}% off',
-                style: const TextStyle(fontSize: 12),
-              ),
-              trailing: const Icon(Icons.chevron_right_rounded, size: 20),
-            );
-          },
-        ),
+        const SizedBox(height: 20),
+        CgSection(title: 'Available tiers'),
+        const SizedBox(height: 8),
+        for (var i = 0; i < packages.length; i++)
+          Padding(
+            padding: EdgeInsets.only(
+              bottom: i == packages.length - 1 ? 0 : 10,
+            ),
+            child: CgTile(
+              icon: Icons.card_membership_rounded,
+              title:
+                  '${packages[i].name} · '
+                  '${packages[i].price == 0 ? 'Free' : '৳${packages[i].price.toStringAsFixed(2)}'}/mo',
+              subtitle: packages[i].bookingLimit == -1
+                  ? 'Unlimited bookings · '
+                        '${packages[i].discountPercentage.toStringAsFixed(0)}% off'
+                  : '${packages[i].bookingLimit} bookings/mo · '
+                        '${packages[i].discountPercentage.toStringAsFixed(0)}% off',
+            ),
+          ),
       ],
     );
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return OneUIColors.statusPending;
-      case 'confirmed':
-        return OneUIColors.statusConfirmed;
-      case 'completed':
-        return OneUIColors.statusCompleted;
-      case 'cancelled':
-        return OneUIColors.statusCancelled;
-      default:
-        return Colors.grey;
-    }
+  static String _statusLabel(Enum status) {
+    final name = status.name;
+    return name[0].toUpperCase() + name.substring(1);
   }
 
   static String _paymentMethodLabel(PaymentMethod method) {
@@ -929,19 +813,6 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
     }
   }
 
-  static Color _getTierColor(PackageTier tier) {
-    switch (tier) {
-      case PackageTier.basic:
-        return OneUIColors.tierBasic;
-      case PackageTier.pro:
-        return OneUIColors.tierPro;
-      case PackageTier.premium:
-        return OneUIColors.tierPremium;
-      case PackageTier.ultimate:
-        return OneUIColors.tierUltimate;
-    }
-  }
-
   static String _fmtRevenue(dynamic value) {
     final amount = (value is num ? value : 0).toDouble().round().toString();
     final b = StringBuffer();
@@ -953,59 +824,77 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen>
   }
 }
 
-class _StatItem extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final String label;
-  final Color color;
-
-  const _StatItem({
+class _StatCard extends StatelessWidget {
+  const _StatCard({
     required this.icon,
     required this.value,
     required this.label,
-    required this.color,
   });
+
+  final IconData icon;
+  final String value;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+    final c = CgColors.of(context);
+    return CgCard(
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              gradient: c.gMint,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 18, color: c.primary),
           ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style:  TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary(context),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    style: CgType.t16.copyWith(color: c.text),
+                  ),
+                ),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: CgType.l12.copyWith(
+                    fontSize: 11,
+                    color: c.text2,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        Text(
-          label,
-          style:  TextStyle(
-            fontSize: 11,
-            color: AppColors.textSecondary(context),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
-
 
 /// Donut chart painter for the dashboard's booking-type distribution.
 class _DonutPainter extends CustomPainter {
   final List<double> values;
   final List<Color> colors;
+  final Color emptyColor;
 
-  const _DonutPainter({required this.values, required this.colors});
+  const _DonutPainter({
+    required this.values,
+    required this.colors,
+    required this.emptyColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1017,7 +906,7 @@ class _DonutPainter extends CustomPainter {
       ..strokeCap = StrokeCap.butt;
 
     if (total <= 0) {
-      paint.color = const Color(0xFFE1EAE2);
+      paint.color = emptyColor;
       canvas.drawCircle(
         size.center(Offset.zero),
         (size.shortestSide - stroke) / 2,
@@ -1045,5 +934,7 @@ class _DonutPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_DonutPainter oldDelegate) =>
-      oldDelegate.values != values || oldDelegate.colors != colors;
+      oldDelegate.values != values ||
+      oldDelegate.colors != colors ||
+      oldDelegate.emptyColor != emptyColor;
 }

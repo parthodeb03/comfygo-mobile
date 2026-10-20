@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../theme/theme.dart';
+import '../theme/design_tokens.dart';
 
-/// One UI Collapsing Large Title App Bar
-/// Matches Samsung's signature big-to-small title transition on scroll
+/// Collapsing large-title app bar for detail screens.
 class OneUILargeTitleAppBar extends StatelessWidget {
   final String title;
   final String? subtitle;
@@ -33,47 +32,43 @@ class OneUILargeTitleAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final scheme = theme.colorScheme;
 
     return SliverAppBar(
       expandedHeight: expandedHeight,
       floating: false,
       pinned: true,
-      backgroundColor:
-          backgroundColor ??
-          (isDark ? OneUIColors.backgroundDark : OneUIColors.backgroundLight),
+      centerTitle: centerTitle,
+      backgroundColor: backgroundColor ?? scheme.surface,
       surfaceTintColor: Colors.transparent,
       leading: showBackButton
           ? IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+              icon: const Icon(Icons.arrow_back_rounded, size: ComfySpacing.xl),
               onPressed: onBackPressed ?? () => Navigator.of(context).pop(),
+              tooltip: 'Back',
             )
           : leading,
       actions: actions,
       bottom: bottom,
       flexibleSpace: FlexibleSpaceBar(
         titlePadding: const EdgeInsets.only(
-          left: OneUISpacing.lg,
-          bottom: OneUISpacing.lg,
+          left: ComfySpacing.lg,
+          bottom: ComfySpacing.lg,
         ),
         title: Text(
           title,
-          style: TextStyle(
-            color: isDark
-                ? OneUIColors.textPrimaryDark
-                : OneUIColors.textPrimaryLight,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
+          style: theme.textTheme.headlineSmall?.copyWith(
+            color: scheme.onSurface,
           ),
         ),
         background: Container(
           padding: EdgeInsets.only(
-            left: OneUISpacing.lg,
-            right: OneUISpacing.lg,
+            left: ComfySpacing.lg,
+            right: ComfySpacing.lg,
             top:
                 kToolbarHeight +
                 MediaQuery.of(context).padding.top +
-                OneUISpacing.lg,
+                ComfySpacing.lg,
           ),
           alignment: Alignment.bottomLeft,
           child: Column(
@@ -82,24 +77,16 @@ class OneUILargeTitleAppBar extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: TextStyle(
-                  color: isDark
-                      ? OneUIColors.textPrimaryDark
-                      : OneUIColors.textPrimaryLight,
-                  fontSize: 34,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.5,
+                style: theme.textTheme.displaySmall?.copyWith(
+                  color: scheme.onSurface,
                 ),
               ),
               if (subtitle != null) ...[
-                const SizedBox(height: OneUISpacing.xs),
+                const SizedBox(height: ComfySpacing.xs),
                 Text(
                   subtitle!,
-                  style: TextStyle(
-                    color: isDark
-                        ? OneUIColors.textSecondaryDark
-                        : OneUIColors.textSecondaryLight,
-                    fontSize: 14,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -111,7 +98,7 @@ class OneUILargeTitleAppBar extends StatelessWidget {
   }
 }
 
-/// One UI Simple AppBar (non-collapsing)
+/// Non-collapsing app bar.
 class OneUISimpleAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
@@ -138,40 +125,32 @@ class OneUISimpleAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final scheme = theme.colorScheme;
 
     return AppBar(
-      backgroundColor:
-          backgroundColor ??
-          (isDark ? OneUIColors.backgroundDark : OneUIColors.backgroundLight),
-      foregroundColor: isDark
-          ? OneUIColors.textPrimaryDark
-          : OneUIColors.textPrimaryLight,
+      backgroundColor: backgroundColor ?? scheme.surface,
+      foregroundColor: scheme.onSurface,
+      surfaceTintColor: Colors.transparent,
       elevation: 0,
-      scrolledUnderElevation: 0.5,
+      scrolledUnderElevation: 0,
       centerTitle: centerTitle,
       leading: showBackButton
           ? IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+              icon: const Icon(Icons.arrow_back_rounded, size: ComfySpacing.xl),
               onPressed: onBackPressed ?? () => Navigator.of(context).pop(),
+              tooltip: 'Back',
             )
           : leading,
       title: Text(
         title,
-        style: TextStyle(
-          color: isDark
-              ? OneUIColors.textPrimaryDark
-              : OneUIColors.textPrimaryLight,
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-        ),
+        style: theme.textTheme.headlineSmall?.copyWith(color: scheme.onSurface),
       ),
       actions: actions,
     );
   }
 }
 
-/// One UI Search Bar
+/// Search field used by list screens.
 class OneUISearchBar extends StatelessWidget {
   final String hintText;
   final ValueChanged<String>? onChanged;
@@ -197,12 +176,12 @@ class OneUISearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final scheme = theme.colorScheme;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: OneUISpacing.lg,
-        vertical: OneUISpacing.sm,
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: ComfySpacing.lg,
+        vertical: ComfySpacing.sm,
       ),
       child: TextField(
         controller: controller,
@@ -210,46 +189,18 @@ class OneUISearchBar extends StatelessWidget {
         readOnly: readOnly,
         onTap: onTap,
         onChanged: onChanged,
-        style: TextStyle(
-          color: isDark
-              ? OneUIColors.textPrimaryDark
-              : OneUIColors.textPrimaryLight,
-        ),
+        style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: TextStyle(
-            color: isDark
-                ? OneUIColors.textHintDark
-                : OneUIColors.textHintLight,
-          ),
           prefixIcon:
               prefix ??
-              Icon(
-                Icons.search_rounded,
-                color: isDark
-                    ? OneUIColors.textSecondaryDark
-                    : OneUIColors.textSecondaryLight,
-              ),
+              Icon(Icons.search_rounded, color: scheme.onSurfaceVariant),
           suffixIcon: suffix,
           filled: true,
-          fillColor: isDark
-              ? OneUIColors.surfaceVariantDark
-              : OneUIColors.surfaceVariantLight,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(OneUISpacing.radiusMd),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(OneUISpacing.radiusMd),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(OneUISpacing.radiusMd),
-            borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
-          ),
+          fillColor: scheme.surfaceContainerHighest,
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: OneUISpacing.lg,
-            vertical: OneUISpacing.md,
+            horizontal: ComfySpacing.lg,
+            vertical: ComfySpacing.md,
           ),
         ),
       ),

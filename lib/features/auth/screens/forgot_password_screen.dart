@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/comfy_design.dart';
 import '../../../core/utils/navigation.dart';
-import '../../../core/theme/theme.dart';
-import '../../../core/widgets/widgets.dart';
+import '../../../core/widgets/comfy_page.dart';
+import '../../../core/widgets/comfy_ui.dart';
 import '../../../state/auth_provider.dart';
 
 /// Forgot password — 3-step flow matching the spec:
@@ -28,14 +28,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
 
-  final _emailFormKey = GlobalKey<FormState>();
-  final _codeFormKey = GlobalKey<FormState>();
-  final _passwordFormKey = GlobalKey<FormState>();
-
   bool _isLoading = false;
   String? _resetToken;
   String? _devCode; // shown only when the backend echoes it (no email provider)
-  bool _obscurePassword = true;
+
+  String? _emailError;
+  String? _codeError;
+  String? _passwordError;
+  String? _confirmError;
 
   @override
   void dispose() {
@@ -47,27 +47,44 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   void _showSnack(String message) {
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message, style: const TextStyle(fontSize: 13)),
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+    if (mounted) showCgToast(context, message);
+  }
+
+  void _goBackStep() {
+    if (_isLoading) return;
+    if (_step > 1) {
+      setState(() {
+        _step -= 1;
+        _codeError = null;
+        _passwordError = null;
+        _confirmError = null;
+      });
+    } else {
+      goBack(context);
+    }
   }
 
   // ── Step 1: request code ────────────────────────────────────────────────
 
   Future<void> _requestCode() async {
-    if (!_emailFormKey.currentState!.validate()) return;
-    setState(() => _isLoading = true);
+    final email = _emailController.text.trim();
+    final error = email.isEmpty
+        ? 'Enter your email'
+        : !email.contains('@')
+        ? 'Enter a valid email'
+        : null;
+    if (error != null) {
+      setState(() => _emailError = error);
+      return;
+    }
+    setState(() {
+      _emailError = null;
+      _isLoading = true;
+    });
 
     final result = await ref
         .read(authProvider.notifier)
-        .requestCode(email: _emailController.text.trim());
+        .requestCode(email: email);
 
     if (!mounted) return;
     setState(() {
@@ -78,22 +95,26 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       }
     });
     if (!result) {
-      _showSnack(
-        ref.read(authProvider).error ?? 'Could not send the code',
-      );
+      _showSnack(ref.read(authProvider).error ?? 'Could not send the code');
     }
   }
 
   // ── Step 2: verify code ─────────────────────────────────────────────────
 
   Future<void> _verifyCode() async {
-    if (!_codeFormKey.currentState!.validate()) return;
-    setState(() => _isLoading = true);
+    final code = _codeController.text.trim();
+    if (!RegExp(r'^\d{6}$').hasMatch(code)) {
+      setState(() => _codeError = 'Enter the 6-digit code');
+      return;
+    }
+    setState(() {
+      _codeError = null;
+      _isLoading = true;
+    });
 
-    final result = await ref.read(authProvider.notifier).verifyResetCode(
-          email: _emailController.text.trim(),
-          code: _codeController.text.trim(),
-        );
+    final result = await ref
+        .read(authProvider.notifier)
+        .verifyResetCode(email: _emailController.text.trim(), code: code);
 
     if (!mounted) return;
     setState(() {
@@ -104,16 +125,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       }
     });
     if (!result) {
-      _showSnack(
-        ref.read(authProvider).error ?? 'Invalid or expired code',
-      );
+      _showSnack(ref.read(authProvider).error ?? 'Invalid or expired code');
     }
   }
 
   // ── Step 3: set new password ────────────────────────────────────────────
 
-  String? _validatePassword(String? v) {
-    final value = v ?? '';
+  String? _validatePassword(String value) {
     if (value.length < 8) return 'At least 8 characters';
     if (!RegExp(r'[A-Za-z]').hasMatch(value)) return 'Add a letter';
     if (!RegExp(r'\d').hasMatch(value)) return 'Add a number';
@@ -121,10 +139,26 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   Future<void> _setPassword() async {
-    if (!_passwordFormKey.currentState!.validate()) return;
-    setState(() => _isLoading = true);
+    final passwordError = _validatePassword(_passwordController.text);
+    final confirmError = _confirmController.text != _passwordController.text
+        ? 'Passwords do not match'
+        : null;
+    if (passwordError != null || confirmError != null) {
+      setState(() {
+        _passwordError = passwordError;
+        _confirmError = confirmError;
+      });
+      return;
+    }
+    setState(() {
+      _passwordError = null;
+      _confirmError = null;
+      _isLoading = true;
+    });
 
-    final result = await ref.read(authProvider.notifier).resetPassword(
+    final result = await ref
+        .read(authProvider.notifier)
+        .resetPassword(
           token: _resetToken ?? '',
           newPassword: _passwordController.text,
         );
@@ -136,9 +170,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       _showSnack('Password updated — sign in with your new password');
       context.pop();
     } else {
-      _showSnack(
-        ref.read(authProvider).error ?? 'Could not reset password',
-      );
+      _showSnack(ref.read(authProvider).error ?? 'Could not reset password');
     }
   }
 
@@ -146,318 +178,272 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background(context),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: _step > 1
-              ? () => setState(() => _step -= 1)
-              : () => goBack(context),
-        ),
-        title: const Text('Reset Password'),
-      ),
-      body: NatureBackground.wrap(
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: OneUISpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    final c = CgColors.of(context);
+    return CgPageScaffold(
+      child: ListView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: const EdgeInsets.only(bottom: 32),
+        children: [
+          CgPageTitle(
+            title: 'Reset Password',
+            subtitle: 'Step $_step of 3',
+            onBack: _goBackStep,
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: Row(
               children: [
-                const SizedBox(height: OneUISpacing.lg),
-                _buildStepIndicator(),
-                const SizedBox(height: OneUISpacing.xxl),
-                if (_step == 1) _buildEmailStep(),
-                if (_step == 2) _buildCodeStep(),
-                if (_step == 3) _buildPasswordStep(),
+                for (var i = 1; i <= 3; i++) ...[
+                  _StepDot(number: i, active: _step >= i),
+                  if (i < 3)
+                    Expanded(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        height: 2,
+                        margin: const EdgeInsets.symmetric(horizontal: 6),
+                        color: _step > i ? c.primary : c.line,
+                      ),
+                    ),
+                ],
               ],
             ),
           ),
-        ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+            child: CgCard(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (_step == 1) _buildEmailStep(),
+                  if (_step == 2) _buildCodeStep(),
+                  if (_step == 3) _buildPasswordStep(),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildStepIndicator() {
-    Widget dot(int number) {
-      final active = _step >= number;
-      return AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        width: 28,
-        height: 28,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: active ? AppColors.primary(context) : AppColors.divider(context),
-        ),
-        child: Center(
-          child: Text(
-            '$number',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: active ? Colors.white : AppColors.textHint(context),
-            ),
-          ),
-        ),
-      );
-    }
-
-    Widget line(bool done) => Expanded(
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            height: 2,
-            margin: const EdgeInsets.symmetric(horizontal: 6),
-            color: done
-                ? AppColors.primary(context)
-                : AppColors.divider(context),
-          ),
-        );
-
-    return Row(
-      children: [
-        dot(1),
-        line(_step > 1),
-        dot(2),
-        line(_step > 2),
-        dot(3),
-      ],
-    );
-  }
-
-  Widget _buildTitle(String title, String subtitle) {
+  Widget _buildStepTitle(String title, String subtitle) {
+    final c = CgColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary(context),
-          ),
-        ),
-        const SizedBox(height: OneUISpacing.sm),
-        Text(
-          subtitle,
-          style: TextStyle(fontSize: 14, color: AppColors.textSecondary(context)),
-        ),
-        const SizedBox(height: OneUISpacing.xxl),
+        Text(title, style: CgType.h1Bold.copyWith(fontSize: 24, color: c.text)),
+        const SizedBox(height: 6),
+        Text(subtitle, style: CgType.b14.copyWith(color: c.text2)),
+        const SizedBox(height: 20),
       ],
     );
   }
 
   Widget _buildEmailStep() {
+    final c = CgColors.of(context);
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildTitle(
+        _buildStepTitle(
           'Forgot Password',
-          'Enter your email and we\'ll send you a 6-digit code',
+          "Enter your email and we'll send you a 6-digit code",
         ),
-        Form(
-          key: _emailFormKey,
-          child: GlassInput(
-            controller: _emailController,
-            hintText: 'Enter your email',
-            prefixIcon: Icons.email_outlined,
-            keyboardType: TextInputType.emailAddress,
-            textInputAction: TextInputAction.done,
-            enabled: !_isLoading,
-            validator: (v) {
-              final value = (v ?? '').trim();
-              if (value.isEmpty) return 'Enter your email';
-              if (!value.contains('@')) return 'Enter a valid email';
-              return null;
-            },
-          ),
+        CgTextField(
+          label: 'Email',
+          controller: _emailController,
+          icon: Icons.email_outlined,
+          hint: 'Enter your email',
+          errorText: _emailError,
+          keyboardType: TextInputType.emailAddress,
+          textInputAction: TextInputAction.done,
+          enabled: !_isLoading,
+          onSubmitted: (_) => _requestCode(),
         ),
-        const SizedBox(height: OneUISpacing.xxl),
-        CGButton(
-          label: 'Send Code',
-          isLoading: _isLoading,
-          onPressed: _requestCode,
+        const SizedBox(height: 20),
+        CgPillButton(
+          onTap: _requestCode,
+          loading: _isLoading,
+          child: const Text('Send Code'),
         ),
-        const SizedBox(height: OneUISpacing.xxl),
+        const SizedBox(height: 16),
         Center(
-          child: GestureDetector(
-            onTap: () => context.pop(),
-            child: Text.rich(
-              TextSpan(
-                text: 'Remember your password? ',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary(context),
-                ),
-                children: [
-                  TextSpan(
-                    text: 'Sign In',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary(context),
-                    ),
+          child: Text.rich(
+            TextSpan(
+              text: 'Remember your password? ',
+              style: CgType.b14.copyWith(color: c.text2),
+              children: [
+                TextSpan(
+                  text: 'Sign In',
+                  style: CgType.b14.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: c.primary,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
-        const SizedBox(height: OneUISpacing.xxl),
       ],
     );
   }
 
   Widget _buildCodeStep() {
+    final c = CgColors.of(context);
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildTitle(
+        _buildStepTitle(
           'Enter the Code',
           'We sent a 6-digit code to ${_emailController.text.trim()}.\n'
               'It expires in 10 minutes.',
         ),
         if (_devCode != null) ...[
           Container(
-            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 16),
             padding: const EdgeInsets.all(14),
-            margin: const EdgeInsets.only(bottom: OneUISpacing.lg),
             decoration: BoxDecoration(
-              color: AppColors.primarySoft(context),
-              borderRadius: BorderRadius.circular(14),
+              color: c.mint,
+              borderRadius: BorderRadius.circular(CgRadii.input),
             ),
             child: Row(
               children: [
-                Icon(Icons.developer_mode_rounded,
-                    size: 20, color: AppColors.primary(context)),
+                Icon(
+                  Icons.developer_mode_rounded,
+                  size: 20,
+                  color: c.primary,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'Development code: $_devCode',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary(context),
+                    style: CgType.l12.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: c.text,
                     ),
                   ),
                 ),
                 TextButton(
                   onPressed: () {
                     _codeController.text = _devCode!;
+                    setState(() => _codeError = null);
                   },
+                  style: TextButton.styleFrom(foregroundColor: c.primary),
                   child: const Text('Use it'),
                 ),
               ],
             ),
           ),
         ],
-        Form(
-          key: _codeFormKey,
-          child: GlassInput(
-            controller: _codeController,
-            hintText: '6-digit code',
-            prefixIcon: Icons.pin_rounded,
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.done,
-            enabled: !_isLoading,
-            validator: (v) {
-              final value = (v ?? '').trim();
-              if (!RegExp(r'^\d{6}$').hasMatch(value)) {
-                return 'Enter the 6-digit code';
-              }
-              return null;
-            },
-          ),
+        CgTextField(
+          label: 'Code',
+          controller: _codeController,
+          icon: Icons.pin_rounded,
+          hint: '6-digit code',
+          errorText: _codeError,
+          keyboardType: TextInputType.number,
+          textInputAction: TextInputAction.done,
+          enabled: !_isLoading,
+          onSubmitted: (_) => _verifyCode(),
         ),
-        const SizedBox(height: OneUISpacing.xxl),
-        CGButton(
-          label: 'Verify Code',
-          isLoading: _isLoading,
-          onPressed: _verifyCode,
+        const SizedBox(height: 20),
+        CgPillButton(
+          onTap: _verifyCode,
+          loading: _isLoading,
+          child: const Text('Verify Code'),
         ),
-        const SizedBox(height: OneUISpacing.md),
+        const SizedBox(height: 8),
         Center(
           child: TextButton(
-            onPressed: _isLoading
-                ? null
-                : () async {
-                    setState(() => _isLoading = true);
-                    final ok = await ref
-                        .read(authProvider.notifier)
-                        .requestCode(email: _emailController.text.trim());
-                    if (!mounted) return;
-                    setState(() {
-                      _isLoading = false;
-                      if (ok) {
-                        _devCode =
-                            ref.read(authProvider.notifier).lastResetCode;
-                        _codeController.clear();
-                      }
-                    });
-                    _showSnack(ok ? 'A new code was sent' : 'Could not send a new code');
-                  },
-            child: Text(
-              'Didn\'t receive it? Resend code',
-              style: TextStyle(fontSize: 14, color: AppColors.primary(context)),
-            ),
+            onPressed: _isLoading ? null : _resendCode,
+            style: TextButton.styleFrom(foregroundColor: c.primary),
+            child: const Text("Didn't receive it? Resend code"),
           ),
         ),
-        const SizedBox(height: OneUISpacing.lg),
       ],
     );
   }
 
+  Future<void> _resendCode() async {
+    setState(() => _isLoading = true);
+    final ok = await ref
+        .read(authProvider.notifier)
+        .requestCode(email: _emailController.text.trim());
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+      if (ok) {
+        _devCode = ref.read(authProvider.notifier).lastResetCode;
+        _codeController.clear();
+      }
+    });
+    _showSnack(ok ? 'A new code was sent' : 'Could not send a new code');
+  }
+
   Widget _buildPasswordStep() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildTitle('New Password', 'Choose a strong password for your account'),
-        Form(
-          key: _passwordFormKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              GlassInput(
-                controller: _passwordController,
-                hintText: 'New password',
-                prefixIcon: Icons.lock_outline_rounded,
-                obscureText: _obscurePassword,
-                enabled: !_isLoading,
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword
-                        ? Icons.visibility_off_rounded
-                        : Icons.visibility_rounded,
-                    size: 20,
-                  ),
-                  onPressed: () =>
-                      setState(() => _obscurePassword = !_obscurePassword),
-                ),
-                validator: _validatePassword,
-              ),
-              const SizedBox(height: OneUISpacing.md),
-              GlassInput(
-                controller: _confirmController,
-                hintText: 'Confirm new password',
-                prefixIcon: Icons.lock_outline_rounded,
-                obscureText: _obscurePassword,
-                enabled: !_isLoading,
-                validator: (v) {
-                  if ((v ?? '') != _passwordController.text) {
-                    return 'Passwords do not match';
-                  }
-                  return null;
-                },
-              ),
-            ],
-          ),
+        _buildStepTitle(
+          'New Password',
+          'Choose a strong password for your account',
         ),
-        const SizedBox(height: OneUISpacing.xxl),
-        CGButton(
-          label: 'Set New Password',
-          isLoading: _isLoading,
-          onPressed: _setPassword,
+        CgTextField(
+          label: 'New password',
+          controller: _passwordController,
+          icon: Icons.lock_outline_rounded,
+          hint: 'New password',
+          errorText: _passwordError,
+          obscure: true,
+          enabled: !_isLoading,
         ),
-        const SizedBox(height: OneUISpacing.xxl),
+        const SizedBox(height: 12),
+        CgTextField(
+          label: 'Confirm password',
+          controller: _confirmController,
+          icon: Icons.lock_outline_rounded,
+          hint: 'Confirm new password',
+          errorText: _confirmError,
+          obscure: true,
+          enabled: !_isLoading,
+        ),
+        const SizedBox(height: 20),
+        CgPillButton(
+          onTap: _setPassword,
+          loading: _isLoading,
+          child: const Text('Set New Password'),
+        ),
       ],
+    );
+  }
+}
+
+class _StepDot extends StatelessWidget {
+  const _StepDot({required this.number, required this.active});
+
+  final int number;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = CgColors.of(context);
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      width: 28,
+      height: 28,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        gradient: active ? c.gMain : null,
+        color: active ? null : c.line,
+        shape: BoxShape.circle,
+      ),
+      child: Text(
+        '$number',
+        style: CgType.l12.copyWith(
+          fontWeight: FontWeight.w800,
+          color: active ? c.onPrimary : c.text2,
+        ),
+      ),
     );
   }
 }

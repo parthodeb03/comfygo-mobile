@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/design_tokens.dart';
 
 /// Soft, nature-inspired backdrop: a gentle green wash, glowing sunlit blobs
 /// and a faint hill silhouette. Keeps screens from looking empty while text
@@ -14,7 +15,7 @@ class NatureBackground extends StatelessWidget {
   static Widget wrap({required Widget child}) => Stack(
     fit: StackFit.expand,
     children: [
-      const Positioned.fill(child: NatureBackground()),
+      const Positioned.fill(child: RepaintBoundary(child: NatureBackground())),
       child,
     ],
   );
@@ -22,8 +23,9 @@ class NatureBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final painter = _NaturePainter(dark: AppColors.isDark(context));
-    if (child == null) return CustomPaint(painter: painter);
-    return CustomPaint(painter: painter, child: child);
+    return RepaintBoundary(
+      child: CustomPaint(painter: painter, child: child),
+    );
   }
 }
 
@@ -68,15 +70,15 @@ class PhotoBackground extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: dark
-                ? const [
-                    Color(0xD90B1610),
-                    Color(0x9E0C1710),
-                    Color(0xC408120C),
+                ? [
+                    ComfyColors.scrim.withValues(alpha: 0.85),
+                    ComfyColors.scrim.withValues(alpha: 0.62),
+                    ComfyColors.scrim.withValues(alpha: 0.76),
                   ]
-                : const [
-                    Color(0xC4EDF6EA),
-                    Color(0xA8DFEDE0),
-                    Color(0xD6D2E6D6),
+                : [
+                    ComfyColors.backgroundLight.withValues(alpha: 0.77),
+                    ComfyColors.primaryContainerLight.withValues(alpha: 0.66),
+                    ComfyColors.primaryContainerLight.withValues(alpha: 0.84),
                   ],
           ),
         ),
@@ -85,7 +87,7 @@ class PhotoBackground extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        if (child == null) const ColoredBox(color: Color(0xFFE3F0E7)),
+        if (child == null) const ColoredBox(color: ComfyColors.greenSoftLight),
         photo,
         wash,
         ?child,
@@ -102,7 +104,6 @@ class _NaturePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
 
-    // Base wash
     canvas.drawRect(
       rect,
       Paint()
@@ -110,8 +111,8 @@ class _NaturePainter extends CustomPainter {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: dark
-              ? const [Color(0xFF101713), Color(0xFF0F1512)]
-              : const [Color(0xFFF5FAF5), Color(0xFFEAF3EC)],
+              ? const [ComfyColors.backgroundDark, ComfyColors.surfaceDark]
+              : const [ComfyColors.surfaceLight, ComfyColors.backgroundLight],
         ).createShader(rect),
     );
 
@@ -128,15 +129,13 @@ class _NaturePainter extends CustomPainter {
       );
     }
 
-    final green = dark ? const Color(0xFF2FA96C) : const Color(0xFF1B7A4F);
-    final leaf = dark ? const Color(0xFF7BC47F) : const Color(0xFF8BCB6B);
+    final green = dark ? ComfyColors.primaryDark : ComfyColors.primaryLight;
+    final leaf = dark ? ComfyColors.secondaryDark : ComfyColors.secondaryLight;
 
-    // Sunlit glow top-right, cool shade mid-left, warm meadow bottom-right
     blob(0.92, 0.02, 0.75, green.withValues(alpha: dark ? 0.20 : 0.14));
     blob(0.02, 0.34, 0.60, leaf.withValues(alpha: dark ? 0.12 : 0.10));
     blob(0.80, 0.72, 0.70, green.withValues(alpha: dark ? 0.14 : 0.08));
 
-    // Gentle hill silhouette near the bottom
     final hill = Path()
       ..moveTo(0, size.height)
       ..lineTo(0, size.height * 0.88)

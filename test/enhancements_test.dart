@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:comfygo/core/theme/theme.dart';
-import 'package:comfygo/core/widgets/widgets.dart';
+import 'package:comfygo/core/widgets/comfy_ui.dart';
 import 'package:comfygo/data/tourist_spots.dart';
 import 'package:comfygo/features/admin/screens/admin_panel_screen.dart';
 import 'package:comfygo/features/bookings/screens/booking_form_screen.dart';
@@ -186,8 +186,11 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('How to get there'), findsOneWidget);
       expect(find.text('Best time to visit'), findsOneWidget);
-      expect(find.text('Travel tips'), findsOneWidget);
       expect(find.text('Find Places to Stay'), findsOneWidget);
+      // The travel tips section sits below the fold — scroll to it.
+      await tester.drag(find.byType(ListView).first, const Offset(0, -1600));
+      await tester.pumpAndSettle();
+      expect(find.text('Travel tips'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
@@ -199,8 +202,8 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Tourist Spots'), findsOneWidget);
-      expect(find.widgetWithText(CGChip, 'Chittagong'), findsOneWidget);
-      await tester.tap(find.widgetWithText(CGChip, 'Chittagong'));
+      expect(find.widgetWithText(CgChip, 'Chittagong'), findsOneWidget);
+      await tester.tap(find.widgetWithText(CgChip, 'Chittagong'));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text("Cox's Bazar"));
       expect(find.text("Cox's Bazar"), findsOneWidget);

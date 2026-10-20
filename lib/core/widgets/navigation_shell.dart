@@ -2,101 +2,110 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../state/auth_provider.dart';
+import '../responsive/responsive.dart';
+import '../theme/comfy_design.dart';
+import 'comfy_ui.dart';
 
+/// App shell for the five primary tabs.
+///
+/// Route order is the tab order: Home, Explore, Bookings, Saved, Profile.
 class NavigationShell extends ConsumerWidget {
-  static const routes = <String>['/', '/destinations', '/bookings', '/profile'];
+  static const List<String> routes = <String>[
+    '/',
+    '/destinations',
+    '/bookings',
+    '/saved',
+    '/profile',
+  ];
+
   final Widget? child;
+
   const NavigationShell({super.key, this.child});
+
+  static int indexFor(String path) {
+    if (path == '/') return 0;
+    if (path.startsWith('/destinations')) return 1;
+    if (path.startsWith('/bookings')) return 2;
+    if (path.startsWith('/saved')) return 3;
+    if (path.startsWith('/profile')) return 4;
+    return 0;
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final path = GoRouterState.of(context).uri.path;
-    final selectedIndex = path == '/bookings'
-        ? 1
-        : path == '/profile'
-            ? 2
-            : 0;
-    final user = ref.watch(currentUserProvider);
+    final selectedIndex = indexFor(path);
+    final wide = MediaQuery.sizeOf(context).width >= Breakpoints.medium;
+    final c = CgColors.of(context);
 
-    void navigate(int value) {
-      switch (value) {
-        case 0:
-          context.go('/destinations');
-          return;
-        case 1:
-          context.go('/bookings');
-          return;
-        case 2:
-          context.go('/profile');
-          return;
-      }
+    void navigate(int index) {
+      if (index < 0 || index >= routes.length) return;
+      context.go(routes[index]);
     }
 
-    final wide = MediaQuery.sizeOf(context).width >= 840;
-    return Scaffold(
-      body: wide
-          ? Row(
-              children: [
-                SafeArea(
-                  child: NavigationRail(
-                    selectedIndex: selectedIndex,
-                    onDestinationSelected: navigate,
-                    labelType: NavigationRailLabelType.all,
-                    destinations: const [
-                      NavigationRailDestination(
-                        icon: Icon(Icons.search, size: 30),
-                        label: Text('Search'),
-                      ),
-                      NavigationRailDestination(
-                        icon: Icon(Icons.bookmark_border, size: 30),
-                        label: Text('Bookings'),
-                      ),
-                      NavigationRailDestination(
-                        icon: Icon(Icons.person, size: 30),
-                        label: Text('Profile'),
-                      ),
-                    ],
+    if (wide) {
+      return Scaffold(
+        backgroundColor: c.bg,
+        body: Row(
+          children: [
+            SafeArea(
+              child: NavigationRail(
+                backgroundColor: c.surface,
+                selectedIndex: selectedIndex,
+                onDestinationSelected: navigate,
+                labelType: NavigationRailLabelType.all,
+                minWidth: 88,
+                indicatorColor: c.mint,
+                selectedIconTheme: IconThemeData(color: c.primary),
+                unselectedIconTheme: IconThemeData(color: c.text2),
+                selectedLabelTextStyle: CgType.l12.copyWith(
+                  color: c.text,
+                  fontWeight: FontWeight.w700,
+                ),
+                unselectedLabelTextStyle: CgType.l12.copyWith(color: c.text2),
+                destinations: const [
+                  NavigationRailDestination(
+                    icon: Icon(Icons.home_outlined),
+                    selectedIcon: Icon(Icons.home_rounded),
+                    label: Text('Home'),
                   ),
-                ),
-                const VerticalDivider(width: 1),
-                Expanded(child: child ?? const SizedBox.shrink()),
-              ],
-            )
-          : child,
-      bottomNavigationBar: wide
-          ? null
-          : BottomNavigationBar(
-              currentIndex: selectedIndex,
-              onTap: navigate,
-              showSelectedLabels: false,
-              showUnselectedLabels: false,
-              type: BottomNavigationBarType.fixed,
-              items: [
-                const BottomNavigationBarItem(
-                  icon: Icon(Icons.search, size: 30),
-                  label: '',
-                ),
-                const BottomNavigationBarItem(
-                  icon: Icon(Icons.bookmark_border, size: 30),
-                  label: '',
-                ),
-                BottomNavigationBarItem(
-                  icon: CircleAvatar(
-                    radius: 15,
-                    backgroundImage: user?.profileImage?.isNotEmpty == true
-                        ? NetworkImage(user!.profileImage!)
-                        : null,
-                    child: user?.profileImage?.isNotEmpty == true
-                        ? null
-                        : const Icon(Icons.person, size: 18),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.search_rounded),
+                    selectedIcon: Icon(Icons.search_rounded),
+                    label: Text('Explore'),
                   ),
-                  label: '',
-                ),
-              ],
+                  NavigationRailDestination(
+                    icon: Icon(Icons.calendar_today_outlined),
+                    selectedIcon: Icon(Icons.calendar_today_rounded),
+                    label: Text('Bookings'),
+                  ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.favorite_border_rounded),
+                    selectedIcon: Icon(Icons.favorite_rounded),
+                    label: Text('Saved'),
+                  ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.person_outline_rounded),
+                    selectedIcon: Icon(Icons.person_rounded),
+                    label: Text('Profile'),
+                  ),
+                ],
+              ),
             ),
+            VerticalDivider(width: 1, color: c.line),
+            Expanded(child: child ?? const SizedBox.shrink()),
+          ],
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: c.bg,
+      body: child ?? const SizedBox.shrink(),
+      bottomNavigationBar: CgBottomNav(
+        currentIndex: selectedIndex,
+        onSelected: navigate,
+      ),
     );
   }
 }
-
-

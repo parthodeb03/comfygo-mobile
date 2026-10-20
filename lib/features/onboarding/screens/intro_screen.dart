@@ -1,13 +1,15 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/theme.dart';
-import '../../../core/widgets/widgets.dart';
-import '../../../features/onboarding/screens/splash_screen.dart';
+import '../../../core/theme/comfy_design.dart';
+import '../../../core/widgets/comfy_ui.dart';
+import 'splash_screen.dart';
 
-/// First-run introduction slides (shown once, before login).
+/// First-run artwork screen, reproduced from the reference intro page.
 class IntroScreen extends StatefulWidget {
   const IntroScreen({super.key});
 
@@ -15,215 +17,254 @@ class IntroScreen extends StatefulWidget {
   State<IntroScreen> createState() => _IntroScreenState();
 }
 
-class _IntroScreenState extends State<IntroScreen> {
-  final _controller = PageController();
-  int _page = 0;
+class _IntroScreenState extends State<IntroScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _float;
 
-  static const _slides = [
-    _SlideData(
-      icon: Icons.explore_rounded,
-      title: 'Discover Bangladesh',
-      body:
-          'From the beaches of Cox\'s Bazar to the tea gardens of Sylhet — '
-          'explore destinations hand-picked for every kind of traveler.',
-      image: 'assets/images/bg_sundarbans.jpg',
-    ),
-    _SlideData(
-      icon: Icons.hotel_rounded,
-      title: 'Book Stays & Transport',
-      body:
-          'Hotels, buses, trains and guides in one place. Pick your dates, '
-          'choose your seats, and pay with bKash, Nagad, card or cash.',
-      image: 'assets/images/bg_hotels.jpg',
-    ),
-    _SlideData(
-      icon: Icons.confirmation_number_rounded,
-      title: 'Trips in One Tap',
-      body:
-          'Your bookings, tickets and invoices stay together — confirm, '
-          'cancel or review every trip from your profile.',
-      image: 'assets/images/bg_bookings.jpg',
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _float = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 5),
+    )..repeat();
+  }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _float.dispose();
     super.dispose();
   }
 
-  Future<void> _finish() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(SplashScreen.introSeenKey, true);
-    if (!mounted) return;
-    context.go('/login');
+  Future<void> _markSeen() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(SplashScreen.introSeenKey, true);
+    } catch (_) {
+      // The intro is still usable if preferences are unavailable.
+    }
   }
 
-  void _next() {
-    if (_page < _slides.length - 1) {
-      _controller.nextPage(
-        duration: OneUISpacing.animSlow,
-        curve: Curves.easeOutCubic,
-      );
-    } else {
-      _finish();
-    }
+  Future<void> _start() async {
+    await _markSeen();
+    if (mounted) context.go('/login');
+  }
+
+  Future<void> _signUp() async {
+    await _markSeen();
+    if (mounted) context.go('/signup');
   }
 
   @override
   Widget build(BuildContext context) {
-    final isLast = _page == _slides.length - 1;
+    final width = MediaQuery.sizeOf(context).width;
     return Scaffold(
-      backgroundColor: AppColors.background(context),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
-                child: TextButton(
-                  onPressed: _finish,
-                  child: Text(
-                    'Skip',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary(context),
+      backgroundColor: CgColors.light.bg,
+      body: CgBackground(
+        gradient: CgColors.light.gSage,
+        child: SafeArea(
+          bottom: false,
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight:
+                    MediaQuery.sizeOf(context).height -
+                    MediaQuery.paddingOf(context).top,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 56, 24, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Explore',
+                          style: CgType.t20.copyWith(
+                            fontSize: 26,
+                            height: 32 / 26,
+                            color: CgColors.ink,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Transform.rotate(
+                          angle: -2 * math.pi / 180,
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            color: CgColors.deepGreen,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 2,
+                            ),
+                            child: Text(
+                              'Worldwide',
+                              style: CgType.t20.copyWith(
+                                fontSize: 26,
+                                height: 32 / 26,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: PageView.builder(
-                controller: _controller,
-                itemCount: _slides.length,
-                onPageChanged: (i) => setState(() => _page = i),
-                itemBuilder: (context, i) => _buildSlide(_slides[i]),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(_slides.length, (i) {
-                      final active = i == _page;
-                      return AnimatedContainer(
-                        duration: OneUISpacing.animNormal,
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: active ? 24 : 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: active
-                              ? AppColors.primary(context)
-                              : AppColors.divider(context),
-                          borderRadius: BorderRadius.circular(4),
+                  const SizedBox(height: 6),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: AnimatedBuilder(
+                      animation: _float,
+                      builder: (context, child) {
+                        final offset =
+                            math.sin(_float.value * math.pi * 2) * -8.0;
+                        return Transform.translate(
+                          offset: Offset(0, offset),
+                          child: child,
+                        );
+                      },
+                      child: SizedBox(
+                        height: 300,
+                        width: width,
+                        child: SvgPicture.asset(
+                          'assets/illustrations/intro_scene.svg',
+                          fit: BoxFit.contain,
                         ),
-                      );
-                    }),
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: OneUISpacing.xxl),
-                  CGButton(
-                    label: isLast ? 'Get Started' : 'Next',
-                    onPressed: isLast ? _finish : _next,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 30, 24, 32),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text.rich(
+                          TextSpan(
+                            children: [
+                              const TextSpan(text: 'Disc'),
+                              TextSpan(
+                                text: 'ov',
+                                style: CgType.t20.copyWith(
+                                  fontSize: 23,
+                                  height: 34 / 23,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const TextSpan(
+                                text: 'er The World With Travel Gui',
+                              ),
+                              TextSpan(
+                                text: 'd',
+                                style: CgType.t20.copyWith(
+                                  fontSize: 23,
+                                  height: 34 / 23,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const TextSpan(text: 'er'),
+                            ],
+                          ),
+                          style: CgType.t20.copyWith(
+                            fontSize: 23,
+                            height: 34 / 23,
+                            fontWeight: FontWeight.w700,
+                            color: CgColors.ink,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Explore destinations, cultures and hidden gems '
+                          'with our travel guide.',
+                          style: CgType.b14.copyWith(color: CgColors.inkSoft),
+                        ),
+                        const SizedBox(height: 20),
+                        CgPillButton(
+                          width: double.infinity,
+                          semanticLabel: "Let's get started",
+                          onTap: _start,
+                          child: SizedBox(
+                            height: 56,
+                            width: double.infinity,
+                            child: Stack(
+                              children: [
+                                Positioned(
+                                  left: 8,
+                                  top: 8,
+                                  child: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.play_arrow_rounded,
+                                      size: 18,
+                                      color: CgColors.deepGreen,
+                                    ),
+                                  ),
+                                ),
+                                Positioned.fill(
+                                  left: 56,
+                                  right: 16,
+                                  child: Center(
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Text("Let’s get started!"),
+                                          const SizedBox(width: 8),
+                                          Icon(
+                                            Icons.arrow_forward_rounded,
+                                            size: 16,
+                                            color: CgColors.light.onPrimary,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Text(
+                              'You do not have any account? ',
+                              style: CgType.b14.copyWith(
+                                fontSize: 14,
+                                color: CgColors.inkSoft,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: _signUp,
+                              child: Text(
+                                'Sign Up',
+                                style: CgType.b14.copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: CgColors.ink,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
   }
-
-  Widget _buildSlide(_SlideData slide) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Hero(
-            tag: 'intro-${slide.title}',
-            child: Container(
-              width: double.infinity,
-              height: 240,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(28),
-                image: DecorationImage(
-                  image: AssetImage(slide.image),
-                  fit: BoxFit.cover,
-                ),
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: 0.45),
-                    ],
-                  ),
-                ),
-                child: Align(
-                  alignment: Alignment.bottomLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary(context),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Icon(slide.icon, size: 26, color: Colors.white),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: OneUISpacing.xxxl),
-          Text(
-            slide.title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
-              color: AppColors.textPrimary(context),
-            ),
-          ),
-          const SizedBox(height: OneUISpacing.md),
-          Text(
-            slide.body,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              height: 1.5,
-              color: AppColors.textSecondary(context),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SlideData {
-  final IconData icon;
-  final String title;
-  final String body;
-  final String image;
-
-  const _SlideData({
-    required this.icon,
-    required this.title,
-    required this.body,
-    required this.image,
-  });
 }

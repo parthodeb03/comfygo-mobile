@@ -1,77 +1,70 @@
-/// Samsung One UI Spacing & Dimension Constants
-/// Matches Samsung's generous padding and touch target sizes
+import 'design_tokens.dart';
+
+/// Spacing, shape and motion names used across the app.
+///
+/// Values live only in `design_tokens.dart`. The legacy names are preserved so
+/// existing widgets keep compiling while they migrate.
 class OneUISpacing {
   OneUISpacing._();
 
-  // ═══════════════════════════════════════════════════
-  // SPACING SCALE (8px base grid)
-  // ═══════════════════════════════════════════════════
-  static const double xs = 4;
-  static const double sm = 8;
-  static const double md = 12;
-  static const double lg = 16;
-  static const double xl = 20;
-  static const double xxl = 24;
-  static const double xxxl = 32;
-  static const double xxxxl = 40;
-  static const double huge = 48;
-  static const double massive = 64;
+  // Spacing scale (4pt grid)
+  static const double xxs = ComfySpacing.xxs;
+  static const double xs = ComfySpacing.xs;
+  static const double sm = ComfySpacing.sm;
+  static const double md = ComfySpacing.md;
+  static const double lg = ComfySpacing.lg;
+  static const double xl = ComfySpacing.xl;
+  static const double xxl = ComfySpacing.xxl;
+  static const double xxxl = ComfySpacing.xxxl;
+  static const double xxxxl = ComfySpacing.xxxxl;
+  static const double huge = ComfySpacing.huge;
+  static const double massive = ComfySpacing.massive;
 
-  // ═══════════════════════════════════════════════════
-  // BORDER RADIUS - One UI generous radii
-  // ═══════════════════════════════════════════════════
-  static const double radiusSm = 8;
-  static const double radiusMd = 12;
-  static const double radiusLg = 16;
-  static const double radiusXl = 20;
-  static const double radiusXxl = 24;
-  static const double radiusRound = 100;
+  // Radii
+  static const double radiusSm = ComfyRadii.sm;
+  static const double radiusInput = ComfyRadii.input;
+  static const double radiusMd = ComfyRadii.md;
+  static const double radiusLg = ComfyRadii.lg;
+  static const double radiusCard = ComfyRadii.card;
+  static const double radiusXl = ComfyRadii.xl;
+  static const double radiusXxl = ComfyRadii.xxl;
+  static const double radiusSheet = ComfyRadii.sheet;
+  static const double radiusRound = ComfyRadii.pill;
 
-  // ═══════════════════════════════════════════════════
-  // TOUCH TARGETS - Minimum 48dp per One UI
-  // ═══════════════════════════════════════════════════
+  // Touch targets
   static const double touchTargetMin = 48;
   static const double touchTargetComfortable = 56;
   static const double touchTargetLarge = 64;
 
-  // ═══════════════════════════════════════════════════
-  // ELEVATION / SHADOW
-  // ═══════════════════════════════════════════════════
+  // Elevation
   static const double elevationNone = 0;
   static const double elevationLow = 1;
   static const double elevationMedium = 4;
   static const double elevationHigh = 8;
 
-  // ═══════════════════════════════════════════════════
-  // PAGE PADDING
-  // ═══════════════════════════════════════════════════
-  static const double pageHorizontal = 16;
-  static const double pageVertical = 24;
+  // Page padding
+  static const double pageCompact = ComfySpacing.pageCompact;
+  static const double pageMedium = ComfySpacing.pageMedium;
+  static const double pageExpanded = ComfySpacing.pageExpanded;
+  static const double pageHorizontal = ComfySpacing.pageCompact;
+  static const double pageVertical = ComfySpacing.xxl;
 
-  // ═══════════════════════════════════════════════════
-  // APP BAR HEIGHT
-  // ═══════════════════════════════════════════════════
+  // Chrome
   static const double appBarHeight = 56;
-  static const double bottomNavHeight = 64;
+  static const double bottomNavHeight = 80;
 
-  // ═══════════════════════════════════════════════════
-  // CARD DIMENSIONS
-  // ═══════════════════════════════════════════════════
+  // Cards
   static const double cardMinHeight = 80;
   static const double cardImageHeight = 200;
   static const double cardThumbnailSize = 56;
 
-  // ═══════════════════════════════════════════════════
-  // LIST ITEM HEIGHTS
-  // ═══════════════════════════════════════════════════
+  // Lists
   static const double listItemCompact = 48;
   static const double listItemStandard = 56;
   static const double listItemComfortable = 64;
   static const double listItemExpanded = 72;
 
-  // ═══════════════════════════════════════════════════
-  // AVATAR / ICON SIZES
-  // ═══════════════════════════════════════════════════
+  // Icons/avatars
   static const double iconSm = 16;
   static const double iconMd = 24;
   static const double iconLg = 32;
@@ -81,11 +74,9 @@ class OneUISpacing {
   static const double avatarLg = 56;
   static const double avatarXl = 80;
 
-  // ═══════════════════════════════════════════════════
-  // ANIMATION DURATIONS
-  // ═══════════════════════════════════════════════════
-  static const Duration animFast = Duration(milliseconds: 150);
-  static const Duration animNormal = Duration(milliseconds: 250);
-  static const Duration animSlow = Duration(milliseconds: 400);
-  static const Duration animVerySlow = Duration(milliseconds: 600);
+  // Motion
+  static const Duration animFast = ComfyDurations.fast;
+  static const Duration animNormal = ComfyDurations.base;
+  static const Duration animSlow = ComfyDurations.slow;
+  static const Duration animVerySlow = ComfyDurations.verySlow;
 }

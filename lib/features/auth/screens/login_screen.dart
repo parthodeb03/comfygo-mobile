@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/theme.dart';
-import '../../../core/widgets/widgets.dart';
+import '../../../core/theme/comfy_design.dart';
+import '../../../core/widgets/comfy_ui.dart';
 import '../../../state/auth_provider.dart';
+import '../widgets/auth_shell.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -14,284 +14,284 @@ class LoginScreen extends ConsumerStatefulWidget {
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen>
-    with SingleTickerProviderStateMixin {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
-  bool _isLoading = false;
-
-  late AnimationController _animController;
-  late Animation<double> _fadeAnim;
-  late Animation<Offset> _slideAnim;
-
-  // Admin long-press counter
-  int _logoTapCount = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _fadeAnim = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
-    );
-    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero)
-        .animate(
-          CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
-        );
-    _animController.forward();
-  }
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _emailController = TextEditingController(text: 'ahmed@email.com');
+  final _passwordController = TextEditingController(text: 'password123');
+  bool _loading = false;
+  String? _error;
+  int _logoTaps = 0;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _animController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
-    if (_isLoading) return;
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _signIn() async {
+    if (_loading) return;
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
 
-    setState(() => _isLoading = true);
+    if (!RegExp(r'^\S+@\S+\.\S+$').hasMatch(email)) {
+      setState(() => _error = 'Enter a valid email address');
+      return;
+    }
+    if (password.length < 6) {
+      setState(() => _error = 'Use at least 6 characters');
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
     final success = await ref
         .read(authProvider.notifier)
-        .login(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        );
+        .login(email: email, password: password);
 
     if (!mounted) return;
-    setState(() => _isLoading = false);
-
     if (success) {
       context.go('/');
-    } else {
-      final error = ref.read(authProvider).error;
-      if (mounted && error != null) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error, style: const TextStyle(fontSize: 13)),
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 5),
-            margin: const EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
+      return;
     }
+
+    setState(() {
+      _loading = false;
+      _error = ref.read(authProvider).error ?? 'Unable to sign in right now';
+    });
   }
 
   void _handleLogoTap() {
-    _logoTapCount++;
-    if (_logoTapCount >= 5) {
-      _logoTapCount = 0;
+    _logoTaps++;
+    if (_logoTaps >= 5) {
+      _logoTaps = 0;
       context.push('/admin-login');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
-    return Scaffold(
-      backgroundColor: AppColors.background(context),
-      body: NatureBackground.wrap(child: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnim,
-          child: SlideTransition(
-            position: _slideAnim,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: OneUISpacing.lg),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    SizedBox(height: size.height * 0.08),
-
-                    // Logo — long-press 5x for admin access
-                    GestureDetector(
-                      onTap: _handleLogoTap,
-                      child: Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary(context),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.flight_takeoff_rounded,
-                          size: 36,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: OneUISpacing.xxl),
-
-                    // Title with emoji
-                     Text(
-                      'Welcome back 👋',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary(context),
-                      ),
-                    ),
-                    const SizedBox(height: OneUISpacing.sm),
-                    Text(
-                      'Sign in to continue to ComfyGo',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary(context),
-                      ),
-                    ),
-
-                    SizedBox(height: size.height * 0.05),
-
-                    // Email input
-                    _buildLabel('Email address'),
-                    const SizedBox(height: OneUISpacing.sm),
-                    GlassInput(
-                      controller: _emailController,
-                      hintText: 'Enter your email',
-                      prefixIcon: Icons.email_outlined,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      enabled: !_isLoading,
-                      validator: (v) {
-                        if (v == null || v.isEmpty) return 'Enter your email';
-                        if (!v.contains('@')) return 'Enter a valid email';
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(height: OneUISpacing.lg),
-
-                    // Password input
-                    _buildLabel('Password'),
-                    const SizedBox(height: OneUISpacing.sm),
-                    GlassInput(
-                      controller: _passwordController,
-                      hintText: 'Enter your password',
-                      prefixIcon: Icons.lock_outline_rounded,
-                      obscureText: _obscurePassword,
-                      textInputAction: TextInputAction.done,
-                      enabled: !_isLoading,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off_rounded
-                              : Icons.visibility_rounded,
-                          color: AppColors.textSecondary(context),
-                          size: 20,
-                        ),
-                        onPressed: () => setState(
-                          () => _obscurePassword = !_obscurePassword,
-                        ),
-                      ),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) {
-                          return 'Enter your password';
-                        }
-                        if (v.length < 6) return 'Min 6 characters';
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(height: OneUISpacing.sm),
-
-                    // Forgot password
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: _isLoading
-                            ? null
-                            : () => context.push('/forgot-password'),
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child:  Text(
-                          'Forgot Password?',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.primary(context),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: OneUISpacing.xxl),
-
-                    // Sign In button
-                    CGButton(
-                      label: 'Sign In',
-                      isLoading: _isLoading,
-                      onPressed: _handleLogin,
-                    ),
-
-                    const SizedBox(height: OneUISpacing.xxl),
-
-                    // Sign up link
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Text(
-                          "Don't have an account? ",
-                          style: TextStyle(
-                            color: AppColors.textSecondary(context),
-                            fontSize: 14,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: _isLoading
-                              ? null
-                              : () => context.push('/signup'),
-                          child:  Text(
-                            'Sign Up',
-                            style: TextStyle(
-                              color: AppColors.primary(context),
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: OneUISpacing.xxl),
-                  ],
+    final c = CgColors.of(context);
+    return CgAuthShell(
+      title: 'Welcome back',
+      subtitle: 'Sign in to continue your journey',
+      onBack: () => context.go('/intro'),
+      onArtworkTap: _handleLogoTap,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          CgTextField(
+            label: 'Email address',
+            controller: _emailController,
+            icon: Icons.mail_outline_rounded,
+            hint: 'you@example.com',
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+            enabled: !_loading,
+            autofillHints: const [AutofillHints.email],
+            onChanged: (_) {
+              if (_error != null) setState(() => _error = null);
+            },
+          ),
+          const SizedBox(height: 16),
+          CgTextField(
+            label: 'Password',
+            controller: _passwordController,
+            icon: Icons.lock_outline_rounded,
+            hint: 'Enter your password',
+            obscure: true,
+            textInputAction: TextInputAction.done,
+            enabled: !_loading,
+            autofillHints: const [AutofillHints.password],
+            onSubmitted: (_) => _signIn(),
+            onChanged: (_) {
+              if (_error != null) setState(() => _error = null);
+            },
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: _loading
+                  ? null
+                  : () => context.push('/forgot-password'),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                minimumSize: const Size(0, 40),
+                foregroundColor: c.primary,
+              ),
+              child: Text(
+                'Forgot password?',
+                style: CgType.b14.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: c.primary,
                 ),
               ),
             ),
           ),
-        ),
-      )),
+          if (_error != null) ...[
+            const SizedBox(height: 4),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.error_outline_rounded,
+                  size: 16,
+                  color: CgColorConstants.danger,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    _error!,
+                    style: CgType.l12.copyWith(
+                      color: CgColorConstants.danger,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 16),
+          CgPillButton(
+            width: double.infinity,
+            loading: _loading,
+            onTap: _signIn,
+            semanticLabel: 'Sign in',
+            child: const Text('Sign in'),
+          ),
+          const SizedBox(height: 20),
+          _SocialDivider(color: c.text2, line: c.line),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _SocialButton(
+                  label: 'Google',
+                  mark: 'G',
+                  markColor: const Color(0xFFEA4335),
+                  onTap: () => showCgToast(context, 'Google sign-in is a demo'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _SocialButton(
+                  label: 'Facebook',
+                  mark: 'f',
+                  markColor: const Color(0xFF1877F2),
+                  onTap: () =>
+                      showCgToast(context, 'Facebook sign-in is a demo'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                'Don’t have an account? ',
+                style: CgType.b14.copyWith(color: c.text2),
+              ),
+              GestureDetector(
+                onTap: _loading ? null : () => context.go('/signup'),
+                child: Text(
+                  'Sign Up',
+                  style: CgType.b14.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: c.text,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
+}
 
-  Widget _buildLabel(String text) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        text,
-        style:  TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textSecondary(context),
+class _SocialDivider extends StatelessWidget {
+  const _SocialDivider({required this.color, required this.line});
+
+  final Color color;
+  final Color line;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: Container(height: 1, color: line)),
+        Flexible(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              'or continue with',
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              style: CgType.l12.copyWith(color: color),
+            ),
+          ),
+        ),
+        Expanded(child: Container(height: 1, color: line)),
+      ],
+    );
+  }
+}
+
+class _SocialButton extends StatelessWidget {
+  const _SocialButton({
+    required this.label,
+    required this.mark,
+    required this.markColor,
+    required this.onTap,
+  });
+
+  final String label;
+  final String mark;
+  final Color markColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = CgColors.of(context);
+    return CgPressable(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        decoration: BoxDecoration(
+          color: c.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: c.line, width: 1.5),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              mark,
+              style: CgType.b14.copyWith(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: markColor,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: CgType.b14.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: c.text,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

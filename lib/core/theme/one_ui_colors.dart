@@ -1,91 +1,105 @@
 import 'package:flutter/material.dart';
 
-/// ComfyGo Color System
-/// Based on the green-and-white reference UI kit
+import 'design_tokens.dart';
+
+/// ComfyGo colour names.
+///
+/// Values live only in `design_tokens.dart`. This class keeps the historical
+/// names so existing screens continue to compile while they migrate to
+/// `AppColors` / `Theme.of(context)`.
 class OneUIColors {
   OneUIColors._();
 
-  // ═══════════════════════════════════════════════════
-  // PRIMARY - Naturistic Emerald Green
-  //
-  // Light mode uses the deep brand green (white text on it, or it used
-  // as text on white — 5.2:1 both ways). Dark mode uses the soft leaf
-  // green so it stays legible on the dark surfaces (7.8:1 as text) and
-  // pairs with the dark-green label when it fills a button.
-  // ═══════════════════════════════════════════════════
-  static const Color primaryLight = Color(0xFF1B7A4F);
-  static const Color primaryDark = Color(0xFF7ED0A2);
-  static const Color primaryVariantLight = Color(0xFF20271A);
-  static const Color primarySoft = Color(0xFFDDEFE4);
+  // Primary
+  static const Color primaryLight = ComfyColors.primaryLight;
+  static const Color primaryDark = ComfyColors.primaryDark;
+  static const Color primaryVariantLight = ComfyColors.onPrimaryContainerLight;
+  static const Color primarySoft = ComfyColors.primaryContainerLight;
 
-  // Button green (works with white text in BOTH light and dark mode)
-  static const Color buttonGreenDark = Color(0xFF20271A);
-  static const Color buttonGreen = Color(0xFF7ED0A2);
-  static const Color buttonGreenLight = Color(0xFF1B7A4F);
+  // Button inks that work with white / dark labels
+  static const Color buttonGreenDark = ComfyColors.onPrimaryDark;
+  static const Color buttonGreen = ComfyColors.primaryDark;
+  static const Color buttonGreenLight = ComfyColors.primaryLight;
 
-  // ═══════════════════════════════════════════════════
-  // SECONDARY - Lighter green accents
-  // ═══════════════════════════════════════════════════
-  static const Color secondaryLight = Color(0xFF9EAF28);
-  static const Color secondaryDark = Color(0xFFB6CC35);
+  // Secondary & tertiary
+  static const Color secondaryLight = ComfyColors.secondaryLight;
+  static const Color secondaryDark = ComfyColors.secondaryDark;
+  static const Color tertiaryLight = ComfyColors.tertiaryLight;
+  static const Color tertiaryDark = ComfyColors.tertiaryDark;
 
-  // ═══════════════════════════════════════════════════
-  // TERRIARY - Warm accent for highlights
-  // ═══════════════════════════════════════════════════
-  static const Color tertiaryLight = Color(0xFF879078);
-  static const Color tertiaryDark = Color(0xFFAAB596);
+  // Backgrounds
+  static const Color backgroundLight = ComfyColors.backgroundLight;
+  static const Color surfaceLight = ComfyColors.surfaceLight;
+  static const Color surfaceVariantLight = ComfyColors.surfaceVariantLight;
+  static const Color inputFillLight = ComfyColors.inputFillLight;
 
-  // ═══════════════════════════════════════════════════
-  // BACKGROUNDS - soft, nature-inspired greens
-  // ═══════════════════════════════════════════════════
-  static const Color backgroundLight = Color(0xFFF3F5F7);
-  static const Color surfaceLight = Color(0xFFFFFFFF);
-  static const Color surfaceVariantLight = Color(0xFFF3F0E6);
-  static const Color inputFillLight = Color(0xFFF3F0E6);
+  static const Color backgroundDark = ComfyColors.backgroundDark;
+  static const Color surfaceDark = ComfyColors.surfaceDark;
+  static const Color surfaceVariantDark = ComfyColors.surfaceVariantDark;
+  static const Color inputFillDark = ComfyColors.inputFillDark;
 
-  // Dark Mode
-  static const Color backgroundDark = Color(0xFF20271A);
-  static const Color surfaceDark = Color(0xFF2A3022);
-  static const Color surfaceVariantDark = Color(0xFF383D30);
+  // Text
+  static const Color textPrimaryLight = ComfyColors.textPrimaryLight;
+  static const Color textSecondaryLight = ComfyColors.textSecondaryLight;
+  static const Color textHintLight = ComfyColors.textHintLight;
 
-  // ═══════════════════════════════════════════════════
-  // TEXT — tuned for WCAG-AA readability on their backgrounds
-  // ═══════════════════════════════════════════════════
-  static const Color textPrimaryLight = Color(0xFF20271A);
-  static const Color textSecondaryLight = Color(0xFF707266);
-  static const Color textHintLight = Color(0xFF858678);
+  static const Color textPrimaryDark = ComfyColors.textPrimaryDark;
+  static const Color textSecondaryDark = ComfyColors.textSecondaryDark;
+  static const Color textHintDark = ComfyColors.textHintDark;
 
-  static const Color textPrimaryDark = Color(0xFFF4F0E4);
-  static const Color textSecondaryDark = Color(0xFFCBC7B7);
-  static const Color textHintDark = Color(0xFFAAA695);
+  // Semantic
+  static const Color success = ComfyColors.successLight;
+  static const Color successDark = ComfyColors.successDark;
+  static const Color warning = ComfyColors.warningLight;
+  static const Color warningDark = ComfyColors.warningDark;
+  static const Color error = ComfyColors.errorLight;
+  static const Color errorDark = ComfyColors.errorDark;
+  static const Color info = ComfyColors.infoLight;
+  static const Color infoDark = ComfyColors.infoDark;
 
-  // ═══════════════════════════════════════════════════
-  // STATUS
-  // ═══════════════════════════════════════════════════
-  static const Color success = Color(0xFF9EAF28);
-  static const Color warning = Color(0xFFFFC107);
-  static const Color error = Color(0xFFF44336);
-  static const Color info = Color(0xFF2196F3);
+  // Lines
+  static const Color dividerLight = ComfyColors.outlineVariantLight;
+  static const Color dividerDark = ComfyColors.outlineVariantDark;
+  static const Color outlineLight = ComfyColors.outlineLight;
+  static const Color outlineDark = ComfyColors.outlineDark;
 
-  // ═══════════════════════════════════════════════════
-  // DIVIDER & BORDER
-  // ═══════════════════════════════════════════════════
-  static const Color dividerLight = Color(0xFFDDD9CA);
-  static const Color dividerDark = Color(0xFF414536);
+  // Package tiers
+  static const Color tierBasic = ComfyColors.tierBasicLight;
+  static const Color tierPro = ComfyColors.tierProLight;
+  static const Color tierPremium = ComfyColors.tierPremiumLight;
+  static const Color tierUltimate = ComfyColors.tierUltimateLight;
 
-  // ═══════════════════════════════════════════════════
-  // PACKAGE TIER COLORS
-  // ═══════════════════════════════════════════════════
-  static const Color tierBasic = Color(0xFF78909C);
-  static const Color tierPro = Color(0xFFB6CC35);
-  static const Color tierPremium = Color(0xFFFFB300);
-  static const Color tierUltimate = Color(0xFF9C27B0);
+  static const Color tierBasicBg = ComfyColors.tierBasicBgLight;
+  static const Color tierProBg = ComfyColors.tierProBgLight;
+  static const Color tierPremiumBg = ComfyColors.tierPremiumBgLight;
+  static const Color tierUltimateBg = ComfyColors.tierUltimateBgLight;
 
-  // ═══════════════════════════════════════════════════
-  // BOOKING STATUS
-  // ═══════════════════════════════════════════════════
-  static const Color statusPending = Color(0xFFFFC107);
-  static const Color statusConfirmed = Color(0xFF9EAF28);
-  static const Color statusCancelled = Color(0xFFF44336);
-  static const Color statusCompleted = Color(0xFFB6CC35);
+  static const Color tierBasicDark = ComfyColors.tierBasicDark;
+  static const Color tierProDark = ComfyColors.tierProDark;
+  static const Color tierPremiumDark = ComfyColors.tierPremiumDark;
+  static const Color tierUltimateDark = ComfyColors.tierUltimateDark;
+
+  static const Color tierBasicBgDark = ComfyColors.tierBasicBgDark;
+  static const Color tierProBgDark = ComfyColors.tierProBgDark;
+  static const Color tierPremiumBgDark = ComfyColors.tierPremiumBgDark;
+  static const Color tierUltimateBgDark = ComfyColors.tierUltimateBgDark;
+
+  // Booking statuses
+  static const Color statusPending = ComfyColors.statusPendingLight;
+  static const Color statusPendingBg = ComfyColors.statusPendingBgLight;
+  static const Color statusConfirmed = ComfyColors.statusConfirmedLight;
+  static const Color statusConfirmedBg = ComfyColors.statusConfirmedBgLight;
+  static const Color statusCancelled = ComfyColors.statusCancelledLight;
+  static const Color statusCancelledBg = ComfyColors.statusCancelledBgLight;
+  static const Color statusCompleted = ComfyColors.statusCompletedLight;
+  static const Color statusCompletedBg = ComfyColors.statusCompletedBgLight;
+
+  static const Color statusPendingDark = ComfyColors.statusPendingDark;
+  static const Color statusPendingBgDark = ComfyColors.statusPendingBgDark;
+  static const Color statusConfirmedDark = ComfyColors.statusConfirmedDark;
+  static const Color statusConfirmedBgDark = ComfyColors.statusConfirmedBgDark;
+  static const Color statusCancelledDark = ComfyColors.statusCancelledDark;
+  static const Color statusCancelledBgDark = ComfyColors.statusCancelledBgDark;
+  static const Color statusCompletedDark = ComfyColors.statusCompletedDark;
+  static const Color statusCompletedBgDark = ComfyColors.statusCompletedBgDark;
 }

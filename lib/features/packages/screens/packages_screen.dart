@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/comfy_design.dart';
 import '../../../core/utils/navigation.dart';
-import '../../../core/theme/theme.dart';
-import '../../../core/widgets/widgets.dart';
-import '../../../state/service_providers.dart';
+import '../../../core/widgets/comfy_page.dart';
+import '../../../core/widgets/comfy_ui.dart';
 import '../../../models/package_model.dart';
 import '../../../services/api_exception.dart';
+import '../../../state/service_providers.dart';
 
 class PackagesScreen extends ConsumerStatefulWidget {
   const PackagesScreen({super.key});
@@ -58,102 +58,130 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
     try {
       final result = await showDialog<bool>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: const Text('Payment details'),
-          content: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '৳${price.toStringAsFixed(2)} / month',
-                  style:  TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary(context),
+        builder: (dialogContext) {
+          final c = CgColors.of(dialogContext);
+          return AlertDialog(
+            backgroundColor: c.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(CgRadii.card),
+            ),
+            title: Text(
+              'Payment details',
+              style: CgType.t20.copyWith(color: c.text),
+            ),
+            content: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '৳${price.toStringAsFixed(2)} / month',
+                    style: CgType.b14.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: c.primary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  key: const Key('sub-card-number'),
-                  controller: numberController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    hintText: '4242 4242 4242 4242 (sandbox)',
-                    prefixIcon: Icon(Icons.credit_card_rounded, size: 20),
-                    isDense: true,
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (v) {
-                    final digits = (v ?? '').replaceAll(' ', '');
-                    if (digits != '4242424242424242') {
-                      return 'Sandbox card: 4242 4242 4242 4242';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        key: const Key('sub-card-expiry'),
-                        controller: expiryController,
-                        keyboardType: TextInputType.datetime,
-                        decoration: const InputDecoration(
-                          hintText: 'MM/YY',
-                          isDense: true,
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (v) {
-                          final ok = RegExp(r'^(0[1-9]|1[0-2])\/\d{2}$')
-                              .hasMatch((v ?? '').trim());
-                          return ok ? null : 'MM/YY';
-                        },
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    key: const Key('sub-card-number'),
+                    controller: numberController,
+                    keyboardType: TextInputType.number,
+                    style: CgType.b14.copyWith(color: c.text),
+                    decoration: InputDecoration(
+                      hintText: '4242 4242 4242 4242 (sandbox)',
+                      hintStyle: CgType.b14.copyWith(color: c.text2),
+                      prefixIcon: Icon(
+                        Icons.credit_card_rounded,
+                        size: 20,
+                        color: c.text2,
+                      ),
+                      isDense: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(CgRadii.input),
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: TextFormField(
-                        key: const Key('sub-card-cvv'),
-                        controller: cvvController,
-                        obscureText: true,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          hintText: 'CVV',
-                          isDense: true,
-                          border: OutlineInputBorder(),
+                    validator: (v) {
+                      final digits = (v ?? '').replaceAll(' ', '');
+                      if (digits != '4242424242424242') {
+                        return 'Sandbox card: 4242 4242 4242 4242';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          key: const Key('sub-card-expiry'),
+                          controller: expiryController,
+                          keyboardType: TextInputType.datetime,
+                          style: CgType.b14.copyWith(color: c.text),
+                          decoration: InputDecoration(
+                            hintText: 'MM/YY',
+                            hintStyle: CgType.b14.copyWith(color: c.text2),
+                            isDense: true,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(
+                                CgRadii.input,
+                              ),
+                            ),
+                          ),
+                          validator: (v) {
+                            final ok = RegExp(r'^(0[1-9]|1[0-2])\/\d{2}$')
+                                .hasMatch((v ?? '').trim());
+                            return ok ? null : 'MM/YY';
+                          },
                         ),
-                        validator: (v) => RegExp(r'^\d{3,4}$')
-                                .hasMatch((v ?? '').trim())
-                            ? null
-                            : 'CVV',
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: TextFormField(
+                          key: const Key('sub-card-cvv'),
+                          controller: cvvController,
+                          obscureText: true,
+                          keyboardType: TextInputType.number,
+                          style: CgType.b14.copyWith(color: c.text),
+                          decoration: InputDecoration(
+                            hintText: 'CVV',
+                            hintStyle: CgType.b14.copyWith(color: c.text2),
+                            isDense: true,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(
+                                CgRadii.input,
+                              ),
+                            ),
+                          ),
+                          validator: (v) =>
+                              RegExp(r'^\d{3,4}$').hasMatch((v ?? '').trim())
+                              ? null
+                              : 'CVV',
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                if (formKey.currentState!.validate()) {
-                  Navigator.of(dialogContext).pop(true);
-                }
-              },
-              child: const Text('Pay'),
-            ),
-          ],
-        ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                style: TextButton.styleFrom(foregroundColor: c.text2),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  if (formKey.currentState!.validate()) {
+                    Navigator.of(dialogContext).pop(true);
+                  }
+                },
+                style: TextButton.styleFrom(foregroundColor: c.primary),
+                child: const Text('Pay'),
+              ),
+            ],
+          );
+        },
       );
       if (result != true) return null;
       return {
@@ -234,24 +262,37 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
   Future<void> _cancelCurrent() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Cancel subscription?'),
-        content: const Text('You will lose your plan benefits immediately.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Keep Plan'),
+      builder: (dialogContext) {
+        final c = CgColors.of(dialogContext);
+        return AlertDialog(
+          backgroundColor: c.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(CgRadii.card),
           ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text(
-              'Cancel Plan',
-              style: TextStyle(color: OneUIColors.error),
+          title: Text(
+            'Cancel subscription?',
+            style: CgType.t20.copyWith(color: c.text),
+          ),
+          content: Text(
+            'You will lose your plan benefits immediately.',
+            style: CgType.b14.copyWith(color: c.text2),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              style: TextButton.styleFrom(foregroundColor: c.text2),
+              child: const Text('Keep Plan'),
             ),
-          ),
-        ],
-      ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: TextButton.styleFrom(
+                foregroundColor: CgColorConstants.danger,
+              ),
+              child: const Text('Cancel Plan'),
+            ),
+          ],
+        );
+      },
     );
     if (confirmed != true || !mounted) return;
 
@@ -273,16 +314,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
   }
 
   void _showSnack(String message) {
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message, style: const TextStyle(fontSize: 13)),
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+    if (mounted) showCgToast(context, message);
   }
 
   String get _buttonLabel {
@@ -307,293 +339,273 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
     return true;
   }
 
+  Color _tierColor(CgColors c, PackageTier tier) => switch (tier) {
+    PackageTier.basic => c.primary,
+    PackageTier.pro => const Color(0xFF2F8F72),
+    PackageTier.premium => const Color(0xFF4A90C2),
+    PackageTier.ultimate => c.accent,
+  };
+
   // ── Build ───────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
+    final c = CgColors.of(context);
     final packagesState = ref.watch(packagesProvider);
     final packages = packagesState.packages.isNotEmpty
         ? packagesState.packages.cast<Package>()
         : Package.predefinedPackages;
 
-    return Scaffold(
-      backgroundColor: AppColors.background(context),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => goBack(context),
-        ),
-        title: const Text('Packages'),
-      ),
-      body: PhotoBackground.wrap(child: packagesState.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title
-                   Text(
-                    'Choose Your Plan',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary(context),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Unlock premium features and save more on your travels. Sandbox payments only; no card is charged.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary(context),
-                    ),
-                  ),
-
-                  if (!_loadingCurrent && _currentPackage != null) ...[
-                    const SizedBox(height: 16),
-                    _buildCurrentPlanBanner(),
-                  ],
-
-                  const SizedBox(height: 24),
-
-                  // Package cards
-                  for (final package in packages) ...[
-                    _buildPackageCard(package),
-                    const SizedBox(height: 12),
-                  ],
-
-                  const SizedBox(height: 24),
-
-                  // Subscribe button
-                  CGButton(
-                    key: const Key('subscribe-button'),
-                    label: _buttonLabel,
-                    isLoading: _isLoading,
-                    onPressed: !_buttonEnabled || _isLoading
-                        ? null
-                        : () => _handleSubscribe(packages),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                   Center(
-                    child: Text(
-                      'By subscribing, you agree to our Terms of Service',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textHint(context),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-                ],
-              ),
-            )),
-    );
-  }
-
-  Widget _buildCurrentPlanBanner() {
-    final current = _currentPackage!;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _getTierColor(current.package.tier).withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: _getTierColor(current.package.tier),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.card_membership_rounded,
-            color: _getTierColor(current.package.tier),
+    return CgPageScaffold(
+      bottom: Container(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+        decoration: BoxDecoration(
+          color: c.surface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(CgRadii.nav),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Your plan: ${current.package.name}',
-                  style:  TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary(context),
-                  ),
-                ),
-                Text(
-                  'Active until ${_fmtDate(current.endDate)}',
-                  style:  TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary(context),
-                  ),
-                ),
-              ],
+          boxShadow: c.navShadow,
+        ),
+        child: SafeArea(
+          top: false,
+          child: Opacity(
+            opacity: _buttonEnabled ? 1 : .5,
+            child: CgPillButton(
+              key: const Key('subscribe-button'),
+              loading: _isLoading,
+              onTap: !_buttonEnabled || _isLoading
+                  ? null
+                  : () => _handleSubscribe(packages),
+              child: Text(
+                _buttonLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
+        ),
+      ),
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 24),
+        children: [
+          CgPageTitle(
+            title: 'Choose Your Plan',
+            subtitle:
+                'Unlock premium features and save more on your travels. '
+                'Sandbox payments only; no card is charged.',
+            onBack: () => goBack(context),
+          ),
+          if (!_loadingCurrent && _currentPackage != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              child: CgCard(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        gradient: c.gMint,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.card_membership_rounded,
+                        size: 20,
+                        color: c.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Your plan: ${_currentPackage!.package.name}',
+                            style: CgType.t16.copyWith(color: c.text),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Active until '
+                            '${_fmtDate(_currentPackage!.endDate)}',
+                            style: CgType.l12.copyWith(color: c.text2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          if (packagesState.isLoading)
+            const CgLoadingState()
+          else ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+              child: Text(
+                'Plans',
+                style: CgType.t16.copyWith(fontSize: 18, color: c.text),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+              child: Column(
+                children: [
+                  for (var i = 0; i < packages.length; i++)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        bottom: i == packages.length - 1 ? 0 : 12,
+                      ),
+                      child: _buildPackageCard(packages[i]),
+                    ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              child: Text(
+                'By subscribing, you agree to our Terms of Service',
+                textAlign: TextAlign.center,
+                style: CgType.l12.copyWith(
+                  fontSize: 11,
+                  color: c.text2,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
   Widget _buildPackageCard(Package package) {
+    final c = CgColors.of(context);
     final isSelected = _selectedTier == package.tier;
-    final color = _getTierColor(package.tier);
+    final color = _tierColor(c, package.tier);
 
     return GestureDetector(
       key: Key('package-${package.tier.name}'),
       onTap: () => setState(() => _selectedTier = package.tier),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(16),
+        duration: const Duration(milliseconds: 220),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: isSelected
-              ? color.withValues(alpha: 0.05)
-              : AppColors.surface(context),
-          borderRadius: BorderRadius.circular(16),
+          gradient: c.gCard,
+          borderRadius: BorderRadius.circular(CgRadii.card),
           border: Border.all(
-            color: isSelected ? color : AppColors.divider(context),
+            color: isSelected ? color : c.line,
             width: isSelected ? 2 : 1,
           ),
+          boxShadow: isSelected ? c.cardShadow : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
+            Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    package.name,
-                    style: TextStyle(
-                      color: color,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                    ),
+                Expanded(
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      CgTextPill(
+                        label: package.name,
+                        background: color.withValues(alpha: .12),
+                        foreground: color,
+                      ),
+                      if (package.tier == PackageTier.ultimate)
+                        CgTextPill(
+                          label: 'BEST VALUE',
+                          icon: Icons.workspace_premium_rounded,
+                          background: c.accent.withValues(alpha: .16),
+                          foreground: c.accent,
+                        ),
+                    ],
                   ),
                 ),
-                if (package.tier == PackageTier.ultimate) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFB300),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Text(
-                      'BEST VALUE',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-                if (isSelected)
-                  Icon(Icons.check_circle_rounded, color: color, size: 22),
+                const SizedBox(width: 8),
+                Icon(
+                  isSelected
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  size: 22,
+                  color: isSelected ? color : c.line,
+                ),
               ],
             ),
             const SizedBox(height: 12),
-            Wrap(
-              crossAxisAlignment: WrapCrossAlignment.end,
-              runSpacing: 8,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  package.price == 0
-                      ? 'Free'
-                      : '৳${package.price.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: color,
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      package.price == 0
+                          ? 'Free'
+                          : '৳${package.price.toStringAsFixed(2)}',
+                      maxLines: 1,
+                      style: CgType.h1Bold.copyWith(
+                        fontSize: 26,
+                        color: color,
+                      ),
+                    ),
                   ),
                 ),
                 if (package.price > 0) ...[
                   const SizedBox(width: 4),
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 3),
+                    padding: const EdgeInsets.only(bottom: 4),
                     child: Text(
                       '/month',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary(context),
-                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: CgType.l12.copyWith(color: c.text2),
                     ),
                   ),
                 ],
               ],
             ),
-            const SizedBox(height: 12),
-            _buildFeatureRow(
-              '${package.bookingLimit == -1 ? "Unlimited" : package.bookingLimit} bookings per month',
+            const SizedBox(height: 10),
+            _feature(
+              package.bookingLimit == -1
+                  ? 'Unlimited bookings per month'
+                  : '${package.bookingLimit} bookings per month',
               color,
             ),
             if (package.discountPercentage > 0)
-              _buildFeatureRow(
-                '${package.discountPercentage.toStringAsFixed(0)}% discount on all bookings',
+              _feature(
+                '${package.discountPercentage.toStringAsFixed(0)}% discount '
+                'on all bookings',
                 color,
               ),
-            if (package.priorityListing) _buildFeatureRow('Priority listing', color),
-            if (package.featuredListing) _buildFeatureRow('Featured listing', color),
-            if (package.vipSupport) _buildFeatureRow('VIP support', color),
+            if (package.priorityListing) _feature('Priority listing', color),
+            if (package.featuredListing) _feature('Featured listing', color),
+            if (package.vipSupport) _feature('VIP support', color),
             if (package.exclusivePackages)
-              _buildFeatureRow('Exclusive packages', color),
+              _feature('Exclusive packages', color),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFeatureRow(String text, Color color) {
+  Widget _feature(String text, Color color) {
+    final c = CgColors.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         children: [
           Icon(Icons.check_circle_outline_rounded, size: 16, color: color),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              text,
-              style:  TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary(context),
-              ),
-            ),
+            child: Text(text, style: CgType.l12.copyWith(color: c.text2)),
           ),
         ],
       ),
     );
-  }
-
-  Color _getTierColor(PackageTier tier) {
-    switch (tier) {
-      case PackageTier.basic:
-        return OneUIColors.tierBasic;
-      case PackageTier.pro:
-        return OneUIColors.tierPro;
-      case PackageTier.premium:
-        return OneUIColors.tierPremium;
-      case PackageTier.ultimate:
-        return OneUIColors.tierUltimate;
-    }
   }
 
   static String _fmtDate(DateTime d) {
