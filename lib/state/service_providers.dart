@@ -1,3 +1,6 @@
+// ComfyGo Project Plan — Phase 2 · Core Features and Data
+// Models, REST services and Provider state from the Phase 2 plan.
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/services.dart';

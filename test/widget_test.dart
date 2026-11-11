@@ -1,3 +1,6 @@
+// ComfyGo Project Plan — Phase 3 · Testing and Finalization
+// Provider, widget and flow tests from the Phase 3 plan.
+
 import 'package:comfygo/main.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

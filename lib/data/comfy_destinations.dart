@@ -1,3 +1,6 @@
+// ComfyGo Project Plan — Phase 1 · Foundation and UI
+// Mock catalogue that backs the Phase 1 navigable prototype.
+
 /// Destinations shown by the redesigned ComfyGo screens.
 ///
 /// The photos are the locally bundled, destination-specific sets that live in

@@ -1,3 +1,6 @@
+// ComfyGo Project Plan — Phase 1 · Foundation and UI
+// Folders, theme, routes and reusable widgets from the Phase 1 plan.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
+import '../../features/auth/screens/welcome_screen.dart';
 import '../../features/onboarding/screens/splash_screen.dart';
 import '../../features/onboarding/screens/intro_screen.dart';
 import '../../features/home/screens/home_screen.dart';
@@ -83,6 +87,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       // Auth Routes
+      GoRoute(
+        path: '/welcome',
+        pageBuilder: (context, state) =>
+            _fadeSlide(state, const WelcomeScreen()),
+      ),
       GoRoute(
         path: '/login',
         pageBuilder: (context, state) => _fadeSlide(state, const LoginScreen()),
@@ -281,6 +290,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       final isLoginRoute = location == '/login';
       final isSignupRoute = location == '/signup';
+      final isWelcomeRoute = location == '/welcome';
       final isForgotPasswordRoute = location == '/forgot-password';
       final isAdminLoginRoute = location == '/admin-login';
       final isSplashRoute = location == '/splash';
@@ -288,6 +298,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isAuthRoute =
           isLoginRoute ||
           isSignupRoute ||
+          isWelcomeRoute ||
           isForgotPasswordRoute ||
           isAdminLoginRoute ||
           isSplashRoute ||
@@ -313,7 +324,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // Splash/intro are only for signed-out users — the SplashScreen itself
       // also routes, this just keeps the URL consistent when auth resolves.
-      if (isAuth && (isSplashRoute || isIntroRoute)) {
+      if (isAuth && (isSplashRoute || isIntroRoute || isWelcomeRoute)) {
         return '/';
       }
 

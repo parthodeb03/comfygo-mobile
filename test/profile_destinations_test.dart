@@ -1,3 +1,6 @@
+// ComfyGo Project Plan — Phase 3 · Testing and Finalization
+// Provider, widget and flow tests from the Phase 3 plan.
+
 import 'package:comfygo/features/destinations/screens/destinations_screen.dart';
 import 'package:comfygo/features/profile/screens/profile_screen.dart';
 import 'package:comfygo/models/models.dart';

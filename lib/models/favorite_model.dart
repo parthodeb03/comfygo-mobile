@@ -1,3 +1,6 @@
+// ComfyGo Project Plan — Phase 2 · Core Features and Data
+// Models, REST services and Provider state from the Phase 2 plan.
+
 import 'package:equatable/equatable.dart';
 
 /// DB-backed favorite item. `item_type` is one of: destination, hotel, guide,

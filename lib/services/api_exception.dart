@@ -1,3 +1,6 @@
+// ComfyGo Project Plan — Phase 2 · Core Features and Data
+// Models, REST services and Provider state from the Phase 2 plan.
+
 import 'package:dio/dio.dart';
 
 /// Failure from the backend, carrying the user-facing message.

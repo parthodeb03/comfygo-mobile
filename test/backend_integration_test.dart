@@ -1,3 +1,6 @@
+// ComfyGo Project Plan — Phase 3 · Testing and Finalization
+// Provider, widget and flow tests from the Phase 3 plan.
+
 /// Backend integration tests — exercises the REAL frontend service layer
 /// against the live FastAPI backend at http://localhost:8000.
 ///

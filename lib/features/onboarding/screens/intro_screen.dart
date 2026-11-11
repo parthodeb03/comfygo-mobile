@@ -1,3 +1,6 @@
+// ComfyGo Project Plan — Phase 1 · Foundation and UI
+// Screen structure and layout from Phase 1; data wiring and validation from Phase 2.
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -47,7 +50,7 @@ class _IntroScreenState extends State<IntroScreen>
 
   Future<void> _start() async {
     await _markSeen();
-    if (mounted) context.go('/login');
+    if (mounted) context.go('/welcome');
   }
 
   Future<void> _signUp() async {

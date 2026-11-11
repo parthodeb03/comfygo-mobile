@@ -1,17 +1,23 @@
+// ComfyGo Project Plan — Phase 1 · Foundation and UI
+// Screen structure and layout from Phase 1; data wiring and validation from Phase 2.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/comfy_design.dart';
 import '../../../core/utils/navigation.dart';
-import '../../../core/widgets/comfy_page.dart';
 import '../../../core/widgets/comfy_ui.dart';
 import '../../../state/auth_provider.dart';
+import '../widgets/mountain_hero.dart';
 
 /// Forgot password — 3-step flow matching the spec:
 ///   1. enter email → 6-digit code is issued
 ///   2. verify the 6-digit code
 ///   3. set a new password
+///
+/// Lays over a full-screen mountain photo with a frosted glass card so there
+/// is no empty section behind the form.
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -179,47 +185,98 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final c = CgColors.of(context);
-    return CgPageScaffold(
-      child: ListView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        padding: const EdgeInsets.only(bottom: 32),
+    return Scaffold(
+      backgroundColor: const Color(0xFF16241C),
+      body: Stack(
+        fit: StackFit.expand,
         children: [
-          CgPageTitle(
-            title: 'Reset Password',
-            subtitle: 'Step $_step of 3',
-            onBack: _goBackStep,
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-            child: Row(
+          const CgMountainBackground(),
+          SafeArea(
+            bottom: false,
+            child: ListView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.only(bottom: 32),
               children: [
-                for (var i = 1; i <= 3; i++) ...[
-                  _StepDot(number: i, active: _step >= i),
-                  if (i < 3)
-                    Expanded(
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
-                        height: 2,
-                        margin: const EdgeInsets.symmetric(horizontal: 6),
-                        color: _step > i ? c.primary : c.line,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CgRoundButton(
+                        icon: Icons.arrow_back_ios_new_rounded,
+                        iconSize: 18,
+                        semanticLabel: 'Back',
+                        onTap: _goBackStep,
+                        color: Colors.white,
+                        background: LinearGradient(
+                          colors: [
+                            Colors.white.withValues(alpha: 0.28),
+                            Colors.white.withValues(alpha: 0.14),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Reset Password',
+                              style: CgType.pageTitle.copyWith(
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Step $_step of 3',
+                              style: CgType.b14.copyWith(
+                                color: Colors.white.withValues(alpha: 0.82),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                  child: Row(
+                    children: [
+                      for (var i = 1; i <= 3; i++) ...[
+                        _StepDot(number: i, active: _step >= i),
+                        if (i < 3)
+                          Expanded(
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              height: 2,
+                              margin: const EdgeInsets.symmetric(horizontal: 6),
+                              color: _step > i ? c.primary : c.line,
+                            ),
+                          ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: CgGlassPanel(
+                    radius: BorderRadius.circular(CgRadii.card),
+                    padding: const EdgeInsets.all(20),
+                    minHeight: 420,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (_step == 1) _buildEmailStep(),
+                        if (_step == 2) _buildCodeStep(),
+                        if (_step == 3) _buildPasswordStep(),
+                      ],
                     ),
-                ],
+                  ),
+                ),
               ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-            child: CgCard(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (_step == 1) _buildEmailStep(),
-                  if (_step == 2) _buildCodeStep(),
-                  if (_step == 3) _buildPasswordStep(),
-                ],
-              ),
             ),
           ),
         ],
@@ -308,11 +365,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.developer_mode_rounded,
-                  size: 20,
-                  color: c.primary,
-                ),
+                Icon(Icons.developer_mode_rounded, size: 20, color: c.primary),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(

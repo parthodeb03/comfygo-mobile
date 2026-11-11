@@ -1,3 +1,6 @@
+// ComfyGo Project Plan — Phase 1 · Foundation and UI
+// Screen structure and layout from Phase 1; data wiring and validation from Phase 2.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -68,7 +71,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (isAuthenticated) {
       context.go('/');
     } else if (introSeen) {
-      context.go('/login');
+      context.go('/welcome');
     } else {
       context.go('/intro');
     }

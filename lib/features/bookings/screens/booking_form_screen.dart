@@ -1,3 +1,6 @@
+// ComfyGo Project Plan — Phase 1 · Foundation and UI
+// Screen structure and layout from Phase 1; data wiring and validation from Phase 2.
+
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -11,6 +14,16 @@ import '../../../core/widgets/comfy_ui.dart';
 import '../../../models/models.dart';
 import '../../../services/api_exception.dart';
 import '../../../state/service_providers.dart';
+
+/// Seat label for a 1-based seat number.
+///
+/// Numbers run down the columns: the first row of seats is `1A 1B | 2A 2B`,
+/// the next is `3A 3B | 4A 4B`, and so on — each number is a seat pair and
+/// `A`/`B` are its two seats.
+String transportSeatLabel(int seatNumber) {
+  final idx = seatNumber - 1;
+  return '${idx ~/ 2 + 1}${idx.isEven ? 'A' : 'B'}';
+}
 
 /// Booking form for hotels and transport.
 ///
@@ -169,11 +182,9 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
     _selectedSeats.clear();
   }
 
-  String seatLabel(int seatNumber) {
-    const cols = ['A', 'B', 'C', 'D'];
-    final idx = seatNumber - 1;
-    return '${idx ~/ 4 + 1}${cols[idx % 4]}';
-  }
+  /// Seat numbering matches [transportSeatLabel]: `1A 1B | 2A 2B` on the
+  /// first row, `3A 3B | 4A 4B` on the next.
+  String seatLabel(int seatNumber) => transportSeatLabel(seatNumber);
 
   List<String> get _selectedSeatLabels =>
       (_selectedSeats.toList()..sort())
@@ -498,7 +509,7 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
     );
   }
 
-  /// Bus-style seat grid: 4 seats per row with a central aisle.
+  /// Bus-style seat grid: two blocks of two seats with a central aisle.
   Widget _buildSeatPicker() {
     final c = CgColors.of(context);
     final transport = _item! as Transport;
@@ -506,14 +517,16 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
     final freeCount = total - _occupiedSeats.length;
     final full = _selectedSeats.length >= freeCount;
 
-    const cols = ['A', 'B', 'C', 'D'];
+    // Fixed block widths keep the aisle straight on a partial last row.
+    const tile = 44.0;
+    const tileGap = 8.0;
+    const aisle = 26.0;
 
     Widget seatTile(int n) {
       final occupied = _occupiedSeats.contains(n);
       final selected = _selectedSeats.contains(n);
       final canTap = !occupied && (!selected && full ? false : true);
-      final idx = n - 1;
-      final label = '${idx ~/ 4 + 1}${cols[idx % 4]}';
+      final label = seatLabel(n);
       return GestureDetector(
         onTap: !canTap
             ? null
@@ -523,8 +536,8 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           curve: Curves.easeOut,
-          width: 44,
-          height: 44,
+          width: tile,
+          height: tile,
           decoration: BoxDecoration(
             gradient: selected ? c.gMain : null,
             color: occupied
@@ -556,6 +569,30 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
         ),
       );
     }
+
+    Widget seatSlot(int n) =>
+        n <= total ? seatTile(n) : const SizedBox(width: tile);
+
+    Widget seatRow(int base) => Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: tile * 2 + tileGap,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [seatSlot(base), seatSlot(base + 1)],
+          ),
+        ),
+        const SizedBox(width: aisle),
+        SizedBox(
+          width: tile * 2 + tileGap,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [seatSlot(base + 2), seatSlot(base + 3)],
+          ),
+        ),
+      ],
+    );
 
     Widget legendDot(Widget swatch, String label) => Row(
       mainAxisSize: MainAxisSize.min,
@@ -618,15 +655,13 @@ class _BookingFormScreenState extends ConsumerState<BookingFormScreen> {
             ],
           ),
           const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            alignment: WrapAlignment.center,
+          Column(
             children: [
-              for (var i = 0; i < total; i++) ...[
-                seatTile(i + 1),
-                if (i % 4 == 1) const SizedBox(width: 20),
-              ],
+              for (var row = 0; row < (total + 3) ~/ 4; row++)
+                Padding(
+                  padding: EdgeInsets.only(top: row == 0 ? 0 : 8),
+                  child: seatRow(row * 4 + 1),
+                ),
             ],
           ),
           const SizedBox(height: 14),

@@ -1,3 +1,6 @@
+// ComfyGo Project Plan — Phase 2 · Core Features and Data
+// Models, REST services and Provider state from the Phase 2 plan.
+
 /// User Model - supports Tourist, Guide, Hotel Manager, and Admin roles
 enum UserRole { tourist, guide, hotelManager, admin }
 

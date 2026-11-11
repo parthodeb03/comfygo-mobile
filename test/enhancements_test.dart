@@ -1,3 +1,6 @@
+// ComfyGo Project Plan — Phase 3 · Testing and Finalization
+// Provider, widget and flow tests from the Phase 3 plan.
+
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -53,8 +56,14 @@ Booking _booking({double total = 15000}) => Booking(
 );
 
 class _TransportService implements TransportService {
+  _TransportService({this.available = 30});
+
+  /// Seats reported as free — pass [total] to leave the map fully available.
+  final int available;
+
   @override
-  Future<Transport?> getTransportById(int id) async => _transport();
+  Future<Transport?> getTransportById(int id) async =>
+      _transport(available: available);
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -232,6 +241,69 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    test('Seat numbers run down the columns in pairs', () {
+      expect(
+        [for (var n = 1; n <= 8; n++) transportSeatLabel(n)],
+        ['1A', '1B', '2A', '2B', '3A', '3B', '4A', '4B'],
+      );
+      expect(transportSeatLabel(40), '20B');
+    });
+
+    testWidgets('Seat map lays seats out in two blocks of two', (tester) async {
+      tester.view.physicalSize = const Size(390, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            // Every seat free, so each label is drawn and measured.
+            transportServiceProvider.overrideWithValue(
+              _TransportService(available: 40),
+            ),
+            bookingServiceProvider.overrideWithValue(_BookingService()),
+          ],
+          child: MaterialApp(
+            theme: OneUITheme.lightTheme,
+            home: const BookingFormScreen(type: 'transport', itemId: 1),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      Rect seat(String label) {
+        final box = tester.getRect(
+          find.widgetWithText(AnimatedContainer, label),
+        );
+        return box;
+      }
+
+      final a1 = seat('1A');
+      final b1 = seat('1B');
+      final a2 = seat('2A');
+      final b2 = seat('2B');
+      final a3 = seat('3A');
+      final b3 = seat('3B');
+
+      // Row 1 holds 1A 1B | 2A 2B, row 2 holds 3A 3B | 4A 4B.
+      expect(a1.top, closeTo(a2.top, .5));
+      expect(a1.top, closeTo(b1.top, .5));
+      expect(a1.top, closeTo(b2.top, .5));
+      expect(a3.top, greaterThan(a1.bottom));
+      expect(a3.top, closeTo(b3.top, .5));
+
+      // Each number is a pair: B sits beside A, and 3A drops into A's column.
+      expect(b1.left, greaterThan(a1.right));
+      expect(b3.left, greaterThan(a3.right));
+      expect(a3.left, closeTo(a1.left, .5));
+
+      // The aisle between the two blocks is wider than the gap inside a pair.
+      expect(a2.left, greaterThan(b1.right));
+      expect(a2.left - b1.right, greaterThan(b1.left - a1.right));
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('Transport booking form offers a seat map', (tester) async {
       await tester.pumpWidget(
         ProviderScope(
@@ -249,6 +321,9 @@ void main() {
 
       expect(find.textContaining('Choose your seats'), findsOneWidget);
       expect(find.text('1A'), findsOneWidget);
+      // The old left-to-right row labels (1C, 1D) must be gone.
+      expect(find.text('1C'), findsNothing);
+      expect(find.text('1D'), findsNothing);
       expect(find.textContaining('0 selected'), findsOneWidget);
 
       // Select two free seats — the counter must update.

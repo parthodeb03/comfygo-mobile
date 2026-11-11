@@ -1,3 +1,6 @@
+// ComfyGo Project Plan — Phase 1 · Foundation and UI
+// Folders, theme, routes and reusable widgets from the Phase 1 plan.
+
 import 'design_tokens.dart';
 
 /// Spacing, shape and motion names used across the app.

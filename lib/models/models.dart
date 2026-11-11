@@ -1,3 +1,6 @@
+// ComfyGo Project Plan — Phase 2 · Core Features and Data
+// Models, REST services and Provider state from the Phase 2 plan.
+
 export 'user_model.dart';
 export 'destination_model.dart';
 export 'hotel_model.dart';

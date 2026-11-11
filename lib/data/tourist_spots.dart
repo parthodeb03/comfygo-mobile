@@ -1,3 +1,6 @@
+// ComfyGo Project Plan — Phase 1 · Foundation and UI
+// Mock catalogue that backs the Phase 1 navigable prototype.
+
 /// Division-wise tourist spots of Bangladesh.
 ///
 /// Content: description, how to reach, best time to visit and travel tips.

@@ -1,3 +1,22 @@
+// ComfyGo Project Plan — phase map (plan §07, Development Milestones)
+//
+// The submission document splits the work into three phases. Every source file
+// carries a matching tag at the top so the phase a piece of work belongs to is
+// visible where it lives:
+//
+//   Phase 1  Foundation and UI        (20 Sep – 4 Oct 2026)
+//            Project setup, folders, theme, routes, reusable widgets and the
+//            main screen structures with mock data.
+//   Phase 2  Core Features and Data   (5 Oct – 1 Nov 2026)
+//            Models, REST services and Provider classes, validated forms,
+//            local settings, search, booking flow and role dashboards.
+//   Phase 3  Testing and Finalization (2 Nov – 22 Nov 2026)
+//            Unit, widget and flow tests, defect fixes, error states,
+//            responsiveness, accessibility and release documentation.
+//
+// This entry point is Phase 2 wiring: it mounts the Phase 1 theme and router
+// and starts the Phase 2 health check behind the Phase 3 offline banner.
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';

@@ -1,11 +1,14 @@
+// ComfyGo Project Plan — Phase 1 · Foundation and UI
+// Sign-up screen in the reference visual language; validation and registration
+// are the Phase 2 work it wraps.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/comfy_design.dart';
-import '../../../core/widgets/comfy_ui.dart';
 import '../../../state/auth_provider.dart';
-import '../widgets/auth_shell.dart';
+import '../widgets/reference_auth_page.dart';
+import '../widgets/reference_controls.dart';
+import '../widgets/reference_theme.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -101,68 +104,79 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final c = CgColors.of(context);
-    return CgAuthShell(
+    final c = CgRefColors.of(context);
+    return CgAuthPage(
       title: 'Create account',
-      subtitle: 'Join ComfyGo and explore Bangladesh',
-      onBack: () => context.go('/intro'),
+      onBack: () => context.go('/welcome'),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          CgTextField(
-            label: 'Full name',
+          const _RefLabel(text: 'Full name'),
+          const SizedBox(height: 8),
+          CgRefField(
             controller: _nameController,
-            icon: Icons.person_outline_rounded,
             hint: 'Your full name',
             textInputAction: TextInputAction.next,
             enabled: !_loading,
             autofillHints: const [AutofillHints.name],
-            errorText: _nameError,
+            error: _nameError != null,
             onChanged: (_) {
               if (_nameError != null) setState(() => _nameError = null);
             },
           ),
+          if (_nameError != null) ...[
+            const SizedBox(height: 6),
+            CgRefError(message: _nameError!),
+          ],
           const SizedBox(height: 16),
-          CgTextField(
-            label: 'Mobile number',
+          const _RefLabel(text: 'Mobile number'),
+          const SizedBox(height: 8),
+          CgRefField(
             controller: _phoneController,
-            icon: Icons.phone_outlined,
             hint: '+880 1XXX-XXXXXX',
             keyboardType: TextInputType.phone,
             textInputAction: TextInputAction.next,
             enabled: !_loading,
             autofillHints: const [AutofillHints.telephoneNumber],
-            errorText: _phoneError,
+            error: _phoneError != null,
             onChanged: (_) {
               if (_phoneError != null) setState(() => _phoneError = null);
             },
           ),
+          if (_phoneError != null) ...[
+            const SizedBox(height: 6),
+            CgRefError(message: _phoneError!),
+          ],
           const SizedBox(height: 16),
-          CgTextField(
-            label: 'Email address',
+          const _RefLabel(text: 'Email address'),
+          const SizedBox(height: 8),
+          CgRefField(
             controller: _emailController,
-            icon: Icons.mail_outline_rounded,
             hint: 'you@example.com',
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
             enabled: !_loading,
             autofillHints: const [AutofillHints.email],
-            errorText: _emailError,
+            error: _emailError != null,
             onChanged: (_) {
               if (_emailError != null) setState(() => _emailError = null);
             },
           ),
+          if (_emailError != null) ...[
+            const SizedBox(height: 6),
+            CgRefError(message: _emailError!),
+          ],
           const SizedBox(height: 16),
-          CgTextField(
-            label: 'Password',
+          const _RefLabel(text: 'Password'),
+          const SizedBox(height: 8),
+          CgRefField(
             controller: _passwordController,
-            icon: Icons.lock_outline_rounded,
             hint: 'At least 6 characters',
             obscure: true,
             textInputAction: TextInputAction.done,
             enabled: !_loading,
             autofillHints: const [AutofillHints.newPassword],
-            errorText: _passwordError,
+            error: _passwordError != null,
             onSubmitted: (_) => _createAccount(),
             onChanged: (_) {
               if (_passwordError != null) {
@@ -170,134 +184,119 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               }
             },
           ),
-          const SizedBox(height: 16),
-          Text(
-            'I am a',
-            style: CgType.l12.copyWith(
-              color: c.text,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
+          if (_passwordError != null) ...[
+            const SizedBox(height: 6),
+            CgRefError(message: _passwordError!),
+          ],
+          const SizedBox(height: 20),
+          const _RefLabel(text: 'I am a'),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              for (final entry in _roles.entries) ...[
-                Expanded(
-                  child: _RoleButton(
-                    label: entry.value,
-                    selected: _role == entry.key,
-                    onTap: _loading
-                        ? null
-                        : () => setState(() => _role = entry.key),
-                  ),
+              for (final entry in _roles.entries)
+                CgRefChip(
+                  label: entry.value,
+                  selected: _role == entry.key,
+                  onTap: _loading
+                      ? null
+                      : () => setState(() => _role = entry.key),
                 ),
-                if (entry.key != _roles.keys.last) const SizedBox(width: 8),
-              ],
             ],
           ),
           const SizedBox(height: 20),
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: _loading
-                ? null
-                : () {
-                    setState(() {
-                      _terms = !_terms;
-                      if (_terms) _termsError = null;
-                    });
-                  },
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 20,
-                  height: 20,
-                  margin: const EdgeInsets.only(top: 2),
-                  decoration: BoxDecoration(
-                    color: _terms ? c.primary : c.surface,
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(
-                      color: _terms ? c.primary : c.line,
-                      width: 1.5,
+          Semantics(
+            checked: _terms,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _loading
+                  ? null
+                  : () {
+                      setState(() {
+                        _terms = !_terms;
+                        if (_terms) _termsError = null;
+                      });
+                    },
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 20,
+                    height: 20,
+                    margin: const EdgeInsets.only(top: 1),
+                    decoration: BoxDecoration(
+                      color: _terms ? c.primary : c.surface,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: _terms ? c.primary : c.outline,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: _terms
+                        ? Icon(Icons.check, size: 14, color: c.surface)
+                        : null,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          const TextSpan(text: 'I agree to the '),
+                          TextSpan(
+                            text: 'Terms',
+                            style: CgRefType.bodyS.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: c.text,
+                            ),
+                          ),
+                          const TextSpan(text: ' and '),
+                          TextSpan(
+                            text: 'Privacy Policy',
+                            style: CgRefType.bodyS.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: c.text,
+                            ),
+                          ),
+                        ],
+                      ),
+                      style: CgRefType.bodyS.copyWith(color: c.text2),
                     ),
                   ),
-                  child: _terms
-                      ? Icon(Icons.check, size: 14, color: c.onPrimary)
-                      : null,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text.rich(
-                    TextSpan(
-                      children: [
-                        const TextSpan(text: 'I agree to the '),
-                        TextSpan(
-                          text: 'Terms',
-                          style: CgType.b14.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: c.text,
-                          ),
-                        ),
-                        const TextSpan(text: ' and '),
-                        TextSpan(
-                          text: 'Privacy Policy',
-                          style: CgType.b14.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: c.text,
-                          ),
-                        ),
-                      ],
-                    ),
-                    style: CgType.b14.copyWith(color: c.text2),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           if (_termsError != null) ...[
-            const SizedBox(height: 6),
-            Text(
-              _termsError!,
-              style: CgType.l12.copyWith(color: CgColorConstants.danger),
-            ),
+            const SizedBox(height: 8),
+            CgRefError(message: _termsError!),
           ],
           if (_apiError != null) ...[
             const SizedBox(height: 12),
-            Text(
-              _apiError!,
-              style: CgType.l12.copyWith(
-                color: CgColorConstants.danger,
-                height: 1.4,
-              ),
-            ),
+            CgRefError(message: _apiError!),
           ],
           const SizedBox(height: 20),
-          CgPillButton(
-            width: double.infinity,
+          CgRefButton(
+            expand: true,
             loading: _loading,
             onTap: _createAccount,
             semanticLabel: 'Create account',
             child: const Text('Create account'),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           Wrap(
             alignment: WrapAlignment.center,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
                 'Already have an account? ',
-                style: CgType.b14.copyWith(color: c.text2),
+                style: CgRefType.bodyS.copyWith(color: c.text2),
               ),
-              GestureDetector(
+              CgRefLink(
+                label: 'Sign in',
+                color: c.primary,
+                minHeight: 28,
                 onTap: _loading ? null : () => context.go('/login'),
-                child: Text(
-                  'Sign in',
-                  style: CgType.b14.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: c.text,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
               ),
             ],
           ),
@@ -307,43 +306,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   }
 }
 
-class _RoleButton extends StatelessWidget {
-  const _RoleButton({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
+class _RefLabel extends StatelessWidget {
+  const _RefLabel({required this.text});
 
-  final String label;
-  final bool selected;
-  final VoidCallback? onTap;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    final c = CgColors.of(context);
-    return CgPressable(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        height: 44,
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        decoration: BoxDecoration(
-          color: selected ? c.primary : c.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: selected ? c.primary : c.line, width: 1.5),
-        ),
-        child: Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: CgType.l12.copyWith(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: selected ? c.onPrimary : c.text2,
-          ),
-        ),
-      ),
+    return Text(
+      text,
+      style: CgRefType.label.copyWith(color: CgRefColors.of(context).text2),
     );
   }
 }
