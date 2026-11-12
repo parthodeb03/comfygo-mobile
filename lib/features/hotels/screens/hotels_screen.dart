@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
 // Screen structure and layout from Phase 1; data wiring and validation from Phase 2.
 
 import 'package:flutter/material.dart';
@@ -12,7 +11,7 @@ import '../../../core/widgets/comfy_ui.dart';
 import '../../../state/service_providers.dart';
 
 /// Browse hotels and jump straight into a stay.
-class HotelsScreen extends ConsumerStatefulWidget {
+class HotelsScreen extends ConsumerStatefulWidget { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   const HotelsScreen({super.key});
 
   @override

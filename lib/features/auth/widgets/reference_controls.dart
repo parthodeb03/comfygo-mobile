@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
 // Reference controls (input, pill button, chip, sheet) for the auth screens.
 import 'package:flutter/material.dart';
 
@@ -7,7 +6,7 @@ import 'reference_theme.dart';
 
 /// Text field matching the reference `.in` class: 56dp tall, 16dp radius,
 /// 1px outline that becomes a 2px primary focus ring.
-class CgRefField extends StatefulWidget {
+class CgRefField extends StatefulWidget { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   const CgRefField({
     super.key,
     required this.controller,

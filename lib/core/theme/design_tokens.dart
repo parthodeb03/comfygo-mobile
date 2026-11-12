@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
-// Folders, theme, routes and reusable widgets from the Phase 1 plan.
-
 import 'package:flutter/material.dart';
 
 /// The single source of truth for ComfyGo visual tokens.
@@ -10,7 +7,7 @@ import 'package:flutter/material.dart';
 /// `AppColors`, `OneUISpacing`, `OneUITypography` or `Theme.of(context)`.
 ///
 /// All Pantone references in the design spec are approximate.
-abstract final class ComfyColors {
+abstract final class ComfyColors { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   ComfyColors._();
 
   // ─────────────────────────────────────────────────────────────

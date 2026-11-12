@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
-// Folders, theme, routes and reusable widgets from the Phase 1 plan.
-
 import 'package:flutter/material.dart';
 
 /// Design tokens for the "ComfyGo Mobile UI" reference.
@@ -9,7 +6,7 @@ import 'package:flutter/material.dart';
 /// declared in `assets/UI/ComfyGo Mobile UI.html`. New screens should read
 /// colours and type from here instead of hard-coding values.
 @immutable
-class CgColors {
+class CgColors { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   final Color bg;
   final Color surface;
   final Color primary;

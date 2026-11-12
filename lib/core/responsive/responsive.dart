@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
-// Folders, theme, routes and reusable widgets from the Phase 1 plan.
-
 import 'package:flutter/material.dart';
 
 import '../theme/design_tokens.dart';
@@ -8,7 +5,7 @@ import '../theme/design_tokens.dart';
 /// ─────────────────────────────────────────────────────────────
 /// Responsive breakpoints (Material 3 window size classes)
 /// ─────────────────────────────────────────────────────────────
-class Breakpoints {
+class Breakpoints { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   Breakpoints._();
 
   /// Phones (portrait) — single column layouts

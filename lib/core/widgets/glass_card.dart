@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
-// Folders, theme, routes and reusable widgets from the Phase 1 plan.
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -10,7 +7,7 @@ import 'travel_widgets.dart';
 
 /// Primary green button — full-width, gradient fill, glow shadow and a
 /// press micro-interaction.
-class CGButton extends StatefulWidget {
+class CGButton extends StatefulWidget { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   final String label;
   final VoidCallback? onPressed;
   final bool isLoading;

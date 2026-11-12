@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 3 · Testing and Finalization
 // Golden coverage for the reference landing / sign-in / sign-up screens.
 import 'dart:io';
 
@@ -12,7 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Loads the bundled families so the golden files show real typography instead
 /// of the test placeholder font.
-Future<void> _loadFonts() async {
+Future<void> _loadFonts() async { // Phase 3 · Testing and Finalization (2 Nov – 22 Nov 2026): tests, defect fixes, accessibility, docs, release build.
   const families = <String, List<String>>{
     'PlayfairDisplay': [
       'PlayfairDisplay-Regular.ttf',

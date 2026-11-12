@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
 // Screen structure and layout from Phase 1; data wiring and validation from Phase 2.
 
 import 'dart:io';
@@ -10,7 +9,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/comfy_design.dart';
 
 /// Photo shown by the auth backgrounds.
-const String kMountainAsset = 'assets/images/mountain.jfif';
+const String kMountainAsset = 'assets/images/mountain.jfif'; // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
 
 /// True full-bleed mountain backdrop for the auth screens.
 ///

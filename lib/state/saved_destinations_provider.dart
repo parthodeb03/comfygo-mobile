@@ -1,11 +1,8 @@
-// ComfyGo Project Plan — Phase 2 · Core Features and Data
-// Models, REST services and Provider state from the Phase 2 plan.
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// The category selected on Home / Explore.
-final selectedCategoryProvider = StateProvider<String>((ref) => 'All');
+final selectedCategoryProvider = StateProvider<String>((ref) => 'All'); // Phase 2 · Core Features and Data (5 Oct – 1 Nov 2026): models, REST services, providers, forms, search, bookings, dashboards.
 
 /// Destination ids the traveller has saved.
 ///

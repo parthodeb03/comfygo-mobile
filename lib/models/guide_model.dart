@@ -1,7 +1,4 @@
-// ComfyGo Project Plan — Phase 2 · Core Features and Data
-// Models, REST services and Provider state from the Phase 2 plan.
-
-class Guide {
+class Guide { // Phase 2 · Core Features and Data (5 Oct – 1 Nov 2026): models, REST services, providers, forms, search, bookings, dashboards.
   final int id;
   final int userId;
   final String name;

@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
-// Folders, theme, routes and reusable widgets from the Phase 1 plan.
-
 import 'package:flutter/material.dart';
 
 import 'design_tokens.dart';
@@ -10,7 +7,7 @@ import 'design_tokens.dart';
 /// Values live only in `design_tokens.dart`. This class keeps the historical
 /// names so existing screens continue to compile while they migrate to
 /// `AppColors` / `Theme.of(context)`.
-class OneUIColors {
+class OneUIColors { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   OneUIColors._();
 
   // Primary

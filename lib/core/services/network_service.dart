@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
-// Folders, theme, routes and reusable widgets from the Phase 1 plan.
-
 import 'dart:convert';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -16,7 +13,7 @@ import '../utils/app_logger.dart';
 
 /// Simple exception type for network errors so we can distinguish them
 /// from other DioException errors.
-class NetworkException implements Exception {
+class NetworkException implements Exception { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   final String message;
   const NetworkException(this.message);
 

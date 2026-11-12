@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
 // Screen structure and layout from Phase 1; data wiring and validation from Phase 2.
 
 import 'package:flutter/material.dart';
@@ -18,7 +17,7 @@ import '../widgets/mountain_hero.dart';
 ///
 /// Lays over a full-screen mountain photo with a frosted glass card so there
 /// is no empty section behind the form.
-class ForgotPasswordScreen extends ConsumerStatefulWidget {
+class ForgotPasswordScreen extends ConsumerStatefulWidget { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   const ForgotPasswordScreen({super.key});
 
   @override

@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
 // Screen structure and layout from Phase 1; data wiring and validation from Phase 2.
 
 import 'dart:math' as math;
@@ -13,7 +12,7 @@ import '../../../core/widgets/comfy_ui.dart';
 import '../../../models/models.dart';
 import '../../../state/service_providers.dart';
 
-class AdminPanelScreen extends ConsumerStatefulWidget {
+class AdminPanelScreen extends ConsumerStatefulWidget { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   const AdminPanelScreen({super.key});
 
   @override

@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
 // Landing-page artwork: painted scenes, photo-style header and scribble.
 import 'dart:math' as math;
 
@@ -11,7 +10,7 @@ import 'reference_theme.dart';
 /// The reference draws each destination as an inline SVG (sky gradient, sun,
 /// two ridge silhouettes and a pair of trees). Painting it keeps the screens
 /// identical at every size and avoids depending on remote imagery.
-class CgSceneArt extends StatelessWidget {
+class CgSceneArt extends StatelessWidget { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   const CgSceneArt({super.key, required this.sky, required this.ridge});
 
   /// Upper colour of the sky gradient (`a[1]` in the reference data).

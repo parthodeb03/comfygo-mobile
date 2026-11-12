@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
 // Mock catalogue that backs the Phase 1 navigable prototype.
 
 /// Division-wise tourist spots of Bangladesh.
@@ -7,7 +6,7 @@
 /// Photos are real, locally bundled Bangladesh photography (see
 /// `assets/images/spots/`). Spots are for inspiration — the app books
 /// hotels and transport, not the spots themselves.
-class TouristSpot {
+class TouristSpot { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   final String id;
   final String name;
   final String division;

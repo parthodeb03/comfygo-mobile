@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 3 · Testing and Finalization
-// Provider, widget and flow tests from the Phase 3 plan.
-
 import 'package:comfygo/core/theme/theme.dart';
 import 'package:comfygo/features/guides/screens/guides_screen.dart';
 import 'package:comfygo/features/spots/screens/spots_screen.dart';
@@ -14,7 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 /// Minimal payload that satisfies every list model used by these screens.
-final sample = <String, dynamic>{
+final sample = <String, dynamic>{ // Phase 3 · Testing and Finalization (2 Nov – 22 Nov 2026): tests, defect fixes, accessibility, docs, release build.
   'id': 1,
   'name': 'A beautiful place',
   'description': 'Scenery and memorable experiences on your next journey.',

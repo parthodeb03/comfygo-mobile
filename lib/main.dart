@@ -1,18 +1,22 @@
 // ComfyGo Project Plan — phase map (plan §07, Development Milestones)
 //
 // The submission document splits the work into three phases. Every source file
-// carries a matching tag at the top so the phase a piece of work belongs to is
-// visible where it lives:
+// names its phase in a trailing comment on its first declaration line, and the
+// full scope of each phase is listed here. The commit history labels the same
+// phases "Phase - 1", "Phase - 2" and "Phase - 3".
 //
 //   Phase 1  Foundation and UI        (20 Sep – 4 Oct 2026)
-//            Project setup, folders, theme, routes, reusable widgets and the
-//            main screen structures with mock data.
+//            Includes project setup, folders, theme, routes, reusable widgets
+//            and the main screen structures with mock data.
+//            Output: a navigable UI prototype.
 //   Phase 2  Core Features and Data   (5 Oct – 1 Nov 2026)
-//            Models, REST services and Provider classes, validated forms,
-//            local settings, search, booking flow and role dashboards.
+//            Includes models, REST services and Provider classes, validated
+//            forms, local settings, search, booking flow and role dashboards.
+//            Output: a functional app connected to the backend.
 //   Phase 3  Testing and Finalization (2 Nov – 22 Nov 2026)
-//            Unit, widget and flow tests, defect fixes, error states,
+//            Includes unit, widget and flow tests, defect fixes, error states,
 //            responsiveness, accessibility and release documentation.
+//            Output: a stable, documented app ready for demonstration.
 //
 // This entry point is Phase 2 wiring: it mounts the Phase 1 theme and router
 // and starts the Phase 2 health check behind the Phase 3 offline banner.
@@ -32,7 +36,7 @@ import 'core/services/network_service.dart';
 import 'state/auth_provider.dart';
 import 'state/theme_provider.dart';
 
-void main() {
+void main() { // Phase 2 · Core Features and Data (5 Oct – 1 Nov 2026): app entry point and health-check wiring.
   WidgetsFlutterBinding.ensureInitialized();
 
   SystemChrome.setSystemUIOverlayStyle(

@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 3 · Testing and Finalization
-// Provider, widget and flow tests from the Phase 3 plan.
-
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -24,7 +21,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-Transport _transport({int total = 40, int available = 30, int id = 1}) =>
+Transport _transport({int total = 40, int available = 30, int id = 1}) => // Phase 3 · Testing and Finalization (2 Nov – 22 Nov 2026): tests, defect fixes, accessibility, docs, release build.
     Transport(
       id: id,
       name: 'Test Express',

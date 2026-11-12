@@ -1,10 +1,7 @@
-// ComfyGo Project Plan — Phase 2 · Core Features and Data
-// Models, REST services and Provider state from the Phase 2 plan.
-
 import 'package:equatable/equatable.dart';
 
 /// A review left on a completed booking (one per booking).
-class Review extends Equatable {
+class Review extends Equatable { // Phase 2 · Core Features and Data (5 Oct – 1 Nov 2026): models, REST services, providers, forms, search, bookings, dashboards.
   final int id;
   final int userId;
   final int bookingId;

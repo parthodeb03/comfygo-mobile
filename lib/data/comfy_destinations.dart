@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
 // Mock catalogue that backs the Phase 1 navigable prototype.
 
 /// Destinations shown by the redesigned ComfyGo screens.
@@ -6,7 +5,7 @@
 /// The photos are the locally bundled, destination-specific sets that live in
 /// `assets/images/<Destination>/`. Each entry keeps every photo so the detail
 /// screen can show the full gallery.
-class ComfyDestination {
+class ComfyDestination { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   final int id;
   final String name;
   final String region;

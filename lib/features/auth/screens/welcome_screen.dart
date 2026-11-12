@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
 // Landing screen ("Travel and share moments with us") from the reference UI.
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -10,7 +9,7 @@ import '../widgets/reference_theme.dart';
 
 /// First page of the reference: the tilted-photo collage, the headline and the
 /// two entry actions. Shown once the intro slides are done, before sign in.
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends StatelessWidget { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   const WelcomeScreen({super.key});
 
   @override

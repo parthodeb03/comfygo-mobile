@@ -1,12 +1,9 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
-// Folders, theme, routes and reusable widgets from the Phase 1 plan.
-
 import 'package:flutter/material.dart';
 
 import 'design_tokens.dart';
 
 /// Foreground/background pair for a semantic badge.
-typedef StatusColors = ({Color foreground, Color background});
+typedef StatusColors = ({Color foreground, Color background}); // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
 
 /// Theme-aware colours.
 ///

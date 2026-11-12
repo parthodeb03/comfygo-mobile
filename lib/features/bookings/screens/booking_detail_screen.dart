@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
 // Screen structure and layout from Phase 1; data wiring and validation from Phase 2.
 
 import 'package:flutter/material.dart';
@@ -13,7 +12,7 @@ import '../../../models/models.dart';
 import '../../../services/invoice_pdf.dart';
 import '../../../state/service_providers.dart';
 
-class BookingDetailScreen extends ConsumerStatefulWidget {
+class BookingDetailScreen extends ConsumerStatefulWidget { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   final int id;
 
   const BookingDetailScreen({super.key, required this.id});

@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
-// Folders, theme, routes and reusable widgets from the Phase 1 plan.
-
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
@@ -9,7 +6,7 @@ import '../theme/design_tokens.dart';
 /// Soft, nature-inspired backdrop: a gentle green wash, glowing sunlit blobs
 /// and a faint hill silhouette. Keeps screens from looking empty while text
 /// and cards stay fully readable on top.
-class NatureBackground extends StatelessWidget {
+class NatureBackground extends StatelessWidget { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   final Widget? child;
 
   const NatureBackground({super.key, this.child});

@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
 // Screen structure and layout from Phase 1; data wiring and validation from Phase 2.
 
 import 'package:flutter/material.dart';
@@ -12,7 +11,7 @@ import '../../../state/auth_provider.dart';
 
 /// Contact form — messages are saved to the database and shown in the
 /// admin's inbox (`GET /api/v1/contact/inbox`).
-class ContactScreen extends ConsumerStatefulWidget {
+class ContactScreen extends ConsumerStatefulWidget { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   const ContactScreen({super.key});
 
   @override

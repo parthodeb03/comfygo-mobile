@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
-// Folders, theme, routes and reusable widgets from the Phase 1 plan.
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -11,7 +8,7 @@ import 'one_ui_typography.dart';
 ///
 /// Every colour, radius, duration and type size comes from
 /// `design_tokens.dart`. Screens must read values through the theme.
-class OneUITheme {
+class OneUITheme { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   OneUITheme._();
 
   static final ThemeData lightTheme = _build(

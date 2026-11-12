@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
 // Screen structure and layout from Phase 1; data wiring and validation from Phase 2.
 
 import 'package:flutter/material.dart';
@@ -12,7 +11,7 @@ import '../../../data/tourist_spots.dart';
 
 /// Rich spot detail: description, how to get there, best time and tips.
 /// Spots are informational — the call to action books a hotel stay.
-class SpotDetailScreen extends StatelessWidget {
+class SpotDetailScreen extends StatelessWidget { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   final String id;
 
   const SpotDetailScreen({super.key, required this.id});

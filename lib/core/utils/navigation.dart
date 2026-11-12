@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
-// Folders, theme, routes and reusable widgets from the Phase 1 plan.
-
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,7 +7,7 @@ import 'package:go_router/go_router.dart';
 /// the home screen. Without the fallback, a page opened with `context.go(...)`
 /// (or reached after a redirect) leaves the user with a back arrow that does
 /// nothing.
-void goBack(BuildContext context) {
+void goBack(BuildContext context) { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   final router = GoRouter.of(context);
   if (router.canPop()) {
     router.pop();

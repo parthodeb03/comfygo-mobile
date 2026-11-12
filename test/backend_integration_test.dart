@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 3 · Testing and Finalization
-// Provider, widget and flow tests from the Phase 3 plan.
-
 /// Backend integration tests — exercises the REAL frontend service layer
 /// against the live FastAPI backend at http://localhost:8000.
 ///
@@ -21,7 +18,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+void main() { // Phase 3 · Testing and Finalization (2 Nov – 22 Nov 2026): tests, defect fixes, accessibility, docs, release build.
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late ApiClient apiClient;

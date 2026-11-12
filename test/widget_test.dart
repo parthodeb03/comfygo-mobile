@@ -1,12 +1,9 @@
-// ComfyGo Project Plan — Phase 3 · Testing and Finalization
-// Provider, widget and flow tests from the Phase 3 plan.
-
 import 'package:comfygo/main.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+void main() { // Phase 3 · Testing and Finalization (2 Nov – 22 Nov 2026): tests, defect fixes, accessibility, docs, release build.
   TestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('App smoke test', (WidgetTester tester) async {

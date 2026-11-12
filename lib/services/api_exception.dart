@@ -1,13 +1,10 @@
-// ComfyGo Project Plan — Phase 2 · Core Features and Data
-// Models, REST services and Provider state from the Phase 2 plan.
-
 import 'package:dio/dio.dart';
 
 /// Failure from the backend, carrying the user-facing message.
 ///
 /// Submit-style service calls throw this instead of returning `null` so the
 /// UI can show *why* something failed (e.g. "Only 3 seats available").
-class ApiException implements Exception {
+class ApiException implements Exception { // Phase 2 · Core Features and Data (5 Oct – 1 Nov 2026): models, REST services, providers, forms, search, bookings, dashboards.
   final String message;
   final int? statusCode;
 

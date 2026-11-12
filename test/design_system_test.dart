@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 3 · Testing and Finalization
-// Provider, widget and flow tests from the Phase 3 plan.
-
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -10,7 +7,7 @@ import 'package:comfygo/core/widgets/one_ui_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-double _luminance(Color color) {
+double _luminance(Color color) { // Phase 3 · Testing and Finalization (2 Nov – 22 Nov 2026): tests, defect fixes, accessibility, docs, release build.
   double channel(double value) {
     return value <= 0.04045
         ? value / 12.92

@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 2 · Core Features and Data
-// Models, REST services and Provider state from the Phase 2 plan.
-
 import 'package:dio/dio.dart';
 
 import '../core/utils/app_logger.dart';
@@ -8,7 +5,7 @@ import '../models/hotel_model.dart';
 import 'api_client.dart';
 
 /// Hotel Service
-class HotelService {
+class HotelService { // Phase 2 · Core Features and Data (5 Oct – 1 Nov 2026): models, REST services, providers, forms, search, bookings, dashboards.
   final ApiClient _apiClient;
 
   HotelService(this._apiClient);

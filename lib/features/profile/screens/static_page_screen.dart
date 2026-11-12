@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
 // Screen structure and layout from Phase 1; data wiring and validation from Phase 2.
 
 import 'package:flutter/material.dart';
@@ -9,7 +8,7 @@ import '../../../core/widgets/comfy_page.dart';
 import '../../../core/widgets/comfy_ui.dart';
 
 /// Content data for a static info page.
-class StaticPageData {
+class StaticPageData { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   final String title;
   final IconData icon;
   final List<StaticSection> sections;

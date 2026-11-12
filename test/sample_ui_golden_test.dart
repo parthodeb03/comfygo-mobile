@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 3 · Testing and Finalization
-// Provider, widget and flow tests from the Phase 3 plan.
-
 import 'dart:io';
 
 import 'package:comfygo/core/theme/theme.dart';
@@ -19,7 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-final _destination = Destination(
+final _destination = Destination( // Phase 3 · Testing and Finalization (2 Nov – 22 Nov 2026): tests, defect fixes, accessibility, docs, release build.
   id: 7,
   name: 'Sylhet',
   description: 'Tea gardens, waterfalls, and river valleys.',

@@ -1,7 +1,4 @@
-// ComfyGo Project Plan — Phase 2 · Core Features and Data
-// Models, REST services and Provider state from the Phase 2 plan.
-
-enum PaymentMethod { card, cash, bkash, nagad }
+enum PaymentMethod { card, cash, bkash, nagad } // Phase 2 · Core Features and Data (5 Oct – 1 Nov 2026): models, REST services, providers, forms, search, bookings, dashboards.
 
 enum PaymentStatus { pending, completed, failed, refunded, voided }
 

@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 2 · Core Features and Data
-// Models, REST services and Provider state from the Phase 2 plan.
-
 import 'package:dio/dio.dart';
 
 import '../core/utils/app_logger.dart';
@@ -9,7 +6,7 @@ import 'api_client.dart';
 import 'api_exception.dart';
 
 /// Payment Service
-class PaymentService {
+class PaymentService { // Phase 2 · Core Features and Data (5 Oct – 1 Nov 2026): models, REST services, providers, forms, search, bookings, dashboards.
   final ApiClient _apiClient;
 
   PaymentService(this._apiClient);

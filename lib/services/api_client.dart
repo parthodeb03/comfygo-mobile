@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 2 · Core Features and Data
-// Models, REST services and Provider state from the Phase 2 plan.
-
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -10,7 +7,7 @@ import '../core/services/network_service.dart';
 import '../core/utils/app_logger.dart';
 
 /// API Client with JWT authentication, retry, and offline caching
-class ApiClient {
+class ApiClient { // Phase 2 · Core Features and Data (5 Oct – 1 Nov 2026): models, REST services, providers, forms, search, bookings, dashboards.
   late final Dio _dio;
   final FlutterSecureStorage _storage;
 

@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 3 · Testing and Finalization
 // Widget coverage for the reference landing / sign-in / sign-up screens.
 import 'package:comfygo/features/auth/screens/login_screen.dart';
 import 'package:comfygo/features/auth/screens/signup_screen.dart';
@@ -11,7 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-Future<void> _pump(
+Future<void> _pump( // Phase 3 · Testing and Finalization (2 Nov – 22 Nov 2026): tests, defect fixes, accessibility, docs, release build.
   WidgetTester tester,
   Widget screen, {
   Size size = const Size(390, 844),

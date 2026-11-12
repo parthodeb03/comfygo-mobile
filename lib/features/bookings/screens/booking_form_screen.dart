@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
 // Screen structure and layout from Phase 1; data wiring and validation from Phase 2.
 
 import 'dart:math';
@@ -20,7 +19,7 @@ import '../../../state/service_providers.dart';
 /// Numbers run down the columns: the first row of seats is `1A 1B | 2A 2B`,
 /// the next is `3A 3B | 4A 4B`, and so on — each number is a seat pair and
 /// `A`/`B` are its two seats.
-String transportSeatLabel(int seatNumber) {
+String transportSeatLabel(int seatNumber) { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   final idx = seatNumber - 1;
   return '${idx ~/ 2 + 1}${idx.isEven ? 'A' : 'B'}';
 }

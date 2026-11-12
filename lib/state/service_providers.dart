@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 2 · Core Features and Data
-// Models, REST services and Provider state from the Phase 2 plan.
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/services.dart';
@@ -11,7 +8,7 @@ import '../services/invoice_pdf.dart';
 import 'auth_provider.dart';
 
 /// Destination Service Provider
-final destinationServiceProvider = Provider<DestinationService>((ref) {
+final destinationServiceProvider = Provider<DestinationService>((ref) { // Phase 2 · Core Features and Data (5 Oct – 1 Nov 2026): models, REST services, providers, forms, search, bookings, dashboards.
   final apiClient = ref.watch(apiClientProvider);
   return DestinationService(apiClient);
 });

@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 3 · Testing and Finalization
-// Provider, widget and flow tests from the Phase 3 plan.
-
 import 'package:comfygo/core/theme/theme.dart';
 import 'package:comfygo/core/widgets/comfy_ui.dart';
 import 'package:comfygo/core/widgets/navigation_shell.dart';
@@ -10,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-void main() {
+void main() { // Phase 3 · Testing and Finalization (2 Nov – 22 Nov 2026): tests, defect fixes, accessibility, docs, release build.
   for (final width in [320.0, 840.0, 1440.0]) {
     testWidgets('Navigation adapts and follows the route at $width', (
       tester,

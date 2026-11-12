@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
 // Shared sign-in / sign-up page frame from the reference UI.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,7 +11,7 @@ import 'reference_theme.dart';
 /// The sheet is pulled 24dp over the photo (CSS `-mt-6`) so its rounded top
 /// corners reveal the artwork behind it, and the page gradient stays visible
 /// underneath it.
-class CgAuthPage extends StatelessWidget {
+class CgAuthPage extends StatelessWidget { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   const CgAuthPage({
     super.key,
     required this.title,

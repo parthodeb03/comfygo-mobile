@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
 // Screen structure and layout from Phase 1; data wiring and validation from Phase 2.
 
 import 'package:flutter/material.dart';
@@ -13,7 +12,7 @@ import '../../../state/auth_provider.dart';
 
 /// Launch screen: waits for the auth check, then routes to
 /// intro slides (first run) → login, or straight home when signed in.
-class SplashScreen extends ConsumerStatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   const SplashScreen({super.key});
 
   /// SharedPreferences key marking that the intro slides were shown once.

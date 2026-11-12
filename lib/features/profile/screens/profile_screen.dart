@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
 // Screen structure and layout from Phase 1; data wiring and validation from Phase 2.
 
 import 'package:flutter/material.dart';
@@ -11,7 +10,7 @@ import '../../../core/widgets/comfy_ui.dart';
 import '../../../state/auth_provider.dart';
 import '../../../state/theme_provider.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerWidget { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   const ProfileScreen({super.key});
 
   /// Quick links to every bookable section, mirroring the Home shortcuts.

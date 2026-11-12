@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
 // Design tokens transcribed 1:1 from the reference UI (plan §06, §07).
 import 'package:flutter/material.dart';
 
@@ -9,7 +8,7 @@ import 'package:flutter/material.dart';
 /// that overrides the earlier palettes, so these are the colours the reference
 /// actually paints.
 @immutable
-class CgRefColors {
+class CgRefColors { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   const CgRefColors({
     required this.bg,
     required this.surface,

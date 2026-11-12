@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
 // Screen structure and layout from Phase 1; data wiring and validation from Phase 2.
 
 import 'dart:math' as math;
@@ -13,7 +12,7 @@ import '../../../core/widgets/comfy_ui.dart';
 import 'splash_screen.dart';
 
 /// First-run artwork screen, reproduced from the reference intro page.
-class IntroScreen extends StatefulWidget {
+class IntroScreen extends StatefulWidget { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   const IntroScreen({super.key});
 
   @override

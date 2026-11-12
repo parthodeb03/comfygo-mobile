@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
-// Folders, theme, routes and reusable widgets from the Phase 1 plan.
-
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
@@ -10,7 +7,7 @@ import '../theme/design_tokens.dart';
 ///
 /// Uses the amber status pair, keeps the retry action at 48dp, and announces
 /// itself to screen readers.
-class OfflineBanner extends StatelessWidget {
+class OfflineBanner extends StatelessWidget { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   final VoidCallback onRetry;
   final String title;
   final String message;

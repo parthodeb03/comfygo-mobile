@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
-// Folders, theme, routes and reusable widgets from the Phase 1 plan.
-
 import 'package:flutter/material.dart';
 
 import 'comfy_design.dart';
@@ -10,7 +7,7 @@ import 'comfy_design.dart';
 /// Screens read colours from [CgColors] directly; this theme keeps built-in
 /// widgets (app bars, dialogs, snack bars, pickers, progress) consistent with
 /// the same design language.
-abstract final class CgTheme {
+abstract final class CgTheme { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   CgTheme._();
 
   static const Color _errorLight = Color(0xFFC0453A);

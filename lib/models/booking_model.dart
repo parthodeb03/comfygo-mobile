@@ -1,7 +1,4 @@
-// ComfyGo Project Plan — Phase 2 · Core Features and Data
-// Models, REST services and Provider state from the Phase 2 plan.
-
-enum BookingStatus { pending, confirmed, cancelled, completed }
+enum BookingStatus { pending, confirmed, cancelled, completed } // Phase 2 · Core Features and Data (5 Oct – 1 Nov 2026): models, REST services, providers, forms, search, bookings, dashboards.
 
 enum BookingType { hotel, transport, guide, destination }
 

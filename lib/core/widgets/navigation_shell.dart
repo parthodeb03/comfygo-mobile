@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
-// Folders, theme, routes and reusable widgets from the Phase 1 plan.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,7 +9,7 @@ import 'comfy_ui.dart';
 /// App shell for the five primary tabs.
 ///
 /// Route order is the tab order: Home, Explore, Bookings, Saved, Profile.
-class NavigationShell extends ConsumerWidget {
+class NavigationShell extends ConsumerWidget { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   static const List<String> routes = <String>[
     '/',
     '/destinations',

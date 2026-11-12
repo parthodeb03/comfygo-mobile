@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 2 · Core Features and Data
-// Models, REST services and Provider state from the Phase 2 plan.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme/theme.dart';
 
 /// Theme State
-class ThemeState {
+class ThemeState { // Phase 2 · Core Features and Data (5 Oct – 1 Nov 2026): models, REST services, providers, forms, search, bookings, dashboards.
   final ThemeMode themeMode;
   final bool isDarkMode;
 

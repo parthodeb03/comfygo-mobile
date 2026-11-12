@@ -1,4 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
 // Sign-up screen in the reference visual language; validation and registration
 // are the Phase 2 work it wraps.
 import 'package:flutter/material.dart';
@@ -10,7 +9,7 @@ import '../widgets/reference_auth_page.dart';
 import '../widgets/reference_controls.dart';
 import '../widgets/reference_theme.dart';
 
-class SignupScreen extends ConsumerStatefulWidget {
+class SignupScreen extends ConsumerStatefulWidget { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   const SignupScreen({super.key});
 
   @override

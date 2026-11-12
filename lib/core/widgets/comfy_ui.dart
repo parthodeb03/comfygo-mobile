@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
-// Folders, theme, routes and reusable widgets from the Phase 1 plan.
-
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
@@ -13,7 +10,7 @@ import '../../state/saved_destinations_provider.dart';
 import '../theme/comfy_design.dart';
 
 /// Shared backdrop photo used by [CgBackground] across the whole app.
-const String kCgBackdropAsset = 'assets/images/background image.jfif';
+const String kCgBackdropAsset = 'assets/images/background image.jfif'; // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
 
 /// Full-screen background used by every redesigned page.
 ///

@@ -1,13 +1,10 @@
-// ComfyGo Project Plan — Phase 1 · Foundation and UI
-// Folders, theme, routes and reusable widgets from the Phase 1 plan.
-
 import 'design_tokens.dart';
 
 /// Spacing, shape and motion names used across the app.
 ///
 /// Values live only in `design_tokens.dart`. The legacy names are preserved so
 /// existing widgets keep compiling while they migrate.
-class OneUISpacing {
+class OneUISpacing { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   OneUISpacing._();
 
   // Spacing scale (4pt grid)

@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 2 · Core Features and Data
-// Models, REST services and Provider state from the Phase 2 plan.
-
 import 'dart:typed_data';
 
 import 'package:intl/intl.dart';
@@ -15,7 +12,7 @@ import '../models/booking_model.dart';
 /// Requirements honoured here:
 ///  * all text is clean, plain English (built-in Helvetica fonts),
 ///  * money is always written as "BDT 15,000.00" — never a currency glyph.
-class InvoicePdf {
+class InvoicePdf { // Phase 2 · Core Features and Data (5 Oct – 1 Nov 2026): models, REST services, providers, forms, search, bookings, dashboards.
   InvoicePdf._();
 
   static final DateFormat _dateFmt = DateFormat('d MMMM yyyy');

@@ -1,6 +1,3 @@
-// ComfyGo Project Plan — Phase 3 · Testing and Finalization
-// Provider, widget and flow tests from the Phase 3 plan.
-
 import 'package:comfygo/core/theme/one_ui_theme.dart';
 import 'package:comfygo/features/admin/screens/admin_panel_screen.dart';
 import 'package:comfygo/models/models.dart';
@@ -10,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-class _AdminPreviewService implements AdminService {
+class _AdminPreviewService implements AdminService { // Phase 3 · Testing and Finalization (2 Nov – 22 Nov 2026): tests, defect fixes, accessibility, docs, release build.
   @override
   Future<Map<String, dynamic>> getStats() async => {
     'users': 0,
