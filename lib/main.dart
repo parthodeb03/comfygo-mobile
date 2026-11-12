@@ -36,8 +36,12 @@ import 'core/services/network_service.dart';
 import 'state/auth_provider.dart';
 import 'state/theme_provider.dart';
 
-void main() { // Phase 2 · Core Features and Data (5 Oct – 1 Nov 2026): app entry point and health-check wiring.
+Future<void> main() async { // Phase 2 · Core Features and Data (5 Oct – 1 Nov 2026): app entry point and health-check wiring.
   WidgetsFlutterBinding.ensureInitialized();
+
+  // On Android, pick the host alias that actually answers (emulator vs USB
+  // phone) before the first request goes out.
+  await resolveBackendBaseUrl();
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

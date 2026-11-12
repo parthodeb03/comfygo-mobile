@@ -265,6 +265,9 @@ class _GlassRoundButton extends StatelessWidget {
 
 /// The three tilted photo cards plus the hand-drawn orange loop that open the
 /// landing screen.
+///
+/// Each card shows one of the bundled destination photos (Sreemangal in front,
+/// Cox's Bazar and the Sundarbans behind) with the name of the place on it.
 class CgCollage extends StatelessWidget {
   const CgCollage({super.key});
 
@@ -288,7 +291,7 @@ class CgCollage extends StatelessWidget {
           required double cardHeight,
           required double radius,
           required double angle,
-          required CgSceneArt scene,
+          required Widget scene,
           Widget? overlay,
           double? right,
           Border? border,
@@ -338,10 +341,15 @@ class CgCollage extends StatelessWidget {
                 cardHeight: 200,
                 radius: 18,
                 angle: -8,
-                scene: const CgSceneArt(
-                  sky: Color(0xFFE8D9B0),
-                  ridge: Color(0xFF1F6F8B),
+                scene: const _CollagePhoto(
+                  asset: 'assets/images/Coxs Bazar/Coxs_Bazar.jfif',
+                  label: 'Cox’s Bazar',
+                  fallback: CgSceneArt(
+                    sky: Color(0xFFE8D9B0),
+                    ridge: Color(0xFF1F6F8B),
+                  ),
                 ),
+                overlay: const _GlassPill(label: 'Cox’s Bazar'),
               ),
               card(
                 right: 20,
@@ -350,10 +358,19 @@ class CgCollage extends StatelessWidget {
                 cardHeight: 210,
                 radius: 18,
                 angle: 7,
-                scene: const CgSceneArt(
-                  sky: Color(0xFFB7C9A8),
-                  ridge: Color(0xFF3E5C76),
+                scene: const _CollagePhoto(
+                  asset: 'assets/images/Sundarban/Sundarbans.jfif',
+                  label: 'Sundarbans',
+                  fallback: CgSceneArt(
+                    sky: Color(0xFFB7C9A8),
+                    ridge: Color(0xFF3E5C76),
+                  ),
                 ),
+                overlay: const _GlassPill(label: 'Sundarbans'),
+              ),
+              // The loop weaves behind the front photo so the label stays legible.
+              Positioned.fill(
+                child: IgnorePointer(child: CgScribble(s: s)),
               ),
               card(
                 left: 105,
@@ -366,19 +383,44 @@ class CgCollage extends StatelessWidget {
                   color: Colors.white.withValues(alpha: .75),
                   width: 5 * s,
                 ),
-                scene: const CgSceneArt(
-                  sky: Color(0xFFA8C98B),
-                  ridge: Color(0xFF2F6B4A),
+                scene: const _CollagePhoto(
+                  asset: 'assets/images/Srimangal/Srimangal_1.jfif',
+                  label: 'Sreemangal, Sylhet',
+                  fallback: CgSceneArt(
+                    sky: Color(0xFFA8C98B),
+                    ridge: Color(0xFF2F6B4A),
+                  ),
                 ),
-                overlay: _GlassPill(label: 'Sreemangal, Sylhet'),
-              ),
-              Positioned.fill(
-                child: IgnorePointer(child: CgScribble(s: s)),
+                overlay: const _GlassPill(label: 'Sreemangal, Sylhet'),
               ),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+/// One bundled destination photo for the landing collage. The painted scene is
+/// kept as a fallback so the layout survives a missing asset.
+class _CollagePhoto extends StatelessWidget {
+  const _CollagePhoto({
+    required this.asset,
+    required this.label,
+    required this.fallback,
+  });
+
+  final String asset;
+  final String label;
+  final Widget fallback;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      asset,
+      fit: BoxFit.cover,
+      semanticLabel: label,
+      errorBuilder: (context, error, stackTrace) => fallback,
     );
   }
 }

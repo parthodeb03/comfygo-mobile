@@ -1,20 +1,64 @@
+import 'package:flutter/foundation.dart';
+
 /// API Configuration Constants
 class ApiConstants { // Phase 1 · Foundation and UI (20 Sep – 4 Oct 2026): project setup, theme, routes, widgets, mock-data screens.
   ApiConstants._();
 
-  // Base URL — override at build/run time when needed:
-  //   flutter run --dart-define=API_BASE_URL=http://YOUR_PC_LAN_IP:8000
-  //
-  // Default assumes a physical phone reaching the host through the ADB
-  // reverse tunnel, which must be set up while the phone is plugged in:
-  //   adb reverse tcp:8000 tcp:8000
-  //
-  // For the Android emulator use the host alias instead:
-  //   flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000
-  static const String baseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://localhost:8000',
-  );
+  /// Base URL of the FastAPI backend.
+  ///
+  /// Defaults to the address that actually reaches the development machine
+  /// from the running platform:
+  ///   * Android emulator → `10.0.2.2` (the emulator's alias for the host)
+  ///   * everything else  → `localhost`
+  ///
+  /// A USB phone reaches the host through `localhost` once the reverse tunnel
+  /// is set up (`adb reverse tcp:8000 tcp:8000`); if that is missing, the first
+  /// request transparently retries `10.0.2.2` and keeps the host that works.
+  ///
+  /// Override at run time when neither default applies (e.g. a phone on the
+  /// same Wi-Fi as the PC):
+  ///   flutter run --dart-define=API_BASE_URL=http://192.168.0.110:8000
+  static String baseUrl = _override.isNotEmpty ? _override : _platformDefault;
+
+  static const String _override = String.fromEnvironment('API_BASE_URL');
+  static const String _localhost = 'http://localhost:8000';
+  static const String _emulator = 'http://10.0.2.2:8000';
+
+  static String get _platformDefault =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.android
+      ? _emulator
+      : _localhost;
+
+  /// True when the URL came from `--dart-define`; explicit config is never
+  /// second-guessed at runtime.
+  static bool get isOverridden => _override.isNotEmpty;
+
+  /// Hosts to probe once at startup on Android, in order of preference.
+  ///
+  /// Empty when the URL was supplied explicitly or the platform has a single
+  /// correct host (desktop, web, iOS).
+  static List<String> get androidHostCandidates =>
+      !isOverridden &&
+          !kIsWeb &&
+          defaultTargetPlatform == TargetPlatform.android
+      ? const [_emulator, _localhost]
+      : const [];
+
+  /// The other Android host alias to try when [baseUrl] is unreachable, or
+  /// `null` on platforms where there is nothing to fall back to.
+  static String? get fallbackBaseUrl {
+    if (isOverridden ||
+        kIsWeb ||
+        defaultTargetPlatform != TargetPlatform.android) {
+      return null;
+    }
+    if (baseUrl == _emulator) return _localhost;
+    if (baseUrl == _localhost) return _emulator;
+    return null;
+  }
+
+  /// Remembers the host that answered so later requests skip the dead one.
+  static void useBaseUrl(String url) => baseUrl = url;
 
   // API Prefix
   static const String apiPrefix = '/api/v1';

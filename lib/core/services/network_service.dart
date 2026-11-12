@@ -67,6 +67,48 @@ class ConnectivityInterceptor extends Interceptor {
 
 /// Automatically retries failed requests for transient errors
 /// (timeout, connection refused, server 5xx).
+/// Retries once against the other Android host alias when a request cannot
+/// connect at all, then keeps the host that answered.
+///
+/// `10.0.2.2` is the emulator's alias for the development machine; `localhost`
+/// works on a USB phone with `adb reverse tcp:8000 tcp:8000`. Trying both means
+/// a plain `flutter run` works either way without a `--dart-define`.
+class HostFallbackInterceptor extends Interceptor {
+  HostFallbackInterceptor(this.dio);
+
+  final Dio dio;
+
+  static const String _triedKey = 'host_fallback_tried';
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    final fallback = ApiConstants.fallbackBaseUrl;
+    final options = err.requestOptions;
+
+    // Only a refused or never-opened connection is retried; no request bytes
+    // were sent, so repeating it cannot duplicate a write.
+    final unreachable =
+        err.type == DioExceptionType.connectionError ||
+        err.type == DioExceptionType.connectionTimeout;
+    if (fallback == null || !unreachable || options.extra[_triedKey] == true) {
+      return handler.next(err);
+    }
+
+    options.extra[_triedKey] = true;
+    options.baseUrl = fallback;
+    AppLogger.info('[API] ${options.uri} unreachable, retrying $fallback');
+
+    try {
+      final response = await dio.fetch(options);
+      ApiConstants.useBaseUrl(fallback);
+      dio.options.baseUrl = fallback;
+      return handler.resolve(response);
+    } catch (_) {
+      return handler.next(err);
+    }
+  }
+}
+
 class RetryInterceptor extends Interceptor {
   final Dio dio;
   final int maxRetries;
@@ -238,6 +280,48 @@ class OfflineCacheInterceptor extends Interceptor {
 // ═══════════════════════════════════════════════════════════════
 // BACKEND HEALTH CHECK
 // ═══════════════════════════════════════════════════════════════
+
+/// Picks the Android host that really answers before the app sends its first
+/// request.
+///
+/// The emulator reaches the development machine at `10.0.2.2`, while a USB
+/// phone reaches it at `localhost` once `adb reverse tcp:8000 tcp:8000` is set
+/// up. Probing both avoids the "connection refused" first login that happens
+/// when the default does not match the device in use.
+Future<void> resolveBackendBaseUrl() async {
+  final candidates = ApiConstants.androidHostCandidates;
+  if (candidates.isEmpty) return;
+
+  final reachable = await Future.wait(candidates.map(_isHostHealthy));
+  for (var i = 0; i < candidates.length; i++) {
+    if (reachable[i]) {
+      ApiConstants.useBaseUrl(candidates[i]);
+      AppLogger.info('[API] backend host: ${candidates[i]}');
+      return;
+    }
+  }
+  // Neither host answered: keep the platform default and let the offline UI
+  // handle it. A later request still falls back through
+  // [HostFallbackInterceptor] if the backend comes up on the other alias.
+}
+
+Future<bool> _isHostHealthy(String baseUrl) async {
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: baseUrl,
+      connectTimeout: const Duration(milliseconds: 1200),
+      receiveTimeout: const Duration(milliseconds: 1200),
+    ),
+  );
+  try {
+    final response = await dio.get('/health');
+    return response.statusCode == 200;
+  } catch (_) {
+    return false;
+  } finally {
+    dio.close(force: true);
+  }
+}
 
 /// Checks if the backend is reachable.
 /// Returns true if healthy, false otherwise.

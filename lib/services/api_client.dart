@@ -34,6 +34,7 @@ class ApiClient { // Phase 2 · Core Features and Data (5 Oct – 1 Nov 2026): m
     _dio.interceptors.addAll([
       ConnectivityInterceptor(),
       OfflineCacheInterceptor(),
+      HostFallbackInterceptor(_dio),
       RetryInterceptor(dio: _dio),
       _AuthInterceptor(_dio, _storage),
       _LogInterceptor(),

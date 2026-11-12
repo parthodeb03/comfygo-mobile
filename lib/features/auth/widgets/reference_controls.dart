@@ -108,6 +108,7 @@ class CgRefButton extends StatelessWidget {
     this.height = 52,
     this.padding = const EdgeInsets.symmetric(horizontal: 24),
     this.semanticLabel,
+    this.gradient,
   });
 
   final Widget child;
@@ -117,6 +118,10 @@ class CgRefButton extends StatelessWidget {
   final double height;
   final EdgeInsetsGeometry padding;
   final String? semanticLabel;
+
+  /// Overrides the orange call-to-action gradient (the landing page uses the
+  /// green palette).
+  final Gradient? gradient;
 
   @override
   Widget build(BuildContext context) {
@@ -146,7 +151,7 @@ class CgRefButton extends StatelessWidget {
           width: expand ? double.infinity : null,
           padding: padding,
           decoration: BoxDecoration(
-            gradient: c.gMain,
+            gradient: gradient ?? c.gMain,
             borderRadius: BorderRadius.circular(CgRefRadii.pill),
           ),
           // `widthFactor` keeps the pill at its intrinsic width when it sits

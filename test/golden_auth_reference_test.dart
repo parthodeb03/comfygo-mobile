@@ -1,4 +1,5 @@
 // Golden coverage for the reference landing / sign-in / sign-up screens.
+import 'dart:async';
 import 'dart:io';
 
 import 'package:comfygo/features/auth/screens/login_screen.dart';
@@ -45,6 +46,36 @@ Future<void> _loadFonts() async { // Phase 3 · Testing and Finalization (2 Nov 
   }
 }
 
+/// Decodes the landing collage photos up front; otherwise a golden captured
+/// straight after `pump` shows the cards before their images have loaded.
+Future<void> _precacheCollage(WidgetTester tester) async {
+  const assets = [
+    'assets/images/Coxs Bazar/Coxs_Bazar.jfif',
+    'assets/images/Sundarban/Sundarbans.jfif',
+    'assets/images/Srimangal/Srimangal_1.jfif',
+  ];
+
+  await tester.runAsync(() async {
+    for (final asset in assets) {
+      final stream = AssetImage(asset).resolve(ImageConfiguration.empty);
+      final loaded = Completer<void>();
+      late final ImageStreamListener listener;
+      listener = ImageStreamListener(
+        (image, synchronousCall) {
+          stream.removeListener(listener);
+          if (!loaded.isCompleted) loaded.complete();
+        },
+        onError: (error, stackTrace) {
+          stream.removeListener(listener);
+          if (!loaded.isCompleted) loaded.completeError(error, stackTrace);
+        },
+      );
+      stream.addListener(listener);
+      await loaded.future;
+    }
+  });
+}
+
 void main() {
   setUpAll(_loadFonts);
 
@@ -71,6 +102,7 @@ void main() {
   }
 
   testWidgets('landing page golden', (tester) async {
+    await _precacheCollage(tester);
     await snap(tester, 'auth_welcome', const WelcomeScreen());
   });
 
